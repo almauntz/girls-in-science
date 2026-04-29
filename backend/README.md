@@ -1,6 +1,6 @@
 # Girls in Science — Backend
 
-Izgrađeno sa FastAPI, SQLAlchemy i SQLite (za razvoj).
+Izgrađeno sa FastAPI, SQLModel i SQLite (za razvoj).
 
 ## Postavljanje projekta
 
@@ -37,8 +37,9 @@ app/
     auth.py         — registracija i prijava (ne mijenjati)
     workshops.py    — Projektni tim 1
     mentoring.py    — Projektni tim 2
-    forum.py        — Projektni tim 3
-    profiles.py     — Projektni tim 4
+    role_models.py  — Projektni tim 3
+    news.py         — Projektni tim 4
+    profiles.py     — Projektni tim 5
   main.py           — ulazna tačka aplikacije
   database.py       — konekcija na bazu podataka
 ```

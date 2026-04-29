@@ -1,6 +1,6 @@
 # Girls in Science — Platform
 
-Platforma za Girls in Science centar koja omogućava članicama da se prijave na workshops, pronađu mentora, učestvuju u forumu i upravljaju svojim profilom.
+Platforma za Girls in Science centar koja omogućava članicama da se prijave na workshops, pronađu mentora, istražuju direktorij inspirativnih žena u STEM-u, prate vijesti i upravljaju svojim profilom.
 
 ## Struktura projekta
 
@@ -37,12 +37,13 @@ Aplikacija dostupna na: `http://localhost:5173`
 |-----|---------------|--------|
 | Tim 1 | Workshops | `backend/app/routers/workshops.py`, `frontend/src/views/workshops/` |
 | Tim 2 | Mentoring | `backend/app/routers/mentoring.py`, `frontend/src/views/mentoring/` |
-| Tim 3 | Forum | `backend/app/routers/forum.py`, `frontend/src/views/forum/` |
-| Tim 4 | Profili & Dashboard | `backend/app/routers/profiles.py`, `frontend/src/views/profiles/` |
+| Tim 3 | Role Models | `backend/app/routers/role_models.py`, `frontend/src/views/role_models/` |
+| Tim 4 | Vijesti & Blog | `backend/app/routers/news.py`, `frontend/src/views/news/` |
+| Tim 5 | Profili & Dashboard | `backend/app/routers/profiles.py`, `frontend/src/views/profiles/` |
 
 ## Tehnologije
 
-- **Backend:** Python, FastAPI, SQLAlchemy, Alembic, JWT
+- **Backend:** Python, FastAPI, SQLModel, JWT
 - **Frontend:** Vue 3, Vite, Tailwind CSS, Vue Router
 - **Baza:** SQLite (development), PostgreSQL (produkcija)
 
