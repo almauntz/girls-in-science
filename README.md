@@ -38,8 +38,8 @@ Aplikacija dostupna na: `http://localhost:5173`
 | Tim 1 | Workshops | `backend/app/routers/workshops.py`, `frontend/src/views/workshops/` |
 | Tim 2 | Mentoring | `backend/app/routers/mentoring.py`, `frontend/src/views/mentoring/` |
 | Tim 3 | Role Models | `backend/app/routers/role_models.py`, `frontend/src/views/role_models/` |
-| Tim 4 | Vijesti & Blog | `backend/app/routers/news.py`, `frontend/src/views/news/` |
-| Tim 5 | Profili & Dashboard | `backend/app/routers/profiles.py`, `frontend/src/views/profiles/` |
+| Tim 3 | Vijesti & Blog | `backend/app/routers/news.py`, `frontend/src/views/news/` |
+| Tim 4 | Profili & Dashboard | `backend/app/routers/profiles.py`, `frontend/src/views/profiles/` |
 
 ## Tehnologije
 
