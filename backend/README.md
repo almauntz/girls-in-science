@@ -38,8 +38,8 @@ app/
     workshops.py    — Projektni tim 1
     mentoring.py    — Projektni tim 2
     role_models.py  — Projektni tim 3
-    news.py         — Projektni tim 4
-    profiles.py     — Projektni tim 5
+    news.py         — Projektni tim 3
+    profiles.py     — Projektni tim 4
   main.py           — ulazna tačka aplikacije
   database.py       — konekcija na bazu podataka
 ```
