@@ -86,7 +86,6 @@ def update_workshop(
     if not workshop:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
 
-    # Ažuriraj samo polja koja su proslijeđena (exclude_unset)
     update_data = data.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(workshop, key, value)
@@ -103,7 +102,6 @@ def cancel_workshop(
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin)
 ):
-    """Otkazivanje radionice — samo admin. Status se mijenja u 'cancelled'."""
     workshop = db.get(Workshop, workshop_id)
     if not workshop:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
@@ -115,3 +113,17 @@ def cancel_workshop(
     db.commit()
     db.refresh(workshop)
     return workshop
+
+
+@router.delete("/{workshop_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_workshop(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+
+    db.delete(workshop)
+    db.commit()
