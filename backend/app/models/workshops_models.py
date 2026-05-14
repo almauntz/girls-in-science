@@ -3,7 +3,7 @@ from typing import Optional
 import enum
 from sqlmodel import SQLModel, Field
 
-
+# testls
 class WorkshopStatus(str, enum.Enum):
     upcoming = "upcoming"
     cancelled = "cancelled"
