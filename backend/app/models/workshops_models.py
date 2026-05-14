@@ -1,9 +1,7 @@
-from datetime import datetime
-from enum import Enum
+from datetime import datetime, timezone
 from typing import Optional
-from dns import enum
-from sqlmodel import Field, SQLModel
-from sqlalchemy import Column, DateTime, Enum as SAEnum, func
+import enum
+from sqlmodel import SQLModel, Field
 
 
 class WorkshopStatus(str, enum.Enum):
@@ -21,12 +19,11 @@ class Workshop(SQLModel, table=True):
     location: str = Field(nullable=False)
     date: datetime = Field(nullable=False)
     capacity: int = Field(nullable=False)
-    status: WorkshopStatus = Field(
-        default=WorkshopStatus.upcoming,
-        sa_column=Column(SAEnum(WorkshopStatus), default=WorkshopStatus.upcoming)
-    )
+    
+    status: WorkshopStatus = Field(default=WorkshopStatus.upcoming)
+    
     created_by_id: Optional[int] = Field(default=None, foreign_key="users.id")
+
     created_at: Optional[datetime] = Field(
-        default=None,
-        sa_column=Column(DateTime(timezone=True), server_default=func.now())
+        default_factory=lambda: datetime.now(timezone.utc)
     )
