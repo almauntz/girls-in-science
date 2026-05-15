@@ -56,3 +56,11 @@ class WorkshopRead(BaseModel):
     created_at: Optional[datetime]
     class Config:
         from_attributes = True
+
+
+class WorkshopList(BaseModel):
+    title: str
+    date: datetime
+    location: str
+    class Config:
+        from_attributes = True
