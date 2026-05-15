@@ -1,31 +1,20 @@
-from sqlmodel import SQLModel, Field
 from typing import Optional
-from pydantic import validator, EmailStr # EmailStr je najbolji za GT1-90
+from sqlmodel import SQLModel, Field
+from pydantic import EmailStr, validator
 
-# Task GT1-131: Tabela "Prijave"
-class Prijava(SQLModel, table=True):
+class Registration(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     
-    # GT1-96 & GT1-30: Validacija obaveznih polja (min_length sprečava prazne stringove)
-    ime: str = Field(min_length=2, index=True)
-    prezime: str = Field(min_length=2)
+    # GT1-30: These fields are mandatory (no Optional)
+    first_name: str = Field(min_length=2)  # Name cannot be just 1 letter
+    last_name: str = Field(min_length=2)
     
-    # GT1-90: Validacija email formata
-    # Koristimo EmailStr koji automatski provjerava format (npr. mora imati @ i domenu)
+    # GT1-90: Email format validation
+    # EmailStr automatically checks for @ and domain presence
     email: EmailStr 
     
-    # GT1-30: Telefon je obavezan, dodajemo provjeru minimalne dužine
-    telefon: str = Field(min_length=9)
+    phone: str = Field(min_length=9)  # Basic length check for phone number
+    workshop_id: int = Field(foreign_key="workshop.id")
     
-    radionica_id: int = Field(foreign_key="workshop.id")
-    
-    # GT1-97: Opcionalna polja ostaju ista
-    iskustvo: Optional[str] = None
-    github_nalog: Optional[str] = None
-
-    # GT1-90: Ako profesorica insistira na ručnoj funkciji za validaciju emaila:
-    @validator("email")
-    def email_must_contain_at(cls, v):
-        if "@" not in v:
-            raise ValueError("Email mora sadržavati @ simbol")
-        return v
+    previous_experience: Optional[str] = None
+    github_profile: Optional[str] = None

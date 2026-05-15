@@ -29,30 +29,28 @@ def prijavi_studenticu(podaci: Prijava, db: Session = Depends(get_db)):
     }
 
 # --- NOVA RUTA ZA OTKAZIVANJE (GT1-22) ---
-@router.delete("/otkazivanje", status_code=status.HTTP_200_OK)
-def otkazi_prijavu(radionica_id: int, email: str, db: Session = Depends(get_db)):
-    # 1. Pronađi prijavu na osnovu emaila i ID-a radionice
-    statement = select(Prijava).where(
-        Prijava.radionica_id == radionica_id, 
-        Prijava.email == email
-    )
-    rezultat = db.exec(statement).first()
-
-    if not rezultat:
+@router.delete("/otkazivanje/{prijava_id}")
+def otkazi_prijavu(
+    prijava_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # 1. Pronađi prijavu u bazi
+    prijava = db.get(Prijava, prijava_id)
+    if not prijava:
         raise HTTPException(status_code=404, detail="Prijava nije pronađena")
 
-    # 2. Pronađi radionicu da vratiš mjesto (GT1-86)
-    radionica = db.get(Workshop, radionica_id)
+    # 2. Pronađi radionicu na koju se prijava odnosi
+    radionica = db.get(Workshop, prijava.workshop_id)
+    
+    # 3. Oslobađanje mjesta (Task: Oslobađanje mjesta nakon odjave)
     if radionica:
-        radionica.slobodna_mjesta += 1  # Oslobađanje mjesta
+        radionica.slobodna_mjesta += 1
         db.add(radionica)
 
-    # 3. Obriši prijavu iz baze
-    db.delete(rezultat)
+    # 4. Obriši prijavu
+    db.delete(prijava)
     db.commit()
 
-    # 4. Poruka o uspješnoj odjavi (GT1-87)
-    return {
-        "status": "success", 
-        "message": "Uspješno ste se odjavili sa radionice. Mjesto je oslobođeno."
-    }
+    # 5. Task: Poruka o uspješnoj odjavi
+    return {"message": "Uspješno ste se odjavili sa radionice. Mjesto je oslobođeno."}
