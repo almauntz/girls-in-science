@@ -1,8 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from app.database import get_db
 from app.core.security import get_current_user
-from app.models.user import User
+from app.models.user import User, UserRole
+from app.models.role_model import RoleModel, RoleModelCreate
+
 
 router = APIRouter(prefix="/role-models", tags=["role_models"])
 
@@ -30,3 +32,19 @@ router = APIRouter(prefix="/role-models", tags=["role_models"])
 @router.get("/")
 def role_models_placeholder():
     return {"message": "Role Models router is working — Team 3 builds here"}
+
+
+@router.post("/")
+def create_role_model(
+    role_model_data: RoleModelCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Samo administratorica može dodavati profile")
+    
+    role_model = RoleModel(**role_model_data.model_dump())
+    db.add(role_model)
+    db.commit()
+    db.refresh(role_model)
+    return role_model
