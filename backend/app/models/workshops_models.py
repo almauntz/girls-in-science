@@ -16,6 +16,7 @@ class WorkshopBase(SQLModel):
     description: str
     location: str
     date: datetime
+    end_time: datetime = None
     capacity: int
 
 class Workshop(WorkshopBase, table=True):
@@ -35,6 +36,7 @@ class WorkshopCreate(BaseModel):
     description: str
     location: str
     date: datetime
+    end_time: datetime = None
     capacity: int
 
 class WorkshopUpdate(BaseModel):
@@ -42,6 +44,7 @@ class WorkshopUpdate(BaseModel):
     description: Optional[str] = None
     location: Optional[str] = None
     date: Optional[datetime] = None
+    end_time: Optional[datetime] = None
     capacity: Optional[int] = None
 
 class WorkshopRead(BaseModel):
@@ -50,6 +53,7 @@ class WorkshopRead(BaseModel):
     description: str
     location: str
     date: datetime
+    end_time: datetime
     capacity: int
     status: WorkshopStatus
     created_by_id: Optional[int]
@@ -62,5 +66,18 @@ class WorkshopList(BaseModel):
     title: str
     date: datetime
     location: str
+    class Config:
+        from_attributes = True
+
+class WorkshopDetailRead(BaseModel):
+    ID_workshop: int
+    title: str
+    description: str
+    date: datetime
+    end_time: datetime
+    capacity: int
+    status: WorkshopStatus
+    organizer_name:str
+    organizer_email:str
     class Config:
         from_attributes = True

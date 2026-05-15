@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.workshops_models import Workshop, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead, WorkshopList
+from app.models.workshops_models import Workshop, WorkshopDetailRead, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead, WorkshopList
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/workshops", tags=["workshops"])
@@ -27,6 +27,24 @@ def get_active_workshops(
     if not workshops:
         raise HTTPException(status_code=404, detail="Nema aktivnih radionica.")
     return workshops
+
+@router.get("/{workshop_id}", response_model=WorkshopDetailRead)
+def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+    organizer = db.get(User, workshop.created_by_id)
+    return WorkshopDetailRead(
+        ID_workshop=workshop.ID_workshop,
+        title=workshop.title,
+        description=workshop.description,
+        date=workshop.date,
+        end_time=workshop.end_time,
+        capacity=workshop.capacity,
+        status=workshop.status,
+        organizer_name=organizer.full_name,
+        organizer_email=organizer.email
+    )
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != UserRole.admin:
