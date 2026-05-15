@@ -4,6 +4,7 @@ from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.workshops_models import Workshop, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead, WorkshopList
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
@@ -17,7 +18,9 @@ def get_active_workshops(
     db: Session = Depends(get_db)
 ):
     statement = select(Workshop).where(
-        Workshop.status == WorkshopStatus.upcoming).order_by(
+        Workshop.status == WorkshopStatus.upcoming,
+        Workshop.date >= datetime.now(timezone.utc)
+    ).order_by(
         Workshop.date,
         Workshop.title)
     workshops = db.exec(statement).all()
