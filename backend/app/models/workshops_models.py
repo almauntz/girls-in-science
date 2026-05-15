@@ -16,7 +16,7 @@ class WorkshopBase(SQLModel):
     description: str
     location: str
     date: datetime
-    end_time: datetime = None
+    end_time: datetime
     capacity: int
 
 class Workshop(WorkshopBase, table=True):
@@ -36,7 +36,7 @@ class WorkshopCreate(BaseModel):
     description: str
     location: str
     date: datetime
-    end_time: datetime = None
+    end_time: datetime
     capacity: int
 
 class WorkshopUpdate(BaseModel):

@@ -68,6 +68,7 @@ def create_workshop(
         description=data.description,
         location=data.location,
         date=data.date,
+        end_time=data.end_time,
         capacity=data.capacity,
         created_by_id=admin.id
     )
