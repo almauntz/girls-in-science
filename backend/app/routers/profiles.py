@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from app.database import get_db
 from app.core.security import get_current_user
@@ -50,6 +50,39 @@ def get_my_profile(
 ):
     profile = get_or_create_profile(current_user, db)
     
+    return ProfileResponse(
+        id=profile.id,
+        user_id=current_user.id,
+        full_name=current_user.full_name,
+        email=current_user.email,
+        biography=profile.biography,
+        field=profile.field,
+        avatar=profile.avatar,
+        role=current_user.role
+    )
+
+@router.put("/me", response_model=ProfileResponse)
+def update_my_profile(
+    profile_data: ProfileUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if profile_data.full_name is not None:
+        if profile_data.full_name.strip() == "":
+            raise HTTPException(status_code=400, detail="Ime ne smije biti prazno")
+        current_user.full_name = profile_data.full_name
+        db.add(current_user)
+
+    profile = get_or_create_profile(current_user, db)
+    if profile_data.biography is not None:
+        profile.biography = profile_data.biography
+    if profile_data.field is not None:
+        profile.field = profile_data.field
+
+    db.commit()
+    db.refresh(current_user)
+    db.refresh(profile)
+
     return ProfileResponse(
         id=profile.id,
         user_id=current_user.id,
