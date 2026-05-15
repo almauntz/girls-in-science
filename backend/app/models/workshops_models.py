@@ -4,8 +4,6 @@ import enum
 from sqlmodel import SQLModel, Field
 from pydantic import BaseModel
 from datetime import datetime
-
-
 class WorkshopStatus(str, enum.Enum):
     upcoming = "upcoming"
     cancelled = "cancelled"
@@ -30,7 +28,7 @@ class Workshop(WorkshopBase, table=True):
     )
 
 
-### Schemas ---------------------------------------------------------------------
+### Schemas -------------------------------------------------------------------
 class WorkshopCreate(BaseModel):
     title: str
     description: str
@@ -61,7 +59,6 @@ class WorkshopRead(BaseModel):
     class Config:
         from_attributes = True
 
-
 class WorkshopList(BaseModel):
     title: str
     date: datetime
@@ -81,3 +78,20 @@ class WorkshopDetailRead(BaseModel):
     organizer_email:str
     class Config:
         from_attributes = True
+
+class Registration(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # GT1-30: These fields are mandatory (no Optional)
+    first_name: str = Field(min_length=2)  # Name cannot be just 1 letter
+    last_name: str = Field(min_length=2)
+    
+    # GT1-90: Email format validation
+    # EmailStr automatically checks for @ and domain presence
+    email: EmailStr 
+    
+    phone: str = Field(min_length=9)  # Basic length check for phone number
+    workshop_id: int = Field(foreign_key="workshop.id")
+    
+    previous_experience: Optional[str] = None
+    github_profile: Optional[str] = None
