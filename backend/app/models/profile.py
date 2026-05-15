@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
+from app.models.user import User
 
 # Pivot tabela koja spaja Korisnike i Radionice (Prijave)
 class WorkshopRegistration(SQLModel, table=True):
