@@ -75,7 +75,7 @@ export default {
         const user = await getMe(response.access_token)
         localStorage.setItem('username', user.full_name)
         // window.location.href = '/'
-        this.$router.push('/dashboard') // preusmjeravanje na dashboard (GIS4-20)
+        this.$router.push('/profiles') // preusmjeravanje na dashboard (GIS4-20)
       } else {
         this.error = 'Pogrešan email ili lozinka.'
       }
