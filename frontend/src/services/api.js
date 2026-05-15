@@ -27,3 +27,8 @@ export async function getMe(token) {
   })
   return response.json()
 }
+
+export async function getRoleModels() {
+  const response= await fetch(`${BASE_URL}/role-models`)
+  return response.json()
+}
