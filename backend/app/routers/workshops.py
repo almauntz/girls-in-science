@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.workshops_models import Workshop, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead
+from app.models.workshops_models import Workshop, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead, WorkshopList
 
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
@@ -12,8 +12,15 @@ router = APIRouter(prefix="/workshops", tags=["workshops"])
 def workshops_placeholder():
     return {"message": "Workshops router is working — Team 1 builds here"}
 
-
-
+@router.get("/active", response_model=list[WorkshopList])
+def get_active_workshops(
+    db: Session = Depends(get_db)
+):
+    statement = select(Workshop).where(Workshop.status == WorkshopStatus.upcoming)
+    workshops = db.exec(statement).all()
+    if not workshops:
+         raise HTTPException(status_code=404, detail="Trenutno nema aktivnih radionica.")
+    return workshops
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != UserRole.admin:
