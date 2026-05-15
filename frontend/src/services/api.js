@@ -27,3 +27,15 @@ export async function getMe(token) {
   })
   return response.json()
 }
+
+export async function addRoleModel(data, token) {
+  const response = await fetch(`${BASE_URL}/role-models/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
