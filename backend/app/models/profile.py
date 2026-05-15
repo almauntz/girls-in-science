@@ -20,6 +20,7 @@ class ProfileUpdate(SQLModel):
     biography: Optional[str] = None
     field: Optional[str] = None
 
+    # Provjerava da li je uneseno ime validno (ne smije biti prazan string)
     @field_validator('full_name')
     @classmethod
     def name_not_empty(cls, v):
@@ -27,6 +28,7 @@ class ProfileUpdate(SQLModel):
             raise ValueError('Ime ne smije biti prazno')
         return v
 
+    # Ograničava biografiju na 500 karaktera
     @field_validator('biography')
     @classmethod
     def biography_max_length(cls, v):
