@@ -16,10 +16,13 @@ def workshops_placeholder():
 def get_active_workshops(
     db: Session = Depends(get_db)
 ):
-    statement = select(Workshop).where(Workshop.status == WorkshopStatus.upcoming)
+    statement = select(Workshop).where(
+        Workshop.status == WorkshopStatus.upcoming).order_by(
+        Workshop.date,
+        Workshop.title)
     workshops = db.exec(statement).all()
     if not workshops:
-         raise HTTPException(status_code=404, detail="Trenutno nema aktivnih radionica.")
+        raise HTTPException(status_code=404, detail="Nema aktivnih radionica.")
     return workshops
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
