@@ -1,3 +1,4 @@
+
 <template>
   <div class="min-h-screen flex items-center justify-center">
     <div class="bg-white p-8 rounded-xl shadow-md w-full max-w-md">
@@ -69,10 +70,12 @@ export default {
       const response = await loginUser(this.email, this.password)
 
       if (response.access_token) {
-        localStorage.setItem('token', response.access_token)
+        localStorage.setItem('token', response.access_token) #Spasimo token u memoriju
+        #Dohvatimo podatke o korisniku i spasimo njegovo ime
         const user = await getMe(response.access_token)
         localStorage.setItem('username', user.full_name)
-        window.location.href = '/'
+        # window.location.href = '/'
+        this.$router.push('/dashboard) #preusmjeravanje na dashboard (GIS4-20)
       } else {
         this.error = 'Pogrešan email ili lozinka.'
       }
