@@ -23,7 +23,7 @@ def get_personal_dashboard(
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Niste autorizovani"
+            detail="Niste autorizovani."
         )
     user_id = current_user.id
 
@@ -80,3 +80,71 @@ def get_personal_dashboard(
         "new_workshops": new_workshops,
         "available_workshops": available_workshops
     }
+
+
+@router.post("/dashboard/register", status_code=status.HTTP_201_CREATED)
+def register_for_workshop(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Omogućava trenutno ulogovanom korisniku da se prijavi na dostupnu radionicu.
+    (GIS4-18: direktna prijava sa dashboarda)
+    """
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Niste autorizovani."
+        )
+    
+    # Provjeravamo da li radionica postoji u bazi podataka
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Radionica ne postoji."
+        )
+    # Provjeravamo da li je radionica već prošla
+    if workshop.date < datetime.utcnow():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ne možete se prijaviti na radionicu koja je već prošla."
+        )
+    # Provjeravamo da li je korisnik već prijavljen na ovu radionicu
+    already_registered = db.exec(
+        select(WorkshopRegistration).where(
+            WorkshopRegistration.user_id == current_user.id,
+            WorkshopRegistration.workshop_id == workshop_id
+        )
+    ).first()
+
+    if already_registered:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Već ste prijavljeni na ovu radionicu."
+        )
+    # Provjeravamo da li je radionica popunjena (ako radionica ima ograničen broj mjesta)
+    # Brojimo koliko je trenutno prijavljenih korisnika na ovu radionicu
+    current_registrations_count = len (
+        db.exec(
+            select(WorkshopRegistration).where(
+                WorkshopRegistration.workshop_id == workshop_id
+            )
+        ).all()
+    )
+
+    if current_registrations_count >= workshop.capacity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Nažalost, sva mjesta za ovu radionicu su popunjena."
+        )
+    
+    # Kreiranje nove prijave
+    new_registration = WorkshopRegistration(
+        user_id=current_user.id,
+        workshop_id=workshop_id
+    )
+    db.add(new_registration)
+    db.commit()
+    return {"message": "Uspješno ste se prijavili na radionicu: {workshop.title}."}
