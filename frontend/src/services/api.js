@@ -32,3 +32,21 @@ export async function getRoleModels() {
   const response= await fetch(`${BASE_URL}/role-models/`)
   return response.json()
 }
+
+export async function getRoleModel(id) {
+  const response = await fetch(`${BASE_URL}/role-models/${id}`)
+  return response.json()
+}
+
+export async function updateRoleModel(id, data) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/role-models/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
