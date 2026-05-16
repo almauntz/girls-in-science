@@ -258,3 +258,52 @@ async def upload_avatar(
 
     url = f"/static/avatars/{filename}"
     return { "avatar_url": url }
+
+
+@router.delete("/profiles/me/avatar", response_model=ProfileResponse)
+def delete_avatar(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Briše postojeću profilnu sliku korisnice sa servera i postavlja je na Default (None).
+    Dostupno samo autentificiranim korisnicima.
+    """
+    # Dohvati profil trenutne korisnice
+    profile = get_or_create_profile(current_user, db)
+    
+    # Ako korisnica ima postavljenu sliku, brišemo je sa servera 
+    if not profile.avatar:
+        # Pretvaramo URL (npr. /static/avatars/fajl.png) u relativnu putanju na disku (static/avatars/fajl.png)
+        # S obzirom da URL počinje sa "/" skidamo taj prvi karakter pomoću [1:]
+        file_path = profile.avatar.lstrip("/")  # uklanja početni "/"
+        
+    # Provjeravamo da li fajl fizički postoji na serveru prije brisanja
+    if os.path.exists(file_path):
+        try:
+            os.remove(file_path)
+        except Exception:
+            # Ako se desi neočekivana greška pri brisanju fajla sa diska,
+            # nastavljamo dalje kako aplikacija ne bi pukla
+            pass
+
+    # Dodjeljivanje default avatara u bazi
+    profile.avatar = None
+
+    # Sačuvaj promjene u bazi
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+    db.refresh(current_user)
+
+    # Vrati ažurirani profil nazad
+    return ProfileResponse(
+        id=profile.id,
+        user_id=current_user.id,
+        full_name=current_user.full_name,
+        email=current_user.email,
+        biography=profile.biography,
+        field=profile.field,
+        avatar=profile.avatar,  
+        role=current_user.role
+    )
