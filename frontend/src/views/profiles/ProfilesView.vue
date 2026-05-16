@@ -1,9 +1,3 @@
-<template>
-  <div>
-    <h1>Profili & Dashboard</h1>
-    <p>Tim 4 gradi ovdje.</p>
-  </div>
-</template>
 
 <template>
   <div class="min-h-screen bg-gray-50 py-8 px-4">

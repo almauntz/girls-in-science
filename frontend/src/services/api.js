@@ -27,3 +27,26 @@ export async function getMe(token) {
   })
   return response.json()
 }
+
+// dohvat profila
+export async function getMyProfile(token) {
+  const response = await fetch(`${BASE_URL}/profiles/me`, {
+    headers: { 
+      'Authorization': `Bearer ${token}` 
+    }
+  })
+  return response.json()
+}
+
+// ažuriranje profila
+export async function updateProfile(token, data) {
+  const response = await fetch(`${BASE_URL}/profiles/me`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
