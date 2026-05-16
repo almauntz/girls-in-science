@@ -28,6 +28,10 @@
                      text-sm focus:outline-none focus:ring-2 
                      focus:ring-green-500 focus:border-transparent"
             />
+            <p v-if="errors.full_name" 
+              class="text-red-500 text-xs mt-1">
+              {{ errors.full_name }}
+            </p>
           </div>
 
           <div>
@@ -56,11 +60,20 @@
                      text-sm focus:outline-none focus:ring-2 
                      focus:ring-green-500 focus:border-transparent resize-none"
             ></textarea>
+            <div class="flex justify-between mt-1">
+                 <p v-if="errors.biography" class="text-red-500 text-xs">
+                {{ errors.biography }}
+                </p>
+               <span class="text-xs text-gray-400 ml-auto">
+                {{ form.biography?.length || 0 }}/500
+              </span>
+            </div>
           </div>
 
           <div class="pt-2">
             <button
               type="submit"
+              :disabled="!isFormValid"
               class="w-full bg-green-600 text-white py-2 px-4 rounded-lg 
                      text-sm font-medium hover:bg-green-700 
                      transition-colors duration-200"
@@ -85,11 +98,40 @@ export default {
         full_name: '',
         biography: '',
         field: ''
-      }
+      },
+      errors: { 
+        full_name: '',
+       biography: '' }
+      
+    }
+  },
+    computed: {
+    isFormValid() {
+      return (
+        this.form.full_name.trim() !== '' &&
+        (this.form.biography?.length || 0) <= 500
+      )
     }
   },
 
+
   methods: {
+    validateForm() {
+    this.errors = { full_name: '', biography: '' }
+    let isValid = true
+
+    if (!this.form.full_name || this.form.full_name.trim() === '') {
+      this.errors.full_name = 'Ime ne smije biti prazno.'
+      isValid = false
+    }
+
+    if (this.form.biography && this.form.biography.length > 500) {
+      this.errors.biography = 'Biografija ne smije biti duža od 500 karaktera.'
+      isValid = false
+    }
+
+    return isValid
+  },
     saveProfile() {
       
     }
