@@ -1,12 +1,10 @@
 <template>
   <aside class="w-64 min-h-screen bg-white border-r border-gray-100 shadow-sm flex flex-col">
     
-    <!-- Logo -->
     <div class="p-6 border-b border-gray-100">
       <h1 class="text-lg font-bold text-gray-800">Girls in Science</h1>
     </div>
 
-    <!-- Avatar sekcija -->
     <div class="flex flex-col items-center py-6 border-b border-gray-100">
 
       <div class="relative cursor-pointer group" @click="$refs.fileInput.click()">
@@ -46,23 +44,16 @@
 
       </div>
 
-      <span class="text-white text-xs opacity-0 group-hover:opacity-100">
-          Promijeni
-        </span>
-      </div>
+      <button 
+        v-if="avatarUrl"
+        @click="handleDeleteAvatar" 
+        type="button"
+        class="mt-2 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors"
+      >
+        🗑️ Obriši sliku
+      </button>
 
-    </div>
-
-    <button 
-      v-if="avatarUrl"
-      @click="handleDeleteAvatar" 
-      type="button"
-      class="mt-2 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors"
-    >
-      🗑️ Obriši sliku
-    </button>
-
-    <input
+      <input
         ref="fileInput"
         type="file"
         accept=".jpg,.jpeg,.png"
@@ -83,7 +74,6 @@
 
     </div>
 
-    <!-- Navigacija -->
     <nav class="flex-1 p-4 space-y-1">
       
       <button
@@ -158,26 +148,22 @@ export default {
       this.isUploading = true
       this.avatarError = ''
 
-      // =================
-      // (GIS4-26)
-      // =================
-
       // Kriterij 2 i 4: Provjera formata (Dozvoljeni samo image/jpeg i image/png)
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
       if (!allowedTypes.includes(file.type)) {
         this.avatarError = 'Neispravan format! Dozvoljeni su samo JPG i PNG formati slika.'
         this.isUploading = false
-        event.target.value = '' // Resetujemo input da korisnik može opet birati
-        return // Kriterij 6: Prekidamo funkciju, upload se NE ŠALJE na backend
+        event.target.value = '' 
+        return 
       }
 
-      // Kriterij 3 i 5: Provjera veličine (2MB = 2 * 1024 * 1024 bajta)
+      // Kriterij 3 i 5: Provjera veličine (2MB)
       const maxSizeInBytes = 2 * 1024 * 1024
       if (file.size > maxSizeInBytes) {
         this.avatarError = 'Slika je prevelika! Maksimalna dozvoljena veličina je 2MB.'
         this.isUploading = false
         event.target.value = ''
-        return // Kriterij 6: Prekidamo funkciju, upload se NE ŠALJE na backend
+        return 
       }
 
       try {
@@ -197,7 +183,7 @@ export default {
         }
 
         const data = await response.json()
-        this.$emit('avatar-uploaded', data.avatar_url)  // ← šalje URL roditeljskoj komponenti
+        this.$emit('avatar-uploaded', data.avatar_url)  
 
       } catch (error) {
         this.avatarError = error.message || 'Greška pri uploadu slike.'
@@ -217,7 +203,7 @@ export default {
       try {
         const token = localStorage.getItem('token')
         const response = await fetch('http://localhost:8000/profiles/me/avatar', {
-          method: 'DELETE', // ← Šaljemo DELETE metodu
+          method: 'DELETE', 
           headers: { 'Authorization': `Bearer ${token}` }
         })
 
@@ -226,7 +212,6 @@ export default {
           throw new Error(error.detail || 'Greška pri brisanju sa servera.')
         }
 
-        // Kada backend javi 200 OK, šaljemo signal roditelju da postavi avatarUrl na null
         this.$emit('avatar-deleted')
         alert('Profilna slika je uspješno obrisana!')
 
