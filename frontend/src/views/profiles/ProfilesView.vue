@@ -38,10 +38,10 @@
 
 <script>
 import axios from 'axios'
-import ProfileSidebar from '../../components/profiles/ProfileSidebar.vue'
-import ProfileForm from '../../components/profiles/ProfileForm.vue'
-import DashboardTab from '../../components/profiles/DashboardTab.vue'
-import AktivnostiTab from '../../components/profiles/AktivnostiTab.vue'
+import ProfileSidebar from '../../components/ProfileSidebar.vue'
+import ProfileForm from '../../components/ProfileForm.vue'
+import DashboardTab from '../../components/DashboardTab.vue'
+import AktivnostiTab from '../../components/AktivnostiTab.vue'
 
 export default {
   name: 'ProfilesView',
