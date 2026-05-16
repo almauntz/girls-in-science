@@ -158,6 +158,28 @@ export default {
       this.isUploading = true
       this.avatarError = ''
 
+      // =================
+      // (GIS4-26)
+      // =================
+
+      // Kriterij 2 i 4: Provjera formata (Dozvoljeni samo image/jpeg i image/png)
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+      if (!allowedTypes.includes(file.type)) {
+        this.avatarError = 'Neispravan format! Dozvoljeni su samo JPG i PNG formati slika.'
+        this.isUploading = false
+        event.target.value = '' // Resetujemo input da korisnik može opet birati
+        return // Kriterij 6: Prekidamo funkciju, upload se NE ŠALJE na backend
+      }
+
+      // Kriterij 3 i 5: Provjera veličine (2MB = 2 * 1024 * 1024 bajta)
+      const maxSizeInBytes = 2 * 1024 * 1024
+      if (file.size > maxSizeInBytes) {
+        this.avatarError = 'Slika je prevelika! Maksimalna dozvoljena veličina je 2MB.'
+        this.isUploading = false
+        event.target.value = ''
+        return // Kriterij 6: Prekidamo funkciju, upload se NE ŠALJE na backend
+      }
+
       try {
         const token = localStorage.getItem('token')
         const formData = new FormData()
