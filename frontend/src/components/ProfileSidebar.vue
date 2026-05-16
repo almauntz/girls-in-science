@@ -46,7 +46,23 @@
 
       </div>
 
-      <input
+      <span class="text-white text-xs opacity-0 group-hover:opacity-100">
+          Promijeni
+        </span>
+      </div>
+
+    </div>
+
+    <button 
+      v-if="avatarUrl"
+      @click="handleDeleteAvatar" 
+      type="button"
+      class="mt-2 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors"
+    >
+      🗑️ Obriši sliku
+    </button>
+
+    <input
         ref="fileInput"
         type="file"
         accept=".jpg,.jpeg,.png"
@@ -124,7 +140,7 @@ export default {
     avatarUrl: String
   },
 
-  emits: ['tab-change', 'avatar-uploaded'],
+  emits: ['tab-change', 'avatar-uploaded', 'avatar-deleted'],
 
   data() {
     return {
@@ -166,6 +182,34 @@ export default {
       } finally {
         this.isUploading = false
         event.target.value = ''
+      }
+    },
+
+    // LOGIKA ZA BRISANJE AVATARA
+    async handleDeleteAvatar() {
+      const confirmDelete = confirm("Jeste li sigurni da želite obrisati profilnu sliku?")
+      if (!confirmDelete) return
+
+      this.avatarError = ''
+
+      try {
+        const token = localStorage.getItem('token')
+        const response = await fetch('http://localhost:8000/profiles/me/avatar', {
+          method: 'DELETE', // ← Šaljemo DELETE metodu
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.detail || 'Greška pri brisanju sa servera.')
+        }
+
+        // Kada backend javi 200 OK, šaljemo signal roditelju da postavi avatarUrl na null
+        this.$emit('avatar-deleted')
+        alert('Profilna slika je uspješno obrisana!')
+
+      } catch (error) {
+        this.avatarError = error.message || 'Nije moguće obrisati profilnu sliku.'
       }
     }
   }
