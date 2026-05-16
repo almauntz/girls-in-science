@@ -232,7 +232,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 DOZVOLJENI_FORMATI = ["jpg", "jpeg", "png"]   
 MAX_VELICINA = 2 * 1024 * 1024    
 
-@router.post("/profiles/me/avatar")
+@router.post("/me/avatar")
 async def upload_avatar(
     file: UploadFile = File(...),
     current_user = Depends(get_current_user)  # ← zaštićen endpoint
@@ -258,3 +258,52 @@ async def upload_avatar(
 
     url = f"/static/avatars/{filename}"
     return { "avatar_url": url }
+
+
+@router.delete("/me/avatar", response_model=ProfileResponse)
+def delete_avatar(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Siguran i direktan endpoint za brisanje profilne slike.
+    """
+    # 1. Pronađi profil u bazi
+    profile = db.exec(
+        select(Profile).where(Profile.user_id == current_user.id)
+    ).first()
+    
+    if not profile:
+        profile = Profile(user_id=current_user.id)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+
+    # 2. Fizičko brisanje fajla sa diska - SVE JE SADA UNUTAR JEDNOG SIGURNOG BLOKA
+    if profile.avatar and str(profile.avatar).strip():
+        file_path = str(profile.avatar).lstrip("/")
+        
+        # Tek ako putanja postoji i varijabla je stvorena, provjeravamo disk
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass  
+
+    # 3. Resetujemo avatar na None u bazi
+    profile.avatar = None
+    db.add(profile)
+    db.commit()
+    db.refresh(profile)
+
+    # 4. Slanje sigurnog odgovora bez NoneType zamki
+    return ProfileResponse(
+        id=profile.id if profile.id else 0,
+        user_id=current_user.id,
+        full_name=current_user.full_name if current_user.full_name else "Korisnik",
+        email=current_user.email if current_user.email else "",
+        biography=profile.biography,
+        field=profile.field,
+        avatar=None,
+        role=current_user.role if current_user.role else "user"
+    )
