@@ -74,7 +74,7 @@
 </template>
 
 <script>
-import { getMyProfile, updateProfile } from '../../services/api.js'
+import { getMyProfile, updateProfile } from '../services/api.js'
 
 export default {
   name: 'ProfileForm',
