@@ -12,8 +12,22 @@
       <h2 class="text-2xl font-bold text-gray-800 mb-6">
         Moj profil
       </h2>
-
+    
+      <!-- Forma -->
       <div class="bg-white rounded-xl shadow-sm p-6">
+        <!-- Poruka uspjeha -->
+        <div v-if="successMessage" 
+             class="bg-green-50 text-green-700 border border-green-200 
+                    rounded-lg px-4 py-3 mb-4 text-sm">
+          {{ successMessage }}
+        </div>
+        <!-- Poruka greške -->
+        <div v-if="errorMessage" 
+             class="bg-red-50 text-red-700 border border-red-200 
+                    rounded-lg px-4 py-3 mb-4 text-sm">
+          {{ errorMessage }}
+        </div>
+
         <form @submit.prevent="saveProfile" class="space-y-5">
 
           <div>
@@ -101,7 +115,10 @@ export default {
       },
       errors: { 
         full_name: '',
-       biography: '' }
+       biography: '' 
+      },
+      successMessage: '',
+      errorMessage: ''
       
     }
   },
@@ -114,8 +131,8 @@ export default {
     }
   },
 
-
   methods: {
+    //Frontend validacija forme
     validateForm() {
     this.errors = { full_name: '', biography: '' }
     let isValid = true
@@ -132,9 +149,21 @@ export default {
 
     return isValid
   },
-    saveProfile() {
+     async saveProfile() {
+    if (!this.validateForm()) return
+
+    this.successMessage = ''
+    this.errorMessage = ''
+
+    try {
       
+      this.successMessage = 'Promjene su uspješno sačuvane!'
+      setTimeout(() => { this.successMessage = '' }, 3000)
+    } catch (error) {
+      this.errorMessage = 'Greška pri čuvanju. Pokušajte ponovo.'
+      setTimeout(() => { this.errorMessage = '' }, 3000)
     }
   }
+}
 }
 </script>
