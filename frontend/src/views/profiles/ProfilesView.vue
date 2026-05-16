@@ -8,6 +8,7 @@
       :avatarUrl="avatarUrl"
       @tab-change="activeTab = $event"
       @avatar-uploaded="avatarUrl = $event"
+      @avatar-deleted="avatarUrl = null"
     />
 
     <main class="flex-1 p-8 overflow-y-auto">
