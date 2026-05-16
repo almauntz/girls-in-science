@@ -1,10 +1,11 @@
 <script setup>
 import {ref,onMounted} from "vue"
-import RoleModelCard from "@/components/RoleModelCard.vue"
-import {getRoleModels} from "@/services/api"
+import RoleModelCard from "../../components/RoleModelCard.vue"
+import {getRoleModels} from "../../services/api"
 const roleModels=ref([])
 onMounted(async()=>{
   roleModels.value=await getRoleModels()
+  console.log(roleModels.value)
 })
 </script>
 <template>

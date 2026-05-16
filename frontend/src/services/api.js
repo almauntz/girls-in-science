@@ -29,6 +29,6 @@ export async function getMe(token) {
 }
 
 export async function getRoleModels() {
-  const response= await fetch(`${BASE_URL}/role-models`)
+  const response= await fetch(`${BASE_URL}/role-models/`)
   return response.json()
 }

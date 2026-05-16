@@ -34,10 +34,10 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/rolemodels',
-    name: 'rolemodels',
+    path: '/role-models',
+    name: 'role-models',
     component: () => import('../views/rolemodels/RoleModelsView.vue'),
-    meta: { requiresAuth: true }
+    
   },
   {
     path: '/profiles',
