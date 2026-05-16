@@ -229,20 +229,32 @@ def register_for_workshop(
 UPLOAD_DIR = "static/avatars"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
+DOZVOLJENI_FORMATI = ["jpg", "jpeg", "png"]   
+MAX_VELICINA = 2 * 1024 * 1024    
+
 @router.post("/profiles/me/avatar")
 async def upload_avatar(
     file: UploadFile = File(...),
     current_user = Depends(get_current_user)  # ← zaštićen endpoint
 ):
     # generiši jedinstveno ime fajla
-    extension = file.filename.split(".")[-1]
+    extension = file.filename.split(".")[-1].lower()
+    if extension not in DOZVOLJENI_FORMATI:
+        raise HTTPException(
+            status_code=400,
+            detail="Podržani formati su JPG i PNG."
+        )
+    sadrzaj = await file.read()
+    if len(sadrzaj) > MAX_VELICINA:
+        raise HTTPException(
+            status_code=400,
+            detail="Slika ne smije biti veća od 2MB."
+        )
+
     filename = f"{uuid.uuid4()}.{extension}"
     file_path = f"{UPLOAD_DIR}/{filename}"
-
-    # sačuvaj fajl na server
     with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
+        buffer.write(sadrzaj)   
 
-    # vrati URL slike
     url = f"/static/avatars/{filename}"
     return { "avatar_url": url }

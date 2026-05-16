@@ -51,11 +51,6 @@
         </button>
 
       </nav>
-
-      <div class="p-4 border-t border-gray-100">
-        <p class="text-xs text-gray-400 text-center">© 2026 Girls in Science</p>
-      </div>
-
     </aside>
 
     <!-- ========== GLAVNI SADRŽAJ ========== -->
