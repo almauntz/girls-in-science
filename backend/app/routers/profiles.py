@@ -232,7 +232,7 @@ os.makedirs(UPLOAD_DIR, exist_ok=True)
 DOZVOLJENI_FORMATI = ["jpg", "jpeg", "png"]   
 MAX_VELICINA = 2 * 1024 * 1024    
 
-@router.post("/profiles/me/avatar")
+@router.post("/me/avatar")
 async def upload_avatar(
     file: UploadFile = File(...),
     current_user = Depends(get_current_user)  # ← zaštićen endpoint
@@ -260,50 +260,50 @@ async def upload_avatar(
     return { "avatar_url": url }
 
 
-@router.delete("/profiles/me/avatar", response_model=ProfileResponse)
+@router.delete("/me/avatar", response_model=ProfileResponse)
 def delete_avatar(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """
-    Briše postojeću profilnu sliku korisnice sa servera i postavlja je na Default (None).
-    Dostupno samo autentificiranim korisnicima.
+    Siguran i direktan endpoint za brisanje profilne slike.
     """
-    # Dohvati profil trenutne korisnice
-    profile = get_or_create_profile(current_user, db)
+    # 1. Pronađi profil u bazi
+    profile = db.exec(
+        select(Profile).where(Profile.user_id == current_user.id)
+    ).first()
     
-    # Ako korisnica ima postavljenu sliku, brišemo je sa servera 
-    if not profile.avatar:
-        # Pretvaramo URL (npr. /static/avatars/fajl.png) u relativnu putanju na disku (static/avatars/fajl.png)
-        # S obzirom da URL počinje sa "/" skidamo taj prvi karakter pomoću [1:]
-        file_path = profile.avatar.lstrip("/")  # uklanja početni "/"
+    if not profile:
+        profile = Profile(user_id=current_user.id)
+        db.add(profile)
+        db.commit()
+        db.refresh(profile)
+
+    # 2. Fizičko brisanje fajla sa diska - SVE JE SADA UNUTAR JEDNOG SIGURNOG BLOKA
+    if profile.avatar and str(profile.avatar).strip():
+        file_path = str(profile.avatar).lstrip("/")
         
-    # Provjeravamo da li fajl fizički postoji na serveru prije brisanja
-    if os.path.exists(file_path):
-        try:
-            os.remove(file_path)
-        except Exception:
-            # Ako se desi neočekivana greška pri brisanju fajla sa diska,
-            # nastavljamo dalje kako aplikacija ne bi pukla
-            pass
+        # Tek ako putanja postoji i varijabla je stvorena, provjeravamo disk
+        if os.path.exists(file_path):
+            try:
+                os.remove(file_path)
+            except Exception:
+                pass  
 
-    # Dodjeljivanje default avatara u bazi
+    # 3. Resetujemo avatar na None u bazi
     profile.avatar = None
-
-    # Sačuvaj promjene u bazi
     db.add(profile)
     db.commit()
     db.refresh(profile)
-    db.refresh(current_user)
 
-    # Vrati ažurirani profil nazad
+    # 4. Slanje sigurnog odgovora bez NoneType zamki
     return ProfileResponse(
-        id=profile.id,
+        id=profile.id if profile.id else 0,
         user_id=current_user.id,
-        full_name=current_user.full_name,
-        email=current_user.email,
+        full_name=current_user.full_name if current_user.full_name else "Korisnik",
+        email=current_user.email if current_user.email else "",
         biography=profile.biography,
         field=profile.field,
-        avatar=profile.avatar,  
-        role=current_user.role
+        avatar=None,
+        role=current_user.role if current_user.role else "user"
     )
