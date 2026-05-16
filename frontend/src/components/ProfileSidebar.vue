@@ -1,12 +1,10 @@
 <template>
   <aside class="w-64 min-h-screen bg-white border-r border-gray-100 shadow-sm flex flex-col">
     
-    <!-- Logo -->
     <div class="p-6 border-b border-gray-100">
       <h1 class="text-lg font-bold text-gray-800">Girls in Science</h1>
     </div>
 
-    <!-- Avatar sekcija -->
     <div class="flex flex-col items-center py-6 border-b border-gray-100">
 
       <div class="relative cursor-pointer group" @click="$refs.fileInput.click()">
@@ -46,6 +44,15 @@
 
       </div>
 
+      <button 
+        v-if="avatarUrl"
+        @click="handleDeleteAvatar" 
+        type="button"
+        class="mt-2 text-xs font-medium text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-1 rounded-md transition-colors"
+      >
+        🗑️ Obriši sliku
+      </button>
+
       <input
         ref="fileInput"
         type="file"
@@ -67,7 +74,6 @@
 
     </div>
 
-    <!-- Navigacija -->
     <nav class="flex-1 p-4 space-y-1">
       
       <button
@@ -124,7 +130,7 @@ export default {
     avatarUrl: String
   },
 
-  emits: ['tab-change', 'avatar-uploaded'],
+  emits: ['tab-change', 'avatar-uploaded', 'avatar-deleted'],
 
   data() {
     return {
@@ -141,6 +147,24 @@ export default {
 
       this.isUploading = true
       this.avatarError = ''
+
+      // Kriterij 2 i 4: Provjera formata (Dozvoljeni samo image/jpeg i image/png)
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png']
+      if (!allowedTypes.includes(file.type)) {
+        this.avatarError = 'Neispravan format! Dozvoljeni su samo JPG i PNG formati slika.'
+        this.isUploading = false
+        event.target.value = '' 
+        return 
+      }
+
+      // Kriterij 3 i 5: Provjera veličine (2MB)
+      const maxSizeInBytes = 2 * 1024 * 1024
+      if (file.size > maxSizeInBytes) {
+        this.avatarError = 'Slika je prevelika! Maksimalna dozvoljena veličina je 2MB.'
+        this.isUploading = false
+        event.target.value = ''
+        return 
+      }
 
       try {
         const token = localStorage.getItem('token')
@@ -159,13 +183,40 @@ export default {
         }
 
         const data = await response.json()
-        this.$emit('avatar-uploaded', data.avatar_url)  // ← šalje URL roditeljskoj komponenti
+        this.$emit('avatar-uploaded', data.avatar_url)  
 
       } catch (error) {
         this.avatarError = error.message || 'Greška pri uploadu slike.'
       } finally {
         this.isUploading = false
         event.target.value = ''
+      }
+    },
+
+    // LOGIKA ZA BRISANJE AVATARA
+    async handleDeleteAvatar() {
+      const confirmDelete = confirm("Jeste li sigurni da želite obrisati profilnu sliku?")
+      if (!confirmDelete) return
+
+      this.avatarError = ''
+
+      try {
+        const token = localStorage.getItem('token')
+        const response = await fetch('http://localhost:8000/profiles/me/avatar', {
+          method: 'DELETE', 
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.detail || 'Greška pri brisanju sa servera.')
+        }
+
+        this.$emit('avatar-deleted')
+        alert('Profilna slika je uspješno obrisana!')
+
+      } catch (error) {
+        this.avatarError = error.message || 'Nije moguće obrisati profilnu sliku.'
       }
     }
   }
