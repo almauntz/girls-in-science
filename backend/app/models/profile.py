@@ -1,7 +1,8 @@
-from typing import Optional
-from sqlmodel import SQLModel, Field
+from datetime import datetime
+from typing import Optional, List
+from sqlmodel import SQLModel, Field, Relationship
 from pydantic import field_validator
-
+from app.models.user import User
 
 # Tabela u bazi
 class Profile(SQLModel, table=True):
@@ -20,7 +21,6 @@ class ProfileUpdate(SQLModel):
     biography: Optional[str] = None
     field: Optional[str] = None
 
-    # Provjerava da li je uneseno ime validno (ne smije biti prazan string)
     @field_validator('full_name')
     @classmethod
     def name_not_empty(cls, v):
@@ -28,7 +28,6 @@ class ProfileUpdate(SQLModel):
             raise ValueError('Ime ne smije biti prazno')
         return v
 
-    # Ograničava biografiju na 500 karaktera
     @field_validator('biography')
     @classmethod
     def biography_max_length(cls, v):
@@ -49,12 +48,8 @@ class ProfileResponse(SQLModel):
 
     class Config:
         from_attributes = True
-from datetime import datetime
-from typing import Optional, List
-from sqlmodel import SQLModel, Field, Relationship
-from app.models.user import User
 
-# Pivot tabela koja spaja Korisnike i Radionice (Prijave)
+# Pivot tabela
 class WorkshopRegistration(SQLModel, table=True):
     __tablename__ = "workshop_registrations"
 
@@ -74,4 +69,4 @@ class Workshop(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     # Veza sa korisnicima preko pivot tabele
-    users: List["User"] = Relationship(back_populates="workshops", link_model=WorkshopRegistration)
+    users: List["User"] = Relationship(link_model=WorkshopRegistration)
