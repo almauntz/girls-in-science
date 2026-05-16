@@ -12,16 +12,21 @@
       <h2 class="text-2xl font-bold text-gray-800 mb-6">
         Moj profil
       </h2>
+      <!-- Loading indikator — vidljiv dok traje učitavanje -->
+      <div v-if="isLoading" class="flex justify-center items-center py-10">
+        <div class="text-gray-500 text-sm">Učitavanje...</div>
+      </div>
     
       <!-- Forma -->
-      <div class="bg-white rounded-xl shadow-sm p-6">
-        <!-- Poruka uspjeha -->
+      <div v-else class="bg-white rounded-xl shadow-sm p-6">
+
+        <!-- Zelena poruka pri uspjehu -->
         <div v-if="successMessage" 
              class="bg-green-50 text-green-700 border border-green-200 
                     rounded-lg px-4 py-3 mb-4 text-sm">
           {{ successMessage }}
         </div>
-        <!-- Poruka greške -->
+        <!-- Crvena poruka pri grešci -->
         <div v-if="errorMessage" 
              class="bg-red-50 text-red-700 border border-red-200 
                     rounded-lg px-4 py-3 mb-4 text-sm">
@@ -103,6 +108,7 @@
 </template>
 
 <script>
+import { getMyProfile, updateProfile } from '@/services/api.js'
 export default {
   name: 'ProfilesView',
 
@@ -118,8 +124,8 @@ export default {
        biography: '' 
       },
       successMessage: '',
-      errorMessage: ''
-      
+      errorMessage: '',
+      isLoading: false
     }
   },
     computed: {
@@ -131,7 +137,27 @@ export default {
     }
   },
 
+  async mounted() {
+  await this.loadProfile()
+},
+
   methods: {
+     // Učitavanje podataka korisnice
+    async loadProfile() {
+      this.isLoading = true
+      try {
+        const token = localStorage.getItem('token')
+        const data = await getMyProfile(token)
+        this.form.full_name = data.full_name || ''
+        this.form.biography = data.biography || ''
+        this.form.field = data.field || ''
+      } catch (error) {
+        this.errorMessage = 'Greška pri učitavanju profila.'
+      } finally {
+        this.isLoading = false
+      }
+    },
+
     //Frontend validacija forme
     validateForm() {
     this.errors = { full_name: '', biography: '' }
@@ -149,19 +175,28 @@ export default {
 
     return isValid
   },
+    //Cuvanje promjena profila
      async saveProfile() {
     if (!this.validateForm()) return
 
+    this.isLoading = true
     this.successMessage = ''
     this.errorMessage = ''
 
     try {
-      
+      const token = localStorage.getItem('token')
+      await updateProfile(token, {
+        full_name: this.form.full_name,
+        biography: this.form.biography,
+        field: this.form.field
+      })
       this.successMessage = 'Promjene su uspješno sačuvane!'
       setTimeout(() => { this.successMessage = '' }, 3000)
     } catch (error) {
       this.errorMessage = 'Greška pri čuvanju. Pokušajte ponovo.'
       setTimeout(() => { this.errorMessage = '' }, 3000)
+    } finally {
+      this.isLoading = false
     }
   }
 }
