@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,UploadFile, File
 from sqlmodel import Session
 from app.database import get_db
 from app.core.security import get_current_user
@@ -10,6 +10,9 @@ from datetime import datetime
 from typing import Dict, Any
 from app.models.profile import Workshop, WorkshopRegistration
 from fastapi import status
+import shutil
+import uuid
+import os
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -221,3 +224,25 @@ def register_for_workshop(
     db.add(new_registration)
     db.commit()
     return {"message": "Uspješno ste se prijavili na radionicu: {workshop.title}."}
+
+# Endpoint za upload avatara
+UPLOAD_DIR = "static/avatars"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+@router.post("/profiles/me/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user = Depends(get_current_user)  # ← zaštićen endpoint
+):
+    # generiši jedinstveno ime fajla
+    extension = file.filename.split(".")[-1]
+    filename = f"{uuid.uuid4()}.{extension}"
+    file_path = f"{UPLOAD_DIR}/{filename}"
+
+    # sačuvaj fajl na server
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    # vrati URL slike
+    url = f"/static/avatars/{filename}"
+    return { "avatar_url": url }
