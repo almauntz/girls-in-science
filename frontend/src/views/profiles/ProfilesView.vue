@@ -83,7 +83,7 @@ export default {
       this.dashboardError = null
       try {
         const response = await axios.get(
-          'http://localhost:8000/profiles/dashboard',
+          'http://localhost:8000/dashboard',
           this.getAuthHeaders()
         )
         this.myWorkshops = response.data.my_workshops
@@ -97,7 +97,7 @@ export default {
     async handleRegister(workshopId) {
       try {
         const response = await axios.post(
-          `http://localhost:8000/profiles/dashboard/register?workshop_id=${workshopId}`,
+          `http://localhost:8000/dashboard/register?workshop_id=${workshopId}`,
           {},
           this.getAuthHeaders()
         )
