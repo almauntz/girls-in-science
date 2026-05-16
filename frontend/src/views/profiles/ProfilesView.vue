@@ -37,11 +37,11 @@
 </template>
 
 <script>
-import axios from 'axios'
+//import axios from 'axios'
 import ProfileSidebar from '../../components/ProfileSidebar.vue'
 import ProfileForm from '../../components/ProfileForm.vue'
 import DashboardTab from '../../components/DashboardTab.vue'
-import AktivnostiTab from '../../components/AktivnostiTab.vue'
+//import AktivnostiTab from '../../components/AktivnostiTab.vue'
 
 export default {
   name: 'ProfilesView',
@@ -50,7 +50,7 @@ export default {
     ProfileSidebar,
     ProfileForm,
     DashboardTab,
-    AktivnostiTab
+   // AktivnostiTab
   },
 
   data() {
