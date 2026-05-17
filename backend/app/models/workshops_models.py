@@ -80,18 +80,82 @@ class WorkshopDetailRead(BaseModel):
         from_attributes = True
 
 class Registration(SQLModel, table=True):
+    __tablename__ = "registrations"
+    
     id: Optional[int] = Field(default=None, primary_key=True)
     
     # GT1-30: These fields are mandatory (no Optional)
-    first_name: str = Field(min_length=2)  # Name cannot be just 1 letter
-    last_name: str = Field(min_length=2)
+    first_name: str = Field(min_length=2, max_length=100)
+    last_name: str = Field(min_length=2, max_length=100)
     
     # GT1-90: Email format validation
-    # EmailStr automatically checks for @ and domain presence
     email: EmailStr 
     
-    phone: str = Field(min_length=9)  # Basic length check for phone number
-    workshop_id: int = Field(foreign_key="workshop.id")
+    phone: str = Field(min_length=9, max_length=20)
+    user_id: int = Field(foreign_key="users.id")
+    workshop_id: int = Field(foreign_key="workshops.ID_workshop")
     
-    previous_experience: Optional[str] = None
-    github_profile: Optional[str] = None
+    # OPCIONALNA POLJA
+    previous_experience: Optional[str] = Field(default=None, max_length=1000)
+    github_profile: Optional[str] = Field(default=None, max_length=255)
+    
+    # META POLJA
+    status: ApplicationStatus = Field(default=ApplicationStatus.pending)
+    registered_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    confirmed_at: Optional[datetime] = Field(default=None)
+
+
+### Registration Schemas -------------------------------------------------------------------
+
+class RegistrationCreate(BaseModel):
+    """Schema za slanje registracije"""
+    first_name: str = Field(min_length=2, max_length=100)
+    last_name: str = Field(min_length=2, max_length=100)
+    email: EmailStr
+    phone: str = Field(min_length=9, max_length=20)
+    previous_experience: Optional[str] = Field(default=None, max_length=1000)
+    github_profile: Optional[str] = Field(default=None, max_length=255)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "first_name": "Marija",
+                "last_name": "Horvat",
+                "email": "marija@example.com",
+                "phone": "+385981234567",
+                "previous_experience": "Znam osnove Python-a",
+                "github_profile": "https://github.com/marija-horvat"
+            }
+        }
+
+class RegistrationRead(BaseModel):
+    """Schema za čitanje registracije"""
+    id: int
+    user_id: int
+    workshop_id: int
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone: str
+    previous_experience: Optional[str]
+    github_profile: Optional[str]
+    status: str
+    registered_at: datetime
+    confirmed_at: Optional[datetime]
+    
+    class Config:
+        from_attributes = True
+
+class RegistrationList(BaseModel):
+    """Schema za prikaz liste registracija"""
+    id: int
+    first_name: str
+    last_name: str
+    email: EmailStr
+    phone: str
+    status: str
+    registered_at: datetime
+    previous_experience: Optional[str]
+    
+    class Config:
+        from_attributes = True
