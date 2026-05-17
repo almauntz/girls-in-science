@@ -133,7 +133,7 @@
             {{ isLoading ? 'Kreiranje...' : 'Kreiraj profil' }}
           </button>
           <button
-            @click="$router.push('/rolemodels')"
+            @click="$router.push('/role-models')"
             class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-6 py-2 rounded-lg text-sm transition"
           >
             Otkaži
@@ -192,7 +192,7 @@ async function handleSubmit() {
 
     if (result.id) {
       successMessage.value = 'Profil je uspješno dodan u direktorij!'
-      setTimeout(() => router.push('/rolemodels'), 1500)
+      setTimeout(() => router.push('/role-models'), 1500)
     } else {
       serverError.value = result.detail || 'Došlo je do greške. Pokušajte ponovo.'
     }
