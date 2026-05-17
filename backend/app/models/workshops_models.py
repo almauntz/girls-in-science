@@ -27,3 +27,13 @@ class Workshop(WorkshopBase, table=True):
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+
+
+### Schemas -------------------------------------------------------------------
+class WorkshopCreate(BaseModel):
+    title: str
+    description: str
+    location: str
+    date: datetime
+    end_time: datetime
+    capacity: int
