@@ -44,3 +44,20 @@ def create_role_model(role_model_data: RoleModelCreate, db: Session = Depends(ge
     db.commit()
     db.refresh(role_model)
     return role_model
+
+@router.delete("/{role_model_id}")
+def delete_role_model(
+    role_model_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Samo administratorica može brisati profile")
+    
+    role_model = db.get(RoleModel, role_model_id)
+    if not role_model:
+        raise HTTPException(status_code=404, detail="Profil nije pronađen")
+    
+    db.delete(role_model)
+    db.commit()
+    return {"message": "Profil je uspješno obrisan"}
