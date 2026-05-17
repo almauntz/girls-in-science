@@ -17,7 +17,8 @@ def get_active_workshops(
     db: Session = Depends(get_db)
 ):
     statement = select(Workshop).where(
-        Workshop.status == WorkshopStatus.upcoming
+        Workshop.status == WorkshopStatus.upcoming,
+        Workshop.date >= datetime.now(timezone.utc)
     ).order_by(
         Workshop.date,
         Workshop.title)
