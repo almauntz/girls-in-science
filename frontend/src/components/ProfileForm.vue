@@ -146,17 +146,21 @@ export default {
 
   methods: {
     async loadProfile() {
-      try {
-        const token = localStorage.getItem('token')
-        const data = await getMyProfile(token)
-        this.form.full_name = data.full_name || ''
-        this.form.biography = data.biography || ''
-        this.form.field = data.field || ''
-        this.$emit('profile-updated', data)
-      } catch (error) {
-        this.errorMessage = 'Greška pri učitavanju profila.'
+    try {
+      const token = localStorage.getItem('token')
+      const data = await getMyProfile(token)
+      this.form.full_name = data.full_name || ''
+      this.form.biography = data.biography || ''
+      this.form.field = data.field || ''
+      this.$emit('profile-updated', data)
+     
+      if (data.avatar) {
+        this.$emit('avatar-uploaded', `http://localhost:8000${data.avatar}`)
       }
-    },
+    } catch (error) {
+      this.errorMessage = 'Greška pri učitavanju profila.'
+    }
+  },
 
     validateForm() {
       this.errors = { full_name: '', biography: '' }

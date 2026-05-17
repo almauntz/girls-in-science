@@ -1,18 +1,16 @@
 <template>
   <aside class="w-64 min-h-screen bg-violet-300 border-r border-gray-100 shadow-sm flex flex-col">
     
-    <div class="p-6 border-b border-gray-100">
-      <h1 class="text-lg font-bold text-gray-800">Girls in Science</h1>
-    </div>
-
-    <div class="flex flex-col items-center py-6 border-b border-gray-100">
-      <div class="w-16 h-16 rounded-full bg-violet-100 flex items-center justify-center overflow-hidden">
+    <div class="m-4 rounded-xl bg-violet-600 p-6 flex flex-col items-center">
+      <div class="w-16 h-16 rounded-full bg-violet-400 flex items-center justify-center overflow-hidden mb-3">
         <img v-if="avatarUrl" :src="avatarUrl" alt="Profilna slika" class="w-full h-full object-cover" />
         <span v-else class="text-3xl">👤</span>
       </div>
-
-      <p class="text-sm font-semibold text-gray-800 mt-3">{{ fullName || username }}</p>
-      <p class="text-xs text-black-500 mt-0.5" v-if="field">{{ field }}</p>
+      <p class="text-sm font-semibold text-white">{{ fullName || username }}</p>
+      <p class="text-xs text-violet-200 mt-0.5" v-if="field">{{ field }}</p>
+      <span class="mt-3 text-xs font-bold bg-violet-500 text-white px-3 py-1 rounded-full uppercase tracking-wide">
+        Studentica
+      </span>
     </div>
 
     <nav class="flex-1 p-4 space-y-1">
