@@ -27,7 +27,7 @@
       </div>
       <router-link
         v-if="isAdmin"
-        :to="`/role-models/${roleModel.id}/edit`"
+        :to="/role-models/${roleModel.id}/edit"
         class="inline-block bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
       >
         Uredi profil
@@ -42,18 +42,15 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getRoleModel, deleteRoleModel } from '@/services/api.js'
-
+import { getRoleModel, deleteRoleModel } from '../../services/api.js'
 const route = useRoute()
 const router = useRouter()
 const roleModel = ref(null)
 const loading = ref(true)
 const error = ref(null)
-
 const isAdmin = computed(() => {
   try {
     const token = localStorage.getItem('token')
@@ -64,7 +61,6 @@ const isAdmin = computed(() => {
     return false
   }
 })
-
 async function handleDelete() {
   if (!confirm('Da li ste sigurni da želite obrisati ovaj profil?')) return
   const token = localStorage.getItem('token')
@@ -73,7 +69,6 @@ async function handleDelete() {
     router.push('/role-models')
   }
 }
-
 onMounted(async () => {
   try {
     const data = await getRoleModel(route.params.id)
