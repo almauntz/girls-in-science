@@ -46,3 +46,18 @@ class WorkshopUpdate(BaseModel):
     date: Optional[datetime] = None
     end_time: Optional[datetime] = None
     capacity: Optional[int] = None
+
+
+class WorkshopRead(BaseModel):
+    ID_workshop: int
+    title: str
+    description: str
+    location: str
+    date: datetime
+    end_time: datetime
+    capacity: int
+    status: WorkshopStatus
+    created_by_id: Optional[int]
+    created_at: Optional[datetime]
+    class Config:
+        from_attributes = True
