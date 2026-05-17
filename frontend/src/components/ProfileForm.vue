@@ -232,7 +232,7 @@ export default {
         }
 
         const data = await response.json()
-        this.$emit('avatar-uploaded', data.avatar_url)
+        this.$emit('avatar-uploaded', `http://localhost:8000${data.avatar_url}`)
 
       } catch (error) {
         this.avatarError = error.message || 'Greška pri uploadu slike.'

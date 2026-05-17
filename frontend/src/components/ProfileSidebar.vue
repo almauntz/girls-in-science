@@ -1,5 +1,5 @@
 <template>
-  <aside class="w-64 min-h-screen bg-white border-r border-gray-100 shadow-sm flex flex-col">
+  <aside class="w-64 min-h-screen bg-violet-300 border-r border-gray-100 shadow-sm flex flex-col">
     
     <div class="p-6 border-b border-gray-100">
       <h1 class="text-lg font-bold text-gray-800">Girls in Science</h1>
@@ -12,7 +12,7 @@
       </div>
 
       <p class="text-sm font-semibold text-gray-800 mt-3">{{ fullName || username }}</p>
-      <p class="text-xs text-gray-400 mt-0.5" v-if="field">{{ field }}</p>
+      <p class="text-xs text-black-500 mt-0.5" v-if="field">{{ field }}</p>
     </div>
 
     <nav class="flex-1 p-4 space-y-1">
@@ -22,7 +22,7 @@
           'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3',
           activeTab === 'profil'
             ? 'bg-violet-50 text-violet-700 border border-violet-200'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+            : 'text-violet-600 hover:bg-violet-100 hover:text-violet-800'
         ]"
       >
         <span class="text-lg">👤</span>
@@ -35,7 +35,7 @@
           'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3',
           activeTab === 'dashboard'
             ? 'bg-violet-50 text-violet-700 border border-violet-200'
-            : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800'
+            : 'text-black-600 hover:bg-gray-50 hover:text-gray-800'
         ]"
       >
         <span class="text-lg">📊</span>

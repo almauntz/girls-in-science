@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
+   <div class="profiles-wrapper min-h-screen bg-gray-50 flex">
 
     <ProfileSidebar
       :activeTab="activeTab"
@@ -117,8 +117,10 @@ export default {
 </script>
 
 <style scoped>
-.profiles-fullwidth {
-  margin: -2rem -2rem -2rem -2rem;
+.profiles-wrapper {
+  margin-left: -2rem;
+  margin-right: -2rem;
+  margin-top: -2rem;
   width: calc(100% + 4rem);
 }
 </style>

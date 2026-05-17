@@ -235,29 +235,30 @@ MAX_VELICINA = 2 * 1024 * 1024
 @router.post("/me/avatar")
 async def upload_avatar(
     file: UploadFile = File(...),
-    current_user = Depends(get_current_user)  # ← zaštićen endpoint
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)  # ← dodaj db parametar
 ):
-    # generiši jedinstveno ime fajla
     extension = file.filename.split(".")[-1].lower()
     if extension not in DOZVOLJENI_FORMATI:
-        raise HTTPException(
-            status_code=400,
-            detail="Podržani formati su JPG i PNG."
-        )
+        raise HTTPException(status_code=400, detail="Podržani formati su JPG i PNG.")
+    
     sadrzaj = await file.read()
     if len(sadrzaj) > MAX_VELICINA:
-        raise HTTPException(
-            status_code=400,
-            detail="Slika ne smije biti veća od 2MB."
-        )
+        raise HTTPException(status_code=400, detail="Slika ne smije biti veća od 2MB.")
 
     filename = f"{uuid.uuid4()}.{extension}"
     file_path = f"{UPLOAD_DIR}/{filename}"
     with open(file_path, "wb") as buffer:
-        buffer.write(sadrzaj)   
+        buffer.write(sadrzaj)
 
     url = f"/static/avatars/{filename}"
-    return { "avatar_url": url }
+
+    profile = get_or_create_profile(current_user, db)
+    profile.avatar = url
+    db.add(profile)
+    db.commit()
+
+    return {"avatar_url": url}
 
 
 @router.delete("/me/avatar", response_model=ProfileResponse)
