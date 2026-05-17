@@ -33,6 +33,10 @@ def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
     if not workshop:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
     organizer = db.get(User, workshop.created_by_id)
+    registrations = db.exec(
+        select(Registration).where(Registration.workshop_id == workshop_id)
+    ).all()
+    free_spots = workshop.capacity - len(registrations)
     return WorkshopDetailRead(
         ID_workshop=workshop.ID_workshop,
         title=workshop.title,
@@ -42,7 +46,8 @@ def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
         capacity=workshop.capacity,
         status=workshop.status,
         organizer_name=organizer.full_name,
-        organizer_email=organizer.email
+        organizer_email=organizer.email,
+        free_spots=free_spots
     )
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
