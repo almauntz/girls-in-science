@@ -68,3 +68,17 @@ class WorkshopList(BaseModel):
     location: str
     class Config:
         from_attributes = True
+
+class WorkshopDetailRead(BaseModel):
+    ID_workshop: int
+    title: str
+    description: str
+    date: datetime
+    end_time: datetime
+    capacity: int
+    status: WorkshopStatus
+    organizer_name:str
+    organizer_email:str
+    class Config:
+        from_attributes = True
+
