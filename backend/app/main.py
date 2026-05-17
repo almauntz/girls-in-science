@@ -6,6 +6,7 @@ from app.database import create_db
 from app.routers import auth, mentoring, workshops, profiles, role_models, news
 from app.core.security import get_current_user
 from app.models.user import User
+from app.models.role_model import RoleModel
 
 create_db()
 

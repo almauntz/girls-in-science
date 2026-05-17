@@ -13,7 +13,6 @@ export async function loginUser(email, password) {
   const formData = new FormData()
   formData.append('username', email)
   formData.append('password', password)
-
   const response = await fetch(`${BASE_URL}/auth/login`, {
     method: 'POST',
     body: formData
@@ -29,7 +28,7 @@ export async function getMe(token) {
 }
 
 export async function getRoleModels() {
-  const response= await fetch(`${BASE_URL}/role-models/`)
+  const response = await fetch(`${BASE_URL}/role-models/`)
   return response.json()
 }
 
@@ -47,6 +46,28 @@ export async function updateRoleModel(id, data) {
       'Authorization': `Bearer ${token}`
     },
     body: JSON.stringify(data)
+  })
+  return response.json()
+}
+
+export async function addRoleModel(data, token) {
+  const response = await fetch(`${BASE_URL}/role-models/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
+
+export async function deleteRoleModel(id, token) {
+  const response = await fetch(`${BASE_URL}/role-models/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
   })
   return response.json()
 }

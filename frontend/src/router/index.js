@@ -40,11 +40,22 @@ const routes = [
     
   },
   {
+    path: '/role-models/add',
+    name: 'rolemodels-add',
+    component: () => import('../views/rolemodels/RoleModelAdd.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/profiles',
     name: 'profiles',
     component: () => import('../views/profiles/ProfilesView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+  path: '/role-models/:id',
+  name: 'rolemodels-detail',
+  component: () => import('../views/rolemodels/RoleModelDetail.vue'),
+},
 ]
 
 const router = createRouter({
