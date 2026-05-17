@@ -61,3 +61,13 @@ export async function addRoleModel(data, token) {
   })
   return response.json()
 }
+
+export async function deleteRoleModel(id, token) {
+  const response = await fetch(`${BASE_URL}/role-models/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  return response.json()
+}
