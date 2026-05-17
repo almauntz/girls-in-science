@@ -48,6 +48,7 @@ class WorkshopUpdate(BaseModel):
     capacity: Optional[int] = None
 
 
+
 class WorkshopRead(BaseModel):
     ID_workshop: int
     title: str
