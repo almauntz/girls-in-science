@@ -27,7 +27,7 @@
       </div>
       <router-link
         v-if="isAdmin"
-        :to="/role-models/${roleModel.id}/edit"
+        :to="`/role-models/${roleModel.id}/edit`"
         class="inline-block bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700"
       >
         Uredi profil
