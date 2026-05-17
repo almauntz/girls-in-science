@@ -21,3 +21,26 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
         )
     return current_user
    
+
+### Admin CRUD endpoints -------------------------------------------------------
+
+
+@router.post("/", response_model=WorkshopRead, status_code=status.HTTP_201_CREATED)
+def create_workshop(
+    data: WorkshopCreate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    workshop = Workshop(
+        title=data.title,
+        description=data.description,
+        location=data.location,
+        date=data.date,
+        end_time=data.end_time,
+        capacity=data.capacity,
+        created_by_id=admin.id
+    )
+    db.add(workshop)
+    db.commit()
+    db.refresh(workshop)
+    return workshop
