@@ -331,13 +331,6 @@ async def change_password(
     db.commit()
     db.refresh(current_user)
 
-    return ProfileResponse(
-        id=current_user.id,
-        user_id=current_user.id,
-        full_name=current_user.full_name,
-        email=current_user.email,
-        biography=get_or_create_profile(current_user, db).biography,
-        field=get_or_create_profile(current_user, db).field,
-        avatar=get_or_create_profile(current_user, db).avatar,
-        role=current_user.role
-    )
+    return {
+        "message": "Password uspješno promijenjen"
+    }
