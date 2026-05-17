@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.workshops_models import Workshop, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead
+from app.models.workshops_models import Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead
 from datetime import datetime, timezone
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
@@ -98,3 +98,65 @@ def delete_workshop(
 
     db.delete(workshop)
     db.commit()
+
+
+
+
+# --- POSTOJEĆA RUTA ZA PRIJAVU (Ažurirana na engleski) elma ---
+@router.post("/registration", status_code=status.HTTP_201_CREATED)
+def register_student(podaci: RegistrationCreate, db: Session = Depends(get_db)):
+    # 1. Tražimo radionicu (pazimo na naziv modela Workshop)
+    radionica = db.get(Workshop, podaci.workshop_id)
+    
+    if not radionica:
+        raise HTTPException(status_code=404, detail="Workshop not found")
+
+    # 2. Provjera kapaciteta
+    if radionica.capacity <= 0:
+        raise HTTPException(status_code=400, detail="No more seats available")
+
+    # 3. Smanjujemo broj mjesta u radionici
+    radionica.capacity -= 1 
+    
+    # 4. Kreiramo novu prijavu 
+    # IZMJENA: Izbačen user_id=1 jer ga nema u Registration modelu
+    nova_prijava = Registration(**podaci.model_dump()) 
+    
+    # 5. Spašavamo promjene u bazu
+    db.add(radionica)
+    db.add(nova_prijava)
+    db.commit()
+    db.refresh(nova_prijava)
+
+    return {
+        "status": "success",
+        "message": "Registration successful!",
+        "data": nova_prijava
+    }
+
+# --- NOVA RUTA ZA OTKAZIVANJE (GT1-22) --- elma
+@router.delete("/cancellation/{registration_id}")
+def cancel_registration(
+    registration_id: int, 
+    db: Session = Depends(get_db)
+    # current_user: User = Depends(get_current_user) # Odkomentariši kad dodaš auth
+):
+    # 1. Pronađi prijavu u bazi koristeći novi naziv klase Registration
+    prijava = db.get(Registration, registration_id)
+    if not prijava:
+        raise HTTPException(status_code=404, detail="Registration not found")
+
+    # 2. Pronađi radionicu na koju se prijava odnosi
+    radionica = db.get(Workshop, prijava.workshop_id)
+    
+    # 3. Oslobađanje mjesta
+    if radionica:
+        radionica.capacity += 1
+        db.add(radionica)
+
+    # 4. Obriši prijavu
+    db.delete(prijava)
+    db.commit()
+
+    # 5. Poruka o uspješnoj odjavi
+    return {"message": "Successfully unsubscribed. The spot is now free."}
