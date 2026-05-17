@@ -57,8 +57,8 @@ Authorization: Bearer YOUR_TOKEN_HERE
 ## Git Workflow
 
 - Radite na grani `dev` — ne raditi commit direktno na `main`
-- Konvencija za imenovanje grana: `timX/feature/naziv-featurea`
-  - Primjeri: `tim1/feature/workshop-prijava`, `tim3/feature/role-models-lista`
+- Konvencija za imenovanje grana: `timX/naziv-funkcionalnosti/naziv-featurea`
+  - Primjeri: `tim1/workshops/prijava`, `tim3/rolemodels/lista`, `tim2/mentoring/pretraga`
 - Commit poruke trebaju biti smislene i opisivati šta je promijenjeno
 - Radite commit često — ne čekajte da sve bude gotovo pa onda jedan veliki commit
 - Pull request prema `main` grani se radi tek na kraju sprinta, nakon pregleda asistentice
