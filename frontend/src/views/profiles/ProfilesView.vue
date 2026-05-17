@@ -18,10 +18,15 @@
       </div>
 
       <div v-else>
-        <ProfileForm
-          v-if="activeTab === 'profil'"
-          @profile-updated="profileData = $event"
-        />
+      <ProfileForm
+        v-if="activeTab === 'profil'"
+        :fullName="profileData.full_name"
+        :field="profileData.field"
+        :avatarUrl="avatarUrl"
+        @profile-updated="profileData = $event"
+        @avatar-uploaded="avatarUrl = $event"
+        @avatar-deleted="avatarUrl = null"
+      />
         <DashboardTab
           v-if="activeTab === 'dashboard'"
           :myWorkshops="myWorkshops"
