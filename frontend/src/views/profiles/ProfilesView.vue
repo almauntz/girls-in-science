@@ -1,6 +1,5 @@
 <template>
-   <div class="profiles-wrapper min-h-screen bg-gray-50 flex">
-
+<div class="bg-gray-50 flex gap-8 items-stretch p-8">
     <ProfileSidebar
       :activeTab="activeTab"
       :fullName="profileData.full_name"
@@ -11,7 +10,7 @@
       @avatar-deleted="avatarUrl = null"
     />
 
-    <main class="flex-1 p-8 overflow-y-auto">
+    <main class="flex-1 overflow-y-auto h-full">
 
       <div v-if="isLoading" class="flex justify-center items-center py-20">
         <div class="text-gray-400 text-sm">Učitavanje...</div>
@@ -116,11 +115,3 @@ export default {
 }
 </script>
 
-<style scoped>
-.profiles-wrapper {
-  margin-left: -2rem;
-  margin-right: -2rem;
-  margin-top: -2rem;
-  width: calc(100% + 4rem);
-}
-</style>

@@ -2,7 +2,7 @@
   <div>
 
    <!-- HEADER KARTICA -->
-<div class="bg-violet-600 rounded-xl p-6 mb-6 flex items-center gap-5 max-w-2xl">
+<div class="bg-violet-600 rounded-xl p-6 mb-6 flex items-center gap-5 max-w-full">
   
   <div class="relative cursor-pointer group flex-shrink-0" @click="$refs.fileInput.click()">
     <div class="w-20 h-20 rounded-full bg-violet-400 flex items-center justify-center overflow-hidden">
@@ -38,7 +38,7 @@
 </div>
 
     <!-- FORMA -->
-    <div class="bg-white rounded-xl shadow-sm p-6 max-w-2xl">
+    <div class="bg-white rounded-xl shadow-sm p-6 max-w-full min-h-96">
 
       <div v-if="successMessage" class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 mb-4 text-sm">
         {{ successMessage }}
@@ -75,7 +75,8 @@
           <textarea
             v-model="form.biography"
             placeholder="Napišite nešto o sebi..."
-            rows="4"
+            rows="8"
+            spellcheck="false"
             class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none"
           ></textarea>
           <div class="flex justify-between mt-1">

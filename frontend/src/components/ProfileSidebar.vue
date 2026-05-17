@@ -1,6 +1,5 @@
 <template>
-  <aside class="w-64 min-h-screen bg-violet-300 border-r border-gray-100 shadow-sm flex flex-col">
-    
+  <aside class="w-64 bg-violet-300 flex flex-col">
     <div class="m-4 rounded-xl bg-violet-600 p-6 flex flex-col items-center">
       <div class="w-16 h-16 rounded-full bg-violet-400 flex items-center justify-center overflow-hidden mb-3">
         <img v-if="avatarUrl" :src="avatarUrl" alt="Profilna slika" class="w-full h-full object-cover" />
