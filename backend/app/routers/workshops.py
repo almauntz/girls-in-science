@@ -84,3 +84,17 @@ def cancel_workshop(
     db.commit()
     db.refresh(workshop)
     return workshop
+
+
+@router.delete("/{workshop_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_workshop(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+
+    db.delete(workshop)
+    db.commit()
