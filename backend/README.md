@@ -53,6 +53,13 @@ Token se dobija pozivom `POST /auth/login`
 
 ## Migracije baze podataka (Alembic)
 
+**Ako ste već klonirali projekat i radili na svojoj grani**, povucite nove promjene i primijenite migracije:
+
+```bash
+git pull origin main
+alembic upgrade head
+```
+
 Nakon što dodate novi model ili izmijenite postojeći, pokrenite:
 
 ```bash
