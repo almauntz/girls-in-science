@@ -44,3 +44,24 @@ def create_workshop(
     db.commit()
     db.refresh(workshop)
     return workshop
+
+
+@router.patch("/{workshop_id}", response_model=WorkshopRead)
+def update_workshop(
+    workshop_id: int,
+    data: WorkshopUpdate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(workshop, key, value)
+
+    db.add(workshop)
+    db.commit()
+    db.refresh(workshop)
+    return workshop
