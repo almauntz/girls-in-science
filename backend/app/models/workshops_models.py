@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from typing import Optional
 import enum
 from sqlmodel import SQLModel, Field
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from datetime import datetime
 class WorkshopStatus(str, enum.Enum):
     upcoming = "upcoming"
@@ -79,17 +79,24 @@ class WorkshopDetailRead(BaseModel):
     class Config:
         from_attributes = True
 
+ 
+
+ class ApplicationStatus(str, enum.Enum):
+    pending = "pending"
+    confirmed = "confirmed"
+    rejected = "rejected"
+
 class Registration(SQLModel, table=True):
     __tablename__ = "registrations"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     
-    # GT1-30: These fields are mandatory (no Optional)
+    # GT1-30: These fields are mandatory
     first_name: str = Field(min_length=2, max_length=100)
     last_name: str = Field(min_length=2, max_length=100)
     
     # GT1-90: Email format validation
-    email: EmailStr 
+    email: EmailStr = Field(max_length=255) 
     
     phone: str = Field(min_length=9, max_length=20)
     user_id: int = Field(foreign_key="users.id")
@@ -116,8 +123,8 @@ class RegistrationCreate(BaseModel):
     previous_experience: Optional[str] = Field(default=None, max_length=1000)
     github_profile: Optional[str] = Field(default=None, max_length=255)
     
-    class Config:
-        json_schema_extra = {
+    model_config = {
+        "json_schema_extra": {
             "example": {
                 "first_name": "Marija",
                 "last_name": "Horvat",
@@ -127,6 +134,7 @@ class RegistrationCreate(BaseModel):
                 "github_profile": "https://github.com/marija-horvat"
             }
         }
+    }
 
 class RegistrationRead(BaseModel):
     """Schema za čitanje registracije"""
@@ -139,7 +147,7 @@ class RegistrationRead(BaseModel):
     phone: str
     previous_experience: Optional[str]
     github_profile: Optional[str]
-    status: str
+    status: ApplicationStatus
     registered_at: datetime
     confirmed_at: Optional[datetime]
     
@@ -153,9 +161,8 @@ class RegistrationList(BaseModel):
     last_name: str
     email: EmailStr
     phone: str
-    status: str
+    status: ApplicationStatus
     registered_at: datetime
     previous_experience: Optional[str]
     
-    class Config:
-        from_attributes = True
+    
