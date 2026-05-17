@@ -3,80 +3,43 @@ from sqlmodel import Session, select
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.role_model import RoleModel
+from app.models.role_model import RoleModel, RoleModelCreate
 
 router = APIRouter(prefix="/role-models", tags=["role_models"])
 
-# -------------------------------------------------------
-# Team 3 — Role Models
-# This is your router. All your endpoints go here.
-#
-# Role models are inspiring women in STEM. Build a directory
-# that lets users browse and search them.
-#
-# Your team will define the RoleModel model in app/models/role_model.py
-# Coordinate with the News team — a NewsPost can reference a RoleModel.
-#
-# Example protected endpoint:
-#
-# @router.get("/")
-# def get_role_models(
-#     db: Session = Depends(get_db),
-#     current_user: User = Depends(get_current_user)
-# ):
-#     return {"message": "your code here"}
-#
-# -------------------------------------------------------
-
 @router.get("/")
-def get_role_models(
-    db: Session=Depends(get_db)
-):
-    statement=select(RoleModel).order_by(
-        RoleModel.last_name,
-        RoleModel.first_name
-    )
-    role_models=db.exec(statement).all()
+def get_role_models(db: Session = Depends(get_db)):
+    statement = select(RoleModel).order_by(RoleModel.last_name, RoleModel.first_name)
+    role_models = db.exec(statement).all()
     return role_models
 
 @router.get("/{id}")
 def get_role_model(id: int, db: Session = Depends(get_db)):
     role_model = db.get(RoleModel, id)
     if not role_model:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profil nije pronađen"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profil nije pronađen")
     return role_model
 
 @router.put("/{id}")
-def update_role_model(
-    id: int,
-    data: dict,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
+def update_role_model(id: int, data: dict, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.admin:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Samo administratorica može uređivati profile"
-        )
-
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Samo administratorica može uređivati profile")
     role_model = db.get(RoleModel, id)
     if not role_model:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Profil nije pronađen"
-        )
-
-    allowed_fields = {
-        "first_name", "last_name", "stem_field",
-        "institution", "position", "biography", "achievements"
-    }
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profil nije pronađen")
+    allowed_fields = {"first_name", "last_name", "stem_field", "institution", "position", "biography", "achievements"}
     for key, value in data.items():
         if key in allowed_fields:
             setattr(role_model, key, value)
+    db.commit()
+    db.refresh(role_model)
+    return role_model
 
+@router.post("/")
+def create_role_model(role_model_data: RoleModelCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Samo administratorica može dodavati profile")
+    role_model = RoleModel(**role_model_data.model_dump())
     db.add(role_model)
     db.commit()
     db.refresh(role_model)

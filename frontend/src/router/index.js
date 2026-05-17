@@ -40,6 +40,12 @@ const routes = [
     
   },
   {
+  path: '/rolemodels/add',
+  name: 'rolemodels-add',
+  component: () => import('../views/rolemodels/RoleModelAdd.vue'),
+  meta: { requiresAuth: true }
+  },
+  {
     path: '/profiles',
     name: 'profiles',
     component: () => import('../views/profiles/ProfilesView.vue'),
