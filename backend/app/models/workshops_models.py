@@ -37,3 +37,12 @@ class WorkshopCreate(BaseModel):
     date: datetime
     end_time: datetime
     capacity: int
+
+
+class WorkshopUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+    date: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    capacity: Optional[int] = None
