@@ -65,3 +65,22 @@ def update_workshop(
     db.commit()
     db.refresh(workshop)
     return workshop
+
+
+@router.patch("/{workshop_id}/cancel", response_model=WorkshopRead)
+def cancel_workshop(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+    if workshop.status == WorkshopStatus.cancelled:
+        raise HTTPException(status_code=400, detail="Radionica je već otkazana.")
+
+    workshop.status = WorkshopStatus.cancelled
+    db.add(workshop)
+    db.commit()
+    db.refresh(workshop)
+    return workshop
