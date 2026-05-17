@@ -1,34 +1,34 @@
-from typing import Optional
-from sqlmodel import SQLModel, Field
+from sqlalchemy import Column, Integer, String, Boolean
+from app.database import Base
 
 
-class Mentor(SQLModel, table=True):
+class Mentor(Base):
     __tablename__ = "mentors"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
 
     # Osnovne informacije
-    first_name: str = Field(nullable=False)
-    last_name: str = Field(nullable=False)
-    email: str = Field(index=True, unique=True, nullable=False)
-    institution: Optional[str] = Field(default=None)
-    position: Optional[str] = Field(default=None)
-    city_country: Optional[str] = Field(default=None)
-    linkedin_url: Optional[str] = Field(default=None)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    institution = Column(String, nullable=True)
+    position = Column(String, nullable=True)
+    city_country = Column(String, nullable=True)
+    linkedin_url = Column(String, nullable=True)
 
     # Profesionalno iskustvo
-    academic_title: Optional[str] = Field(default=None)
-    field_of_expertise: str = Field(nullable=False)
-    years_of_experience: Optional[str] = Field(default=None)  
-    cv_url: Optional[str] = Field(default=None)
-    has_mentoring_experience: Optional[bool] = Field(default=None)
+    academic_title = Column(String, nullable=True)
+    field_of_expertise = Column(String, nullable=False)
+    years_of_experience = Column(String, nullable=True)
+    cv_url = Column(String, nullable=True)
+    has_mentoring_experience = Column(Boolean, nullable=True)
 
     # Motivacija i dostupnost
-    motivation: Optional[str] = Field(default=None)
-    max_mentees: Optional[int] = Field(default=1) 
-    preferred_session_format: Optional[str] = Field(default=None)
+    motivation = Column(String, nullable=True)
+    max_mentees = Column(Integer, default=1)
+    preferred_session_format = Column(String, nullable=True)
 
-    # Postojeća polja
-    bio: Optional[str] = Field(default=None)
-    profile_img_url: Optional[str] = Field(default=None)
-    is_approved: bool = Field(default=False)
+    # Ostalo
+    bio = Column(String, nullable=True)
+    profile_img_url = Column(String, nullable=True)
+    is_approved = Column(Boolean, default=False)
