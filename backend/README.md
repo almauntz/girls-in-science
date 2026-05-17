@@ -51,11 +51,27 @@ Authorization: Bearer YOUR_TOKEN_HERE
 ```
 Token se dobija pozivom `POST /auth/login`
 
+## Migracije baze podataka (Alembic)
+
+Nakon što dodate novi model ili izmijenite postojeći, pokrenite:
+
+```bash
+# Iz backend/ foldera, s aktiviranim virtualnim okruženjem
+alembic revision --autogenerate -m "kratak opis promjene"
+alembic upgrade head
+```
+
+Primjer:
+```bash
+alembic revision --autogenerate -m "dodaj tabelu workshops"
+alembic upgrade head
+```
+
 ## Za projektne timove
 
 1. Vaš router fajl je već kreiran i registrovan u aplikaciji
 2. Dodajte svoje modele u `app/models/`
-3. Dizajnirajte svoje tabele u bazi podataka
+3. Pokrenite migracije da kreirate tabele u bazi (pogledaj sekciju iznad)
 4. Dodajte svoje endpointe u vaš router fajl
 5. Koristite `Depends(get_current_user)` da dobijete prijavljenog korisnika
 6. Kreirajte vlastite `.env` varijable ako je potrebno
