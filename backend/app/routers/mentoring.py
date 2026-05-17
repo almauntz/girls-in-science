@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_user
@@ -26,16 +26,15 @@ router = APIRouter(prefix="/mentoring", tags=["mentoring"])
 def mentoring_placeholder():
     return {"message": "Mentoring router is working — Team 2 builds here"}
 
-@router.get("/mentors", response_model=List[Mentor])
+@router.get("/mentors")
 def get_mentors(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    mentors = db.exec(
-        select(Mentor)
-        .where(Mentor.is_approved == True)
-        .offset(skip)
-        .limit(limit)
-    ).all()
+    mentors = db.query(Mentor)\
+                .filter(Mentor.is_approved == True)\
+                .offset(skip)\
+                .limit(limit)\
+                .all()
     return mentors
