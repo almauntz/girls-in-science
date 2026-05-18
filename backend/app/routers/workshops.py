@@ -104,7 +104,8 @@ def delete_workshop(
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
 def register_student(
     podaci: RegistrationCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     # 1. Provjeri postoji li radionica
     radionica = db.get(Workshop, podaci.workshop_id)
