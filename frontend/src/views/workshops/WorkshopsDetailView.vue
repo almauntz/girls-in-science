@@ -101,3 +101,41 @@
     </div>  
   </div>
 </template>
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
+import { getWorkshopDetails } from '../../services/api.js'
+
+const route = useRoute()
+const workshop = ref(null)
+const loading = ref(true)
+const error = ref(null)
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('bs-BA', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  })
+}
+
+function formatTime(dateStr) {
+  const date = new Date(dateStr)
+  return date.toLocaleTimeString('bs-BA', {
+    hour: '2-digit', minute: '2-digit'
+  })
+}
+
+function prijaviSe() {
+  console.log('Prijava na radionicu:', route.params.id)
+}
+
+onMounted(async () => {
+  try {
+    workshop.value = await getWorkshopDetails(route.params.id)
+  } catch (e) {
+    error.value = "Greška pri učitavanju radionice."
+  } finally {
+    loading.value = false
+  }
+})
+</script>
