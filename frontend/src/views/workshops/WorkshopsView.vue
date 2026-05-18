@@ -14,6 +14,16 @@
      <!-- Poruka-->
     <p v-if="error" class="text-center text-gray-500 text-lg">{{ error }}</p>
 
+    <!-- Lista kartica -->
+    <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+      <div
+        v-for="workshop in workshops"
+         :key="workshop.ID_workshop"
+         class="flex flex-row items-center gap-6 bg-white rounded-xl shadow p-6"
+            >
+             </div>
+  </div>
+
     </div>
   </div>
 </template>
