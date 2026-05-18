@@ -5,6 +5,7 @@ from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.workshops_models import Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead
 from datetime import datetime, timezone
+from sqlalchemy import func
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
 
@@ -137,30 +138,48 @@ def delete_workshop(
     db.commit()
 
 
-
-
-# --- POSTOJEĆA RUTA ZA PRIJAVU (Ažurirana na engleski) elma ---
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
-def register_student(podaci: RegistrationCreate, db: Session = Depends(get_db)):
-    # 1. Tražimo radionicu (pazimo na naziv modela Workshop)
+def register_student(
+    podaci: RegistrationCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # 1. Provjeri postoji li radionica
     radionica = db.get(Workshop, podaci.workshop_id)
-    
+
     if not radionica:
         raise HTTPException(status_code=404, detail="Workshop not found")
 
-    # 2. Provjera kapaciteta
-    if radionica.capacity <= 0:
-        raise HTTPException(status_code=400, detail="No more seats available")
+    # 2. Provjera da li je student već prijavljen na radionicu (preko emaila)
+    postojeca = db.exec(
+        select(Registration).where(
+            Registration.workshop_id == podaci.workshop_id,
+            Registration.email == podaci.email
+        )
+    ).first()
 
-    # 3. Smanjujemo broj mjesta u radionici
-    radionica.capacity -= 1 
-    
-    # 4. Kreiramo novu prijavu 
-    # IZMJENA: Izbačen user_id=1 jer ga nema u Registration modelu
-    nova_prijava = Registration(**podaci.model_dump()) 
-    
-    # 5. Spašavamo promjene u bazu
-    db.add(radionica)
+    if postojeca:
+        raise HTTPException(
+            status_code=400,
+            detail="Already registered with this email"
+        )
+
+    # 3. Kapacitet (brojanje)
+    broj_prijava = db.exec(
+        select(func.count())
+        .select_from(Registration)
+        .where(Registration.workshop_id == podaci.workshop_id)
+    ).scalar()
+
+    if broj_prijava >= radionica.capacity:
+        raise HTTPException(
+            status_code=400,
+            detail="Workshop is full"
+        )
+
+    # 4. Kreiranje
+    nova_prijava = Registration(**podaci.model_dump())
+
     db.add(nova_prijava)
     db.commit()
     db.refresh(nova_prijava)
@@ -170,6 +189,7 @@ def register_student(podaci: RegistrationCreate, db: Session = Depends(get_db)):
         "message": "Registration successful!",
         "data": nova_prijava
     }
+
 
 # --- NOVA RUTA ZA OTKAZIVANJE (GT1-22) --- elma
 @router.delete("/cancellation/{registration_id}")
@@ -197,3 +217,24 @@ def cancel_registration(
 
     # 5. Poruka o uspješnoj odjavi
     return {"message": "Successfully unsubscribed. The spot is now free."}
+
+
+
+#----------------- STATUS PRIJAVE ----------------
+@router.get("/prijava/status/{workshop_id}")
+def provjeri_status_prijave(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    existing = db.exec(
+        select(Registration).where(
+            Registration.ID_workshop == workshop_id,
+            Registration.user_id == current_user.id
+        )
+    ).first()
+
+    if existing:
+        return {"status": "Prijavljena"}
+
+    return {"status": "Ne prijavljena"}

@@ -37,3 +37,21 @@ export async function getWorkshopDetails(workshopId) {
   const response = await fetch(`${BASE_URL}/workshops/${workshopId}`)
   return response.json()
 }
+
+export async function registerForWorkshop(data, token) {
+  const res = await fetch("http://localhost:8000/registration", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  });
+
+  const result = await res.json();
+
+  if (!res.ok) {
+    throw new Error(result.detail); }
+
+  return result;
+}
