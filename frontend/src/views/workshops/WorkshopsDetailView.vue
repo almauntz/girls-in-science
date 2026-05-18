@@ -77,8 +77,15 @@
           </p>
         </div>
 
-        
-        
+        <!-- Dugmad -->
+        <div class="flex gap-4 mt-4">
+          <button class="px-5 py-2 rounded-lg border border-gray-400 text-gray-600 hover:bg-gray-200">
+            Nazad
+          </button>
+          <button class="px-5 py-2 rounded-lg bg-primary text-white font-bold hover:bg-purple-700">
+            Prijavi se
+          </button>
+        </div>
       </div>
 
     </div>
