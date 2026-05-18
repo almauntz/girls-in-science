@@ -27,6 +27,12 @@ const routes = [
     component: () => import('../views/workshops/WorkshopsView.vue'),
     meta: { requiresAuth: true }
   },
+  //dodana ruta za listu radionnica
+  {
+    path: '/workshops',
+    name: 'workshops',
+    component: () => import('../views/workshops/WorkshopsView.vue'),
+  },
   {
     path: '/mentoring',
     name: 'mentoring',
