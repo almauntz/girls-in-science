@@ -5,6 +5,8 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.mentor import Mentor
 
+from pydantic import BaseModel
+
 
 
 router = APIRouter(prefix="/mentoring", tags=["mentoring"])
