@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, Query
+
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_user
@@ -45,18 +46,7 @@ class MentorOut(BaseModel):
 def mentoring_placeholder():
     return {"message": "Mentoring router is working — Team 2 builds here"}
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlalchemy.orm import Session
-from app.database import get_db
-from app.models.mentor import Mentor
-from pydantic import BaseModel
 
-router = APIRouter(prefix="/mentoring", tags=["mentoring"])
-
-
-@router.get("/")
-def mentoring_placeholder():
-    return {"message": "Mentoring router is working — Team 2 builds here"}
 
 @router.get("/mentors", response_model=list[MentorOut])
 def get_mentors(
