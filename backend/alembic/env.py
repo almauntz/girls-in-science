@@ -13,6 +13,8 @@ from app.core.config import settings
 from sqlmodel import SQLModel
 import app.models.user  # noqa: F401
 
+import app.models.profile
+
 config = context.config
 
 if config.config_file_name is not None:
