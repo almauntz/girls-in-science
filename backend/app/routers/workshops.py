@@ -22,7 +22,7 @@ def get_active_workshops(
     ).order_by(
         Workshop.date,
         Workshop.title)
-    workshops = db.exec(statement).all()
+    workshops = db.execute(statement).all()
     if not workshops:
         raise HTTPException(status_code=404, detail="Nema aktivnih radionica.")
     return workshops
@@ -33,7 +33,7 @@ def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
     if not workshop:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
     organizer = db.get(User, workshop.created_by_id)
-    registrations = db.exec(
+    registrations = db.execute(
         select(Registration).where(Registration.workshop_id == workshop_id)
     ).all()
     free_spots = workshop.capacity - len(registrations)
