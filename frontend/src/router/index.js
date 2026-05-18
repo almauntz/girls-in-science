@@ -27,6 +27,18 @@ const routes = [
     component: () => import('../views/workshops/WorkshopsView.vue'),
     meta: { requiresAuth: true }
   },
+  //dodana ruta za listu radionnica
+  {
+    path: '/workshops',
+    name: 'workshops',
+    component: () => import('../views/workshops/WorkshopsView.vue'),
+  },
+  //dodana ruta za detalje radionice
+  {
+   path: '/workshops/:id',
+   name: 'workshops-detail',
+  component: () => import('../views/workshops/WorkshopsDetailView.vue'),
+  },
   {
     path: '/mentoring',
     name: 'mentoring',
