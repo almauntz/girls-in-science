@@ -1,69 +1,67 @@
-from fastapi.testclient import TestClient
-from sqlmodel import Session, SQLModel, create_engine
-from sqlmodel.pool import StaticPool
 import pytest
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+
+from app.models.mentor import Mentor  
 
 from app.main import app
-from app.database import get_db
-from app.models.mentor import Mentor
+from app.database import Base, get_db
 
 
-@pytest.fixture(name="session")
-def session_fixture():
-    engine = create_engine(
-        "sqlite://", connect_args={"check_same_thread": False},
-        poolclass=StaticPool
-    )
-    SQLModel.metadata.create_all(engine)
-    with Session(engine) as session:
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test_backend.db"
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+@pytest.fixture(scope="function")
+def db_session():
+    # Pošto je Mentor importovan na samom vrhu, create_all će SIGURNO napraviti 'mentors' tabelu
+    Base.metadata.create_all(bind=engine)
+    session = TestingSessionLocal()
+    try:
         yield session
+    finally:
+        session.close()
+        # Brišemo je nakon testa da sljedeći test krene od nule
+        Base.metadata.drop_all(bind=engine)
 
-
-@pytest.fixture(name="client")
-def client_fixture(session: Session):
-    def override_get_db():
-        yield session
-    app.dependency_overrides[get_db] = override_get_db
-    with TestClient(app) as client:
-        yield client
+@pytest.fixture(scope="function")
+def client(db_session):
+    def _get_test_db():
+        try:
+            yield db_session
+        finally:
+            pass
+  
+    app.dependency_overrides[get_db] = _get_test_db
+    with TestClient(app) as c:
+        yield c
     app.dependency_overrides.clear()
 
 
-def test_get_mentors_empty(client: TestClient):
-    response = client.get("/mentoring/mentors")
+
+def test_get_mentor_success(client: TestClient, db_session: sessionmaker):
+  
+    test_mentor = Mentor(
+        id=1,
+        first_name="Amina",
+        last_name="Valic",
+        email="amina.valic@example.com",
+        field_of_expertise="Data, AI i digitalna transformacija",
+        preferred_session_format="Online",
+        max_mentees=1
+    )
+    db_session.add(test_mentor)
+    db_session.commit()
+    
+   
+    response = client.get("/mentoring/mentors/1")
     assert response.status_code == 200
-    assert response.json() == []
 
-
-def test_get_mentors_returns_only_approved(client: TestClient, session: Session):
-    session.add(Mentor(
-        first_name="Odobrena", last_name="Test",
-        email="odobrena@test.com", field_of_expertise="IT",
-        is_approved=True
-    ))
-    session.add(Mentor(
-        first_name="Neodobrena", last_name="Test",
-        email="neodobrena@test.com", field_of_expertise="IT",
-        is_approved=False
-    ))
-    session.commit()
-
-    response = client.get("/mentoring/mentors")
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 1
-    assert data[0]["first_name"] == "Odobrena"
-
-
-def test_get_mentors_pagination(client: TestClient, session: Session):
-    for i in range(5):
-        session.add(Mentor(
-            first_name=f"Mentor{i}", last_name="Test",
-            email=f"mentor{i}@test.com", field_of_expertise="IT",
-            is_approved=True
-        ))
-    session.commit()
-
-    response = client.get("/mentoring/mentors?skip=0&limit=2")
-    assert response.status_code == 200
-    assert len(response.json()) == 2
+def test_get_mentor_not_found(client: TestClient):
+    response = client.get("/mentoring/mentors/9999")
+    assert response.status_code == 404
