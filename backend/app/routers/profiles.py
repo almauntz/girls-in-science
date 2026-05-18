@@ -309,15 +309,16 @@ def delete_avatar(
         role=current_user.role if current_user.role else "user"
     )
 
-@router.put("/me/change-password", response_model=ProfileResponse)
+@router.put("/me/change-password")
 async def change_password(
     data: ChangePasswordRequest,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     if not current_user:
         raise HTTPException(status_code=401, detail="Niste autorizovani.")
     
-    if not current_user.verify_password(data.current_password):
+    if not current_user.password_hash(data.current_password):
         raise HTTPException(status_code=400, detail="Trenutna lozinka nije tačna.")
     
     if data.new_password != data.confirm_new_password:
@@ -326,7 +327,7 @@ async def change_password(
     if len(data.new_password) < 8:
         raise HTTPException(status_code=400, detail="Nova lozinka mora imati najmanje 8 karaktera.")
     
-    current_user.set_password(data.new_password)
+    current_user.password_hash = data.new_password
     db.add(current_user)
     db.commit()
     db.refresh(current_user)
