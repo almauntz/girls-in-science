@@ -1,20 +1,19 @@
 <script setup>
 import { ref, onMounted, computed } from "vue"
-import { getRoleModels } from "../../services/api"
+import { getRoleModels, getMe } from "../../services/api"
 import { useRouter } from "vue-router"
 
 const router = useRouter()
 const roleModels = ref([])
 const search = ref("")
 
-const isAdmin = computed(() => {
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) return false
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.role === 'admin'
-  } catch {
-    return false
+const isAdmin = ref(false)
+onMounted(async () => {
+  roleModels.value = await getRoleModels()
+  const token = localStorage.getItem('token')
+  if (token) {
+    const user = await getMe(token)
+    isAdmin.value = user.role === 'admin'
   }
 })
 
@@ -32,9 +31,6 @@ function getInitials(first, last) {
   return `${first?.[0] || ''}${last?.[0] || ''}`.toUpperCase()
 }
 
-onMounted(async () => {
-  roleModels.value = await getRoleModels()
-})
 </script>
 
 <template>
