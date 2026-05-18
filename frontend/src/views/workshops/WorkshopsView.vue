@@ -41,4 +41,26 @@
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue'
+import { getActiveWorkshops } from '../../services/api.js'
 
+const workshops = ref([])
+const error = ref(null)
+
+function formatDate(dateStr) {
+  const date = new Date(dateStr)
+  return date.toLocaleDateString('bs-BA', {
+    day: '2-digit', month: '2-digit', year: 'numeric'
+  })
+}
+
+onMounted(async () => {
+  const data = await getActiveWorkshops()
+  if (data.detail) {
+    error.value = "Trenutno nema dostupnih radionica."
+  } else {
+    workshops.value = data
+  }
+})
+</script
