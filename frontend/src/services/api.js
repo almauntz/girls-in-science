@@ -32,3 +32,8 @@ export async function getActiveWorkshops() {
   const response = await fetch(`${BASE_URL}/workshops/active`)
   return response.json()
 }
+
+export async function getWorkshopDetails(workshopId) {
+  const response = await fetch(`${BASE_URL}/workshops/${workshopId}`)
+  return response.json()
+}
