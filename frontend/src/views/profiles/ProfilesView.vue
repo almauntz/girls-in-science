@@ -57,7 +57,7 @@ export default {
     ProfileSidebar,
     ProfileForm,
     DashboardTab,
-    //ChangePassword
+    ChangePassword
     // AktivnostiTab
   },
 
