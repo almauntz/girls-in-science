@@ -31,7 +31,11 @@ const routes = [
     path: '/mentoring',
     name: 'mentoring',
     component: () => import('../views/mentoring/MentoringView.vue'),
-    meta: { requiresAuth: true }
+  },
+  {
+  path: '/mentoring/:id',
+  name: 'mentor-profil',
+  component: () => import('../views/mentoring/MentorProfileView.vue')
   },
   {
     path: '/forum',
