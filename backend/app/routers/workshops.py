@@ -101,37 +101,47 @@ def delete_workshop(
     db.commit()
 
 
-
-
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
 def register_student(
     podaci: RegistrationCreate,
     db: Session = Depends(get_db)
 ):
-    # 1. Pronađi radionicu
+    # 1. Provjeri postoji li radionica
     radionica = db.get(Workshop, podaci.workshop_id)
 
     if not radionica:
         raise HTTPException(status_code=404, detail="Workshop not found")
 
-    # 2. Izbroji prijave za tu radionicu
+    # 2. Provjera da li je student već prijavljen na radionicu (preko emaila)
+    postojeca = db.exec(
+        select(Registration).where(
+            Registration.workshop_id == podaci.workshop_id,
+            Registration.email == podaci.email
+        )
+    ).first()
+
+    if postojeca:
+        raise HTTPException(
+            status_code=400,
+            detail="Already registered with this email"
+        )
+
+    # 3. Kapacitet (brojanje)
     broj_prijava = db.exec(
         select(func.count())
         .select_from(Registration)
-        .where(Registration.ID_workshop == podaci.workshop_id)
+        .where(Registration.workshop_id == podaci.workshop_id)
     ).scalar()
 
-    # 3. Provjera kapaciteta
     if broj_prijava >= radionica.capacity:
         raise HTTPException(
             status_code=400,
             detail="Workshop is full"
         )
 
-    # 4. Kreiraj prijavu
+    # 4. Kreiranje
     nova_prijava = Registration(**podaci.model_dump())
 
-    # 5. Spasi u bazu
     db.add(nova_prijava)
     db.commit()
     db.refresh(nova_prijava)
@@ -141,6 +151,7 @@ def register_student(
         "message": "Registration successful!",
         "data": nova_prijava
     }
+
 
 # --- NOVA RUTA ZA OTKAZIVANJE (GT1-22) --- elma
 @router.delete("/cancellation/{registration_id}")
