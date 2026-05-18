@@ -36,8 +36,8 @@
           </div>
           <!-- LinkedIn -->
           <a v-if="mentor.linkedin_url" :href="mentor.linkedin_url" target="_blank"
-            class="border rounded px-2 py-1 text-xs font-bold text-gray-700 hover:bg-gray-100">
-            In
+            class="bg-blue-600 text-white rounded px-3 py-2 text-sm font-bold hover:bg-blue-700 transition">
+            in
           </a>
         </div>
 
@@ -96,7 +96,7 @@
       <button
         :disabled="!mentor.is_available"
         :class="mentor.is_available
-          ? 'w-full bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition'
+          ? 'w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition'
           : 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'"
       >
         {{ mentor.is_available ? 'Zatraži mentorstvo' : 'Nedostupno' }}
