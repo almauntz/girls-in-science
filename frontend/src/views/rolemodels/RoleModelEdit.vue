@@ -1,140 +1,225 @@
 <template>
-  <div class="max-w-2xl mx-auto p-6">
-    <h1 class="text-2xl font-bold mb-6">Uredi profil</h1>
+  <div class="min-h-screen bg-gray-50 py-10 px-4">
+    <div class="max-w-2xl mx-auto">
+      <h1 class="text-3xl font-bold text-gray-900 mb-1">Uredi profil</h1>
+      <p class="text-gray-500 mb-8">Ažuriraj informacije o profilu</p>
 
-    <div v-if="loadError" class="text-red-500 mb-4">{{ loadError }}</div>
+      <div class="bg-white rounded-xl shadow p-8">
+        <!-- Greška sa servera -->
+        <div v-if="serverError" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {{ serverError }}
+        </div>
 
-    <div v-if="successMessage" class="text-green-600 mb-4">{{ successMessage }}</div>
+        <!-- Uspjeh -->
+        <div v-if="successMessage" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+          {{ successMessage }}
+        </div>
 
-    <form v-if="form" @submit.prevent="handleSubmit" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <!-- Ime -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Ime <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="form.first_name"
+              type="text"
+              placeholder="Unesite ime"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              :class="{ 'border-red-400': errors.first_name }"
+            />
+            <p v-if="errors.first_name" class="text-red-500 text-xs mt-1">{{ errors.first_name }}</p>
+          </div>
 
-      <div>
-        <label class="block text-sm font-medium mb-1">Ime *</label>
-        <input v-model="form.first_name" type="text"
-          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400" />
-        <p v-if="errors.first_name" class="text-red-500 text-sm mt-1">{{ errors.first_name }}</p>
+          <!-- Prezime -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">
+              Prezime <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="form.last_name"
+              type="text"
+              placeholder="Unesite prezime"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              :class="{ 'border-red-400': errors.last_name }"
+            />
+            <p v-if="errors.last_name" class="text-red-500 text-xs mt-1">{{ errors.last_name }}</p>
+          </div>
+        </div>
+
+        <!-- STEM oblast -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            STEM oblast <span class="text-red-500">*</span>
+          </label>
+          <input
+            v-model="form.stem_field"
+            type="text"
+            placeholder="npr. Računarstvo i softverski inženjering"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            :class="{ 'border-red-400': errors.stem_field }"
+          />
+          <p v-if="errors.stem_field" class="text-red-500 text-xs mt-1">{{ errors.stem_field }}</p>
+        </div>
+
+        <!-- Institucija -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Institucija <span class="text-red-500">*</span>
+          </label>
+          <input
+            v-model="form.institution"
+            type="text"
+            placeholder="npr. Fakultet elektrotehnike, Univerzitet u Tuzli"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            :class="{ 'border-red-400': errors.institution }"
+          />
+          <p v-if="errors.institution" class="text-red-500 text-xs mt-1">{{ errors.institution }}</p>
+        </div>
+
+        <!-- Pozicija/Zvanje -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Pozicija/Zvanje <span class="text-red-500">*</span>
+          </label>
+          <input
+            v-model="form.position"
+            type="text"
+            placeholder="npr. Docent, Vanredni profesor"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            :class="{ 'border-red-400': errors.position }"
+          />
+          <p v-if="errors.position" class="text-red-500 text-xs mt-1">{{ errors.position }}</p>
+        </div>
+
+        <!-- Biografija -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Biografija <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            v-model="form.biography"
+            placeholder="Unesite biografiju"
+            rows="5"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
+            :class="{ 'border-red-400': errors.biography }"
+          ></textarea>
+          <p v-if="errors.biography" class="text-red-500 text-xs mt-1">{{ errors.biography }}</p>
+        </div>
+
+        <!-- Postignuća -->
+        <div class="mb-8">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            Postignuća <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            v-model="form.achievements"
+            placeholder="Unesite postignuća (svako postignuće u novom redu)"
+            rows="5"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
+            :class="{ 'border-red-400': errors.achievements }"
+          ></textarea>
+          <p class="text-gray-400 text-xs mt-1">Unesite svako postignuće u novi red</p>
+          <p v-if="errors.achievements" class="text-red-500 text-xs mt-1">{{ errors.achievements }}</p>
+        </div>
+
+        <!-- Dugmad -->
+        <div class="flex gap-4">
+          <button
+            @click="handleSubmit"
+            :disabled="isLoading"
+            class="bg-purple-700 hover:bg-purple-800 text-white font-medium px-6 py-2 rounded-lg text-sm transition disabled:opacity-50"
+          >
+            {{ isLoading ? 'Čuvanje...' : 'Sačuvaj izmjene' }}
+          </button>
+          <button
+            @click="$router.push(`/role-models/${route.params.id}`)"
+            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-6 py-2 rounded-lg text-sm transition"
+          >
+            Otkaži
+          </button>
+        </div>
       </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">Prezime *</label>
-        <input v-model="form.last_name" type="text"
-          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400" />
-        <p v-if="errors.last_name" class="text-red-500 text-sm mt-1">{{ errors.last_name }}</p>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">STEM oblast *</label>
-        <input v-model="form.stem_field" type="text"
-          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400" />
-        <p v-if="errors.stem_field" class="text-red-500 text-sm mt-1">{{ errors.stem_field }}</p>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">Institucija *</label>
-        <input v-model="form.institution" type="text"
-          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400" />
-        <p v-if="errors.institution" class="text-red-500 text-sm mt-1">{{ errors.institution }}</p>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">Pozicija/zvanje *</label>
-        <input v-model="form.position" type="text"
-          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400" />
-        <p v-if="errors.position" class="text-red-500 text-sm mt-1">{{ errors.position }}</p>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">Biografija</label>
-        <textarea v-model="form.biography" rows="4"
-          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400" />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">Postignuća</label>
-        <textarea v-model="form.achievements" rows="4"
-          class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400" />
-      </div>
-
-      <div class="flex gap-4 pt-2">
-        <button type="submit"
-          class="bg-purple-600 text-white px-6 py-2 rounded hover:bg-purple-700 disabled:opacity-50"
-          :disabled="submitting">
-          {{ submitting ? 'Čuvanje...' : 'Sačuvaj izmjene' }}
-        </button>
-        <router-link :to="`/role-models/${route.params.id}`"
-          class="px-6 py-2 rounded border hover:bg-gray-100">
-          Odustani
-        </router-link>
-      </div>
-
-    </form>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { getRoleModel, updateRoleModel } from '@/services/api.js'
+import { useRouter, useRoute } from 'vue-router'
+import { getRoleModel, updateRoleModel } from '../../services/api.js'
 
-const route = useRoute()
 const router = useRouter()
+const route = useRoute()
 
-const form = ref(null)
+const form = ref({
+  first_name: '',
+  last_name: '',
+  stem_field: '',
+  institution: '',
+  position: '',
+  biography: '',
+  achievements: ''
+})
+
 const errors = ref({})
-const submitting = ref(false)
-const loadError = ref(null)
-const successMessage = ref(null)
+const serverError = ref('')
+const successMessage = ref('')
+const isLoading = ref(false)
 
 onMounted(async () => {
   try {
     const data = await getRoleModel(route.params.id)
     if (data.detail) {
-      loadError.value = 'Profil nije pronađen.'
-    } else {
-      form.value = {
-        first_name: data.first_name,
-        last_name: data.last_name,
-        stem_field: data.stem_field,
-        institution: data.institution,
-        position: data.position,
-        biography: data.biography || '',
-        achievements: data.achievements || ''
-      }
+      serverError.value = 'Profil nije pronađen.'
+      return
+    }
+    form.value = {
+      first_name: data.first_name,
+      last_name: data.last_name,
+      stem_field: data.stem_field,
+      institution: data.institution,
+      position: data.position,
+      biography: data.biography,
+      achievements: data.achievements
     }
   } catch {
-    loadError.value = 'Greška pri učitavanju profila.'
+    serverError.value = 'Greška pri učitavanju profila.'
   }
 })
 
 function validate() {
-  errors.value = {}
-  const required = ['first_name', 'last_name', 'stem_field', 'institution', 'position']
-  for (const field of required) {
-    if (!form.value[field] || !form.value[field].trim()) {
-      errors.value[field] = 'Ovo polje je obavezno.'
-    }
-  }
-  return Object.keys(errors.value).length === 0
+  const e = {}
+  if (!form.value.first_name.trim()) e.first_name = 'Ime je obavezno'
+  if (!form.value.last_name.trim()) e.last_name = 'Prezime je obavezno'
+  if (!form.value.stem_field.trim()) e.stem_field = 'STEM oblast je obavezna'
+  if (!form.value.institution.trim()) e.institution = 'Institucija je obavezna'
+  if (!form.value.position.trim()) e.position = 'Pozicija/Zvanje je obavezno'
+  if (!form.value.biography.trim()) e.biography = 'Biografija je obavezna'
+  if (!form.value.achievements.trim()) e.achievements = 'Postignuća su obavezna'
+  errors.value = e
+  return Object.keys(e).length === 0
 }
 
 async function handleSubmit() {
+  serverError.value = ''
+  successMessage.value = ''
+
   if (!validate()) return
-  submitting.value = true
-  successMessage.value = null
+
+  isLoading.value = true
   try {
     const result = await updateRoleModel(route.params.id, form.value)
-    if (result.detail) {
-      loadError.value = result.detail
-    } else {
+    if (result.id) {
       successMessage.value = 'Profil je uspješno ažuriran!'
-      setTimeout(() => {
-        router.push(`/role-models/${route.params.id}`)
-      }, 1500)
+      setTimeout(() => router.push(`/role-models/${route.params.id}`), 1500)
+    } else {
+      serverError.value = result.detail || 'Došlo je do greške. Pokušajte ponovo.'
     }
   } catch {
-    loadError.value = 'Greška pri čuvanju. Pokušaj ponovo.'
+    serverError.value = 'Greška pri komunikaciji sa serverom.'
   } finally {
-    submitting.value = false
+    isLoading.value = false
   }
 }
 </script>
