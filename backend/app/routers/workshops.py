@@ -160,3 +160,24 @@ def cancel_registration(
 
     # 5. Poruka o uspješnoj odjavi
     return {"message": "Successfully unsubscribed. The spot is now free."}
+
+
+
+#----------------- STATUS PRIJAVE ----------------
+@router.get("/prijava/status/{workshop_id}")
+def provjeri_status_prijave(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    existing = db.exec(
+        select(Registration).where(
+            Registration.ID_workshop == workshop_id,
+            Registration.user_id == current_user.id
+        )
+    ).first()
+
+    if existing:
+        return {"status": "Prijavljena"}
+
+    return {"status": "Ne prijavljena"}
