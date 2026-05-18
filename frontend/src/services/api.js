@@ -27,3 +27,8 @@ export async function getMe(token) {
   })
   return response.json()
 }
+
+export async function getActiveWorkshops() {
+  const response = await fetch(`${BASE_URL}/workshops/active`)
+  return response.json()
+}
