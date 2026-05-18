@@ -28,7 +28,58 @@
         <h2 class="text-2xl font-bold text-gray-800">Detalji radionice</h2>
         <p class="text-gray-500">Važne informacije na jednom mjestu prije prijave.</p>
 
-            </div>
+       <!-- Datum početka -->
+        <div class="flex items-center gap-4 border-b border-gray-300 pb-4">
+          <div class="flex-1">
+            <p class="font-medium text-gray-800">Datum početka</p>
+            <p class="text-sm text-gray-400">{{ formatDate(workshop.date) }}</p>
+          </div>
+          <p class="font-bold text-gray-700">{{ formatTime(workshop.date) }}</p>
+        </div>
+
+        <!-- Datum završetka -->
+        <div class="flex items-center gap-4 border-b border-gray-300 pb-4">
+          <div class="flex-1">
+            <p class="font-medium text-gray-800">Datum završetka</p>
+            <p class="text-sm text-gray-400">{{ formatDate(workshop.end_time) }}</p>
+          </div>
+          <p class="font-bold text-gray-700">{{ formatTime(workshop.end_time) }}</p>
+        </div>
+
+        <!-- Lokacija -->
+        <div class="flex items-center gap-4 border-b border-gray-300 pb-4">
+          <div class="flex-1">
+            <p class="font-medium text-gray-800">Lokacija</p>
+            <p class="text-sm text-gray-400">{{ workshop.location }}</p>
+          </div>
+        </div>
+
+        <!-- Kapacitet -->
+        <div class="flex items-center gap-4 border-b border-gray-300 pb-4">
+          <div class="flex-1">
+            <p class="font-medium text-gray-800">Kapacitet</p>
+            <p class="text-sm text-gray-400">Broj mjesta</p>
+          </div>
+          <p class="font-bold text-gray-700">{{ workshop.capacity }} polaznica</p>
+        </div>
+
+        <!-- Slobodna mjesta -->
+        <div class="flex items-center gap-4">
+          <div class="flex-1">
+            <p class="font-medium text-gray-800">Slobodna mjesta</p>
+            <p class="text-sm text-gray-400">Još uvijek dostupno</p>
+          </div>
+          <p
+            class="font-bold"
+            :class="workshop.free_spots === 0 ? 'text-red-500' : 'text-green-600'"
+          >
+            {{ workshop.free_spots === 0 ? 'Popunjeno' : workshop.free_spots + ' mjesta' }}
+          </p>
+        </div>
+
+        
+        
+      </div>
 
     </div>
   </div>
