@@ -158,5 +158,92 @@
       </div>
     </Teleport>
 
+<!-- Modal za uređivanje radionice -->
+
+    <Teleport to="body">
+      <div v-if="activeModal === 'edit'" class="overlay" @click.self="closeModal">
+        <div class="modal">
+ 
+          <div class="modal-head head-edit">
+            <div class="mh-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </div>
+            <div>
+              <h2>Uredi radionicu</h2>
+              <p>{{ editStep === 1 ? 'Korak 1 — unesi ID radionice' : `Korak 2 — izmijeni podatke (#${editId})` }}</p>
+            </div>
+            <button class="close-btn" @click="closeModal">&#x2715;</button>
+          </div>
+ 
+          <!-- Korak 1: samo polje za ID -->
+          <div v-if="editStep === 1" class="modal-body">
+            <div class="field">
+              <label>ID radionice <span class="req">*</span></label>
+              <input v-model.number="editId" type="number" min="1" placeholder="npr. 5"
+                     :class="{ 'input-error': errors.editId }"/>
+              <span v-if="errors.editId" class="err-msg">{{ errors.editId }}</span>
+            </div>
+            <p class="hint-text">ID možeš pronaći na listi radionica.</p>
+          </div>
+ 
+          <!-- Korak 2: forma popunjena podacima s API-ja -->
+          <div v-else class="modal-body">
+            <p class="loaded-label">Ostavi polje prazno ako ga ne želiš mijenjati</p>
+ 
+            <div class="field-row">
+              <div class="field">
+                <label>Naziv</label>
+                <input v-model="form.title" type="text" placeholder="Ostavi prazno za ne mijenjanje"/>
+              </div>
+              <div class="field">
+                <label>Lokacija</label>
+                <input v-model="form.location" type="text" placeholder="Ostavi prazno za ne mijenjanje"/>
+              </div>
+            </div>
+ 
+            <div class="field">
+              <label>Opis</label>
+              <textarea v-model="form.description" rows="3"
+                        placeholder="Ostavi prazno za ne mijenjanje"></textarea>
+            </div>
+ 
+            <!-- Datum bez vremena, isto kao kod kreiranja -->
+            <div class="field-row">
+              <div class="field">
+                <label>Datum početka</label>
+                <input v-model="form.date" type="date"/>
+              </div>
+              <div class="field">
+                <label>Datum kraja</label>
+                <input v-model="form.end_time" type="date"/>
+              </div>
+            </div>
+ 
+            <div class="field field-narrow">
+              <label>Kapacitet</label>
+              <input v-model.number="form.capacity" type="number" min="1" placeholder="—"/>
+            </div>
+          </div>
+ 
+          <div class="modal-foot">
+            <button class="btn-secondary" @click="closeModal">Odustani</button>
+            <!-- Korak 1: učitaj podatke s API-ja -->
+            <button v-if="editStep === 1" class="btn-edit" @click="loadWorkshop" :disabled="busy">
+              <span v-if="busy" class="spin"></span>
+              {{ busy ? 'Učitavanje…' : 'Dalje →' }}
+            </button>
+            <!-- Korak 2: otvori potvrdni prozor -->
+            <button v-else class="btn-edit" @click="askConfirm('edit')">
+              Sačuvaj promjene
+            </button>
+          </div>
+ 
+        </div>
+      </div>
+    </Teleport>
+
 </div>
-</template>
+</template> 
