@@ -97,6 +97,7 @@
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { registerForWorkshop } from '../../services/api.js'
+import Swal from 'sweetalert2'
 export default {
   emits: ['cancel', 'success'],
   setup(props, { emit }) {
@@ -115,41 +116,53 @@ export default {
     })
 
     const submitForm = async () => {
-  try {
-    loading.value = true
-    error.value = null
-    
-    // Provjeri u LocalStorage-u (F12 -> Application) da li se ključ zove 'token'
-    const token = localStorage.getItem('token') 
-    console.log("Šaljem ovaj token na backend:", token);
-    if (!token) {
-      error.value = 'Morate biti prijavljeni!'
-      loading.value = false
-      return
+      try {
+        loading.value = true
+        error.value = null
+        
+        const token = localStorage.getItem('token') 
+        if (!token) {
+          error.value = 'Morate biti prijavljeni!'
+          loading.value = false
+          return
+        }
+
+        // Šaljemo podatke i token u API servis
+        await registerForWorkshop(formData.value, token)
+        
+        // Moderni prozorčić za uspjeh
+        await Swal.fire({
+          title: 'Uspješno!',
+          text: 'Vaša prijava na radionicu je evidentirana.',
+          icon: 'success',
+          confirmButtonText: 'Sjajno',
+          confirmButtonColor: '#28a745',
+          timer: 3000
+        });
+
+        emit('success')
+        
+      } catch (err) {
+        // Moderni prozorčić za grešku
+        Swal.fire({
+          title: 'Greška!',
+          text: err.message || 'Došlo je do greške pri prijavi.',
+          icon: 'error',
+          confirmButtonColor: '#d33'
+        });
+        error.value = err.message
+      } finally {
+        loading.value = false
+      }
     }
 
-    // Šaljemo podatke i token u API servis
-    await registerForWorkshop(formData.value, token)
-    
-    alert('Uspješno ste se prijavili na radionicu!')
-    emit('success')
-    
-  } catch (err) {
-    error.value = err.message
-  } finally {
-    loading.value = false
-  }
-}
-
+    // Sve što template koristi mora biti ovdje vraćeno
     return {
       formData,
       loading,
       error,
       submitForm
     }
-  }
-}
+  } // Kraj setup funkcije
+} // Kraj export default bloka
 </script>
-
-<style scoped>
-</style>
