@@ -39,6 +39,12 @@ const routes = [
    name: 'workshops-detail',
   component: () => import('../views/workshops/WorkshopsDetailView.vue'),
   },
+  // Ruta za admin panel radionica  
+  {
+  path: '/workshops/admin',
+  component: () => import('../views/workshops/WorkshopsAdminView.vue'),
+  meta: { requiresAuth: true }
+  },
   {
     path: '/mentoring',
     name: 'mentoring',
