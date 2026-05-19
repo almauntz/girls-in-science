@@ -63,4 +63,4 @@ onMounted(async () => {
     workshops.value = data
   }
 })
-</script
+</script>

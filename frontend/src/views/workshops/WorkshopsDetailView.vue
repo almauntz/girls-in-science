@@ -1,25 +1,19 @@
 <template>
   <div class="min-h-screen bg-purple-100">
 
-    <!-- Učitavanje -->
     <p v-if="loading" class="text-center text-gray-500 py-20">Učitavanje...</p>
 
-    <!-- Greška -->
     <p v-else-if="error" class="text-center text-gray-500 py-20">{{ error }}</p>
 
-    <!-- Sadržaj -->
     <div v-else>
-
       <div class="text-center py-12 px-4">
         <h1 class="text-4xl font-bold text-gray-800 mb-2">{{ workshop.title }}</h1>
       </div>
 
       <hr class="border-gray-300" />
 
-      <!-- Glavni sadržaj: lijevo opis, desno info -->
       <div class="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-12">
 
-        <!-- LIJEVO — opis -->
         <div>
           <h2 class="text-2xl font-bold text-gray-800 mb-4">Opis radionice</h2>
           <p class="text-gray-600 leading-relaxed whitespace-pre-line">{{ workshop.description }}</p>
@@ -31,7 +25,6 @@
           </div>
         </div>
 
-        <!-- DESNO — ključne informacije -->
         <div class="flex flex-col gap-6">
           <h2 class="text-2xl font-bold text-gray-800">Detalji radionice</h2>
           <p class="text-gray-500">Važne informacije na jednom mjestu prije prijave.</p>
@@ -87,55 +80,96 @@
             >
               Nazad
             </router-link>
+            
             <button
               :disabled="workshop.free_spots === 0 || workshop.status !== 'upcoming'"
-              class="px-5 py-2 rounded-lg bg-primary text-white font-bold hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              @click="prijaviSe"
+              class="px-5 py-2 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="showForm = true" 
             >
-              {{ workshop.free_spots === 0 ? 'Nema mjesta' : 'Prijavi se' }}
+              {{ workshop.free_spots === 0 ? 'Nema mjesta' : 'Pridruži se' }}
             </button>
           </div>
+        </div> </div>
 
+        <div v-if="showForm" class="mt-12 border-t border-gray-200 bg-white pt-12">
+          <WorkshopRegistrationForm @cancel="showForm = false" @success="handleSuccess" />
         </div>
-      </div>
-    </div>  
-  </div>
-</template>
-<script setup>
+
+    </div> </div> </template>
+
+<script>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getWorkshopDetails } from '../../services/api.js'
+import { getWorkshopDetails } from '@/services/api'
+import WorkshopRegistrationForm from '@/components/WorkshopRegistrationForm.vue'
 
-const route = useRoute()
-const workshop = ref(null)
-const loading = ref(true)
-const error = ref(null)
+export default {
+  components: {
+    WorkshopRegistrationForm
+  },
+  setup() {
+    const route = useRoute()
+    const workshop = ref({})
+    const loading = ref(true)
+    const error = ref(null)
+    const showForm = ref(false)
 
-function formatDate(dateStr) {
-  const date = new Date(dateStr)
-  return date.toLocaleDateString('bs-BA', {
-    day: '2-digit', month: '2-digit', year: 'numeric'
-  })
-}
+    const formatDate = (date) => {
+      if (!date) return ''
+      return new Date(date).toLocaleDateString('hr-HR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      })
+    }
 
-function formatTime(dateStr) {
-  const date = new Date(dateStr)
-  return date.toLocaleTimeString('bs-BA', {
-    hour: '2-digit', minute: '2-digit'
-  })
-}
+    const formatTime = (date) => {
+      if (!date) return ''
+      return new Date(date).toLocaleTimeString('hr-HR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
 
-function prijaviSe() {
-  console.log('Prijava na radionicu:', route.params.id)
-}
+    const fetchWorkshop = async () => {
+      try {
+        loading.value = true
+        const data = await getWorkshopDetails(route.params.id)
+        workshop.value = data
+        error.value = null
+      } catch (err) {
+        error.value = 'Greška pri učitavanju radionice'
+        console.error(err)
+      } finally {
+        loading.value = false
+      }
+    }
 
-onMounted(async () => {
-  try {
-    workshop.value = await getWorkshopDetails(route.params.id)
-  } catch (e) {
-    error.value = "Greška pri učitavanju radionice."
-  } finally {
-    loading.value = false
+    const handleSuccess = () => {
+      showForm.value = false
+      alert('Uspešno ste se prijavlj na radionicu!')
+      fetchWorkshop()
+    }
+
+    onMounted(() => {
+      fetchWorkshop()
+    })
+
+    return {
+      workshop,
+      loading,
+      error,
+      showForm,
+      formatDate,
+      formatTime,
+      handleSuccess
+    }
   }
-})
+}
 </script>
+
+<style scoped>
+.bg-primary {
+  background-color: #7c3aed;
+}
+</style>

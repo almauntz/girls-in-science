@@ -21,12 +21,7 @@ const routes = [
     component: RegisterView,
     meta: { guestOnly: true }
   },
-  {
-    path: '/workshops',
-    name: 'workshops',
-    component: () => import('../views/workshops/WorkshopsView.vue'),
-    meta: { requiresAuth: true }
-  },
+  
   //dodana ruta za listu radionnica
   {
     path: '/workshops',
