@@ -1,6 +1,16 @@
 <template>
   <div class="py-8">
 
+    <!-- Button za aplikaciju -->
+    <div class="mb-8">
+      <button
+        @click="goToApply"
+        class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+      >
+        Postani mentor
+      </button>
+    </div>
+
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-800">Mentorice</h1>
       <p class="text-gray-500 mt-2">
@@ -39,12 +49,18 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getMentors } from '../../services/mentoring.js'
 import MentorCard from '../../components/MentorCard.vue'
 
+const router = useRouter()
 const mentors = ref([])
 const loading = ref(true)
 const error = ref(false)
+
+const goToApply = () => {
+  router.push({ name: 'mentor-registration' })
+}
 
 onMounted(async () => {
   try {
