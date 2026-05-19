@@ -61,6 +61,12 @@ const routes = [
     meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
+    path: '/admin/mentor-applications/:id',
+    name: 'admin-mentor-applications-detail',
+    component: () => import('../views/admin/MentorApplicationDetailView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
     path: '/unauthorized',
     name: 'unauthorized',
     component: () => import('../views/UnauthorizedView.vue')

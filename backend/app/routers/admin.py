@@ -92,3 +92,23 @@ def delete_mentor_application(
     db.delete(mentor)
     db.commit()
     return {"message": f"Mentor application {id} successfully deleted"}
+
+@router.get("/mentor-applications/{id}", response_model=MentorApplicationOut)
+def get_mentor_application_detail(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """
+    Dohvata sve detalje jedne specifične prijave za mentorstvo.
+    Ovo se koristi kada admin klikne 'Pregledaj'.
+    """
+    mentor = db.query(Mentor).filter(Mentor.id == id).first()
+    
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Prijava sa ID-em {id} nije pronađena."
+        )
+    
+    return mentor

@@ -130,22 +130,19 @@ const isFull = computed(() => {
 })
 
 onMounted(async () => {
-  // FEJK PODACI - obriši ovo kad backend bude imao prave podatke
-  mentor.value = {
-    id: 1,
-    full_name: "Amina Hodžić",
-    field_of_expertise: "IT i digitalne tehnologije, Data, AI i digitalna transformacija",
-    bio: "Imam 6 godina iskustva u softverskom razvoju. Radila sam na projektima u oblasti web razvoja i mašinskog učenja.",
-    linkedin_url: "https://linkedin.com",
-    preferred_session_format: "Online",
-    max_mentees: 3,
-    current_applications_count: 3,
-    is_available: true,
-    profile_img_url: null,
-    position: "Software Engineer",
-    institution: "Microsoft",
-    years_of_experience: "6"
+  try {
+    const mentorId = route.params.id
+    const response = await fetch(`http://127.0.0.1:8000/mentoring/mentors/${mentorId}`)
+    
+    if (!response.ok) {
+      throw new Error('Mentor nije pronađen')
+    }
+    
+    mentor.value = await response.json()
+  } catch (err) {
+    error.value = err.message || 'Greška pri učitavanju profila mentora'
+  } finally {
+    loading.value = false
   }
-  loading.value = false
 })
 </script>

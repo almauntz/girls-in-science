@@ -319,7 +319,7 @@ async function deleteApplication(id) {
 }
 
 function pregledajPrijavu(id) {
-  router.push(`/mentors/${id}?from=admin`)
+  router.push(`/admin/mentor-applications/${id}`)
 }
 
 onMounted(() => {

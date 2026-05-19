@@ -26,7 +26,7 @@ class Mentor(Base):
     # Profesionalno iskustvo
     academic_title = Column(String, nullable=True)
     field_of_expertise = Column(String, nullable=False)
-    years_of_experience = Column(String, nullable=True)
+    years_of_experience = Column(Integer, nullable=True)
     cv_url = Column(String, nullable=True)
     has_mentoring_experience = Column(Boolean, nullable=True)
 

@@ -9,6 +9,7 @@ from pydantic import BaseModel
 
 router = APIRouter(prefix="/mentoring", tags=["mentoring"])
 
+# POPRAVLJENO: Dodana polja koja admin stranica zahtijeva za pregled prijave
 class MentorOut(BaseModel):
     id: int
     full_name: str
@@ -19,6 +20,13 @@ class MentorOut(BaseModel):
     max_mentees: int
     current_applications_count: int
     is_available: bool
+    # Ova tri polja su falila i rušila frontend:
+    email: str | None = None
+    years_of_experience: int | None = None
+    cv_url: str | None = None
+    # Dodana polja za MentorProfileView:
+    position: str | None = None
+    institution: str | None = None
 
     class Config:
         from_attributes = True
@@ -36,12 +44,10 @@ def get_mentors(
     db: Session = Depends(get_db)
 ):
     """Get list of approved mentors"""
-    # 1. Izvlačimo odobrene mentore iz baze podataka
     mentors = db.query(Mentor).filter(Mentor.is_approved == True).offset(skip).limit(limit).all()
     
     result = []
     for mentor in mentors:
-        # 2. Direktno spajamo first_name i last_name u full_name kako Pydantic i frontend očekuju
         f_name = mentor.first_name or ""
         l_name = mentor.last_name or ""
         full_name = f"{f_name} {l_name}".strip() or "Unknown Mentor"
@@ -57,7 +63,12 @@ def get_mentors(
             preferred_session_format=mentor.preferred_session_format or "Online",
             max_mentees=max_m,
             current_applications_count=0,
-            is_available=0 < max_m
+            is_available=0 < max_m,
+            email=mentor.email,
+            years_of_experience=mentor.years_of_experience,
+            cv_url=mentor.cv_url,
+            position=mentor.position,
+            institution=mentor.institution
         ))
     return result
 
@@ -74,10 +85,36 @@ async def apply_as_mentor(
     cv_file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    """Mentor application endpoint."""
+    """Mentor application endpoint - upisuje mentora na čekanje u bazu podataka."""
+    
+    existing_mentor = db.query(Mentor).filter(Mentor.email == email).first()
+    if existing_mentor:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Prijava sa ovim emailom već postoji."
+        )
+
+    cv_filename = cv_file.filename if cv_file else None
+
+    new_mentor = Mentor(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        field_of_expertise=field_of_expertise,
+        years_of_experience=years_of_experience,
+        linkedin_url=linkedin_url,
+        bio=bio,
+        cv_url=cv_filename,  
+        is_approved=False  
+    )
+
+    db.add(new_mentor)
+    db.commit()
+    db.refresh(new_mentor)
+
     return {
-        "message": "Application received. Team 2 will process this when implementation is complete.",
-        "status": "pending"
+        "message": "Prijava je uspješno poslana i čeka odobrenje administratora.",
+        "mentor_id": new_mentor.id
     }
 
 
@@ -89,13 +126,13 @@ def get_mentor_profile(id: int, db: Session = Depends(get_db)):
     if not mentor:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Mentor not found.")
     
-    # Isti provjereni postupak spajanja imena za pojedinačni profil
     f_name = mentor.first_name or ""
     l_name = mentor.last_name or ""
     full_name = f"{f_name} {l_name}".strip() or "Unknown Mentor"
         
     max_m = mentor.max_mentees or 1
     
+    # POPRAVLJENO: Vraćamo i email, iskustvo i CV da frontend ima šta da iscrta
     return MentorOut(
         id=mentor.id,
         full_name=full_name,
@@ -105,5 +142,10 @@ def get_mentor_profile(id: int, db: Session = Depends(get_db)):
         preferred_session_format=mentor.preferred_session_format or "Online",
         max_mentees=max_m,
         current_applications_count=0,
-        is_available=0 < max_m
+        is_available=0 < max_m,
+        email=mentor.email,
+        years_of_experience=mentor.years_of_experience,
+        cv_url=mentor.cv_url,
+        position=mentor.position,
+        institution=mentor.institution
     )
