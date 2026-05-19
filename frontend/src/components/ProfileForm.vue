@@ -109,23 +109,23 @@
             </div>
           </div>
 
-          <div class="pt-2">
-            <button
-              type="submit"
-              :disabled="!isFormValid"
-              class="w-full bg-violet-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-violet-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Spremi promjene
-            </button>
-          </div>
-        </form>
-      </div>
+        <div class="pt-2">
+          <button
+            type="submit"
+            :disabled="!isFormValid"
+            class="w-full bg-violet-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-violet-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Spremi promjene
+          </button>
+        </div>
+
+      </form>
     </div>
+  </div>
 
     <!-- SIGURNOST TAB -->
     <div v-if="activeTab === 'security'">
       <div class="bg-white rounded-xl shadow-sm p-6 max-w-full min-h-96">
-
         <div v-if="passwordSuccess" class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 mb-4 text-sm">
           {{ passwordSuccess }}
         </div>
@@ -174,9 +174,9 @@
             </button>
           </div>
         </form>
-
       </div>
     </div>
+
   </div>
 </template>
 
@@ -378,7 +378,7 @@ export default {
           this.passwordError = data.detail || 'Greška pri promjeni lozinke.'
         }
       } catch (e) {
-        this.passwordError = 'Ne mogu se povezati sa serverom.'
+        this.passwordError = 'Backend ne radi.'
       } finally {
         this.passwordLoading = false
       }
