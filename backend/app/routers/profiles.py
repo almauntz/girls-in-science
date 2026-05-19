@@ -1,18 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException,UploadFile, File
-from sqlmodel import Session
-from app.database import get_db
-from app.core.security import get_current_user
-from app.models.user import User
-from app.models.profile import Profile, ProfileUpdate, ProfileResponse
-from sqlmodel import select
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlmodel import Session, select, not_
+from app.database import get_db
+from app.core.security import get_current_user, verify_password, hash_password
+from app.models.user import User, ChangePasswordRequest
+from app.models.profile import Profile, ProfileUpdate, ProfileResponse, Workshop, WorkshopRegistration
 from datetime import datetime
 from typing import Dict, Any
-from app.models.profile import Workshop, WorkshopRegistration
-from fastapi import status
-import shutil
 import uuid
 import os
+
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -235,29 +231,30 @@ MAX_VELICINA = 2 * 1024 * 1024
 @router.post("/me/avatar")
 async def upload_avatar(
     file: UploadFile = File(...),
-    current_user = Depends(get_current_user)  # ← zaštićen endpoint
+    current_user = Depends(get_current_user),
+    db: Session = Depends(get_db)  # ← dodaj db parametar
 ):
-    # generiši jedinstveno ime fajla
     extension = file.filename.split(".")[-1].lower()
     if extension not in DOZVOLJENI_FORMATI:
-        raise HTTPException(
-            status_code=400,
-            detail="Podržani formati su JPG i PNG."
-        )
+        raise HTTPException(status_code=400, detail="Podržani formati su JPG i PNG.")
+    
     sadrzaj = await file.read()
     if len(sadrzaj) > MAX_VELICINA:
-        raise HTTPException(
-            status_code=400,
-            detail="Slika ne smije biti veća od 2MB."
-        )
+        raise HTTPException(status_code=400, detail="Slika ne smije biti veća od 2MB.")
 
     filename = f"{uuid.uuid4()}.{extension}"
     file_path = f"{UPLOAD_DIR}/{filename}"
     with open(file_path, "wb") as buffer:
-        buffer.write(sadrzaj)   
+        buffer.write(sadrzaj)
 
     url = f"/static/avatars/{filename}"
-    return { "avatar_url": url }
+
+    profile = get_or_create_profile(current_user, db)
+    profile.avatar = url
+    db.add(profile)
+    db.commit()
+
+    return {"avatar_url": url}
 
 
 @router.delete("/me/avatar", response_model=ProfileResponse)
@@ -307,3 +304,24 @@ def delete_avatar(
         avatar=None,
         role=current_user.role if current_user.role else "user"
     )
+
+@router.patch("/me/change-password")
+def change_password(
+    data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if not verify_password(data.old_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Stara lozinka nije tačna.")
+
+    if data.new_password != data.confirm_new_password:
+        raise HTTPException(status_code=400, detail="Nova lozinka i potvrda se ne poklapaju.")
+
+    if len(data.new_password) < 8:
+        raise HTTPException(status_code=400, detail="Nova lozinka mora imati najmanje 8 karaktera.")
+
+    current_user.password_hash = hash_password(data.new_password)
+    db.add(current_user)
+    db.commit()
+
+    return {"message": "Lozinka uspješno promijenjena."}

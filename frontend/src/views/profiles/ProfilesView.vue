@@ -1,6 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex">
-
+<div class="bg-gray-50 flex gap-8 items-stretch p-8">
     <ProfileSidebar
       :activeTab="activeTab"
       :fullName="profileData.full_name"
@@ -11,17 +10,22 @@
       @avatar-deleted="avatarUrl = null"
     />
 
-    <main class="flex-1 p-8 overflow-y-auto">
+    <main class="flex-1 overflow-y-auto h-full">
 
       <div v-if="isLoading" class="flex justify-center items-center py-20">
         <div class="text-gray-400 text-sm">Učitavanje...</div>
       </div>
 
       <div v-else>
-        <ProfileForm
-          v-if="activeTab === 'profil'"
-          @profile-updated="profileData = $event"
-        />
+      <ProfileForm
+        v-if="activeTab === 'profil'"
+        :fullName="profileData.full_name"
+        :field="profileData.field"
+        :avatarUrl="avatarUrl"
+        @profile-updated="profileData = $event"
+        @avatar-uploaded="avatarUrl = $event"
+        @avatar-deleted="avatarUrl = null"
+      />
         <DashboardTab
           v-if="activeTab === 'dashboard'"
           :myWorkshops="myWorkshops"
@@ -43,6 +47,7 @@ import ProfileSidebar from '../../components/ProfileSidebar.vue'
 import ProfileForm from '../../components/ProfileForm.vue'
 import DashboardTab from '../../components/DashboardTab.vue'
 // import AktivnostiTab from '../../components/AktivnostiTab.vue'
+import { getMyProfile } from '../../services/api.js'
 
 export default {
   name: 'ProfilesView',
@@ -50,7 +55,7 @@ export default {
   components: {
     ProfileSidebar,
     ProfileForm,
-    DashboardTab
+    DashboardTab,
     // AktivnostiTab
   },
 
@@ -68,12 +73,29 @@ export default {
   },
 
   async mounted() {
-    this.isLoading = true
-    await this.fetchDashboardData()
-    this.isLoading = false
-  },
+  this.isLoading = true
+  await this.loadProfile()
+  await this.fetchDashboardData()
+  this.isLoading = false
+},
 
   methods: {
+
+    async loadProfile() {
+    try {
+      const token = localStorage.getItem('token')
+      const data = await getMyProfile(token)
+      this.profileData = {
+        full_name: data.full_name || '',
+        field: data.field || ''
+      }
+      if (data.avatar) {
+        this.avatarUrl = `http://localhost:8000${data.avatar}`
+      }
+    } catch (error) {
+      console.error('Greška pri učitavanju profila.')
+    }
+  },
     getAuthHeaders() {
       const token = localStorage.getItem('token')
       return { headers: { Authorization: `Bearer ${token}` } }
@@ -111,9 +133,3 @@ export default {
 }
 </script>
 
-<style scoped>
-.profiles-fullwidth {
-  margin: -2rem -2rem -2rem -2rem;
-  width: calc(100% + 4rem);
-}
-</style>
