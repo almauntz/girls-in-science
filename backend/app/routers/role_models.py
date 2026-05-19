@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.role_model import RoleModel, RoleModelCreate
+from app.models.role_model import RoleModel, RoleModelCreate, RoleModelUpdate
 
 router = APIRouter(prefix="/role-models", tags=["role_models"])
 
