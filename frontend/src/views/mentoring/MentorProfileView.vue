@@ -139,7 +139,7 @@ onMounted(async () => {
     linkedin_url: "https://linkedin.com",
     preferred_session_format: "Online",
     max_mentees: 3,
-    current_applications_count: 1,
+    current_applications_count: 3,
     is_available: true,
     profile_img_url: null,
     position: "Software Engineer",
