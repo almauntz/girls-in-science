@@ -46,7 +46,6 @@
 import ProfileSidebar from '../../components/ProfileSidebar.vue'
 import ProfileForm from '../../components/ProfileForm.vue'
 import DashboardTab from '../../components/DashboardTab.vue'
-import ChangePassword from '../../components/ChangePassword.vue'
 // import AktivnostiTab from '../../components/AktivnostiTab.vue'
 import { getMyProfile } from '../../services/api.js'
 
@@ -57,7 +56,6 @@ export default {
     ProfileSidebar,
     ProfileForm,
     DashboardTab,
-    ChangePassword
     // AktivnostiTab
   },
 
