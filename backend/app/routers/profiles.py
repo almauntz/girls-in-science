@@ -1,18 +1,14 @@
-from fastapi import APIRouter, Depends, HTTPException,UploadFile, File
-from sqlmodel import Session
-from app.database import get_db
-from app.core.security import get_current_user
-from app.models.user import User
-from app.models.profile import Profile, ProfileUpdate, ProfileResponse
-from sqlmodel import select
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlmodel import Session, select, not_
+from app.database import get_db
+from app.core.security import get_current_user, verify_password, hash_password
+from app.models.user import User, ChangePasswordRequest
+from app.models.profile import Profile, ProfileUpdate, ProfileResponse, Workshop, WorkshopRegistration
 from datetime import datetime
 from typing import Dict, Any
-from app.models.profile import Workshop, WorkshopRegistration
-from fastapi import status
-import shutil
 import uuid
 import os
+
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -309,29 +305,23 @@ def delete_avatar(
         role=current_user.role if current_user.role else "user"
     )
 
-@router.put("/me/change-password")
-async def change_password(
+@router.patch("/me/change-password")
+def change_password(
     data: ChangePasswordRequest,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Niste autorizovani.")
-    
-    if not current_user.password_hash(data.current_password):
-        raise HTTPException(status_code=400, detail="Trenutna lozinka nije tačna.")
-    
+    if not verify_password(data.old_password, current_user.password_hash):
+        raise HTTPException(status_code=400, detail="Stara lozinka nije tačna.")
+
     if data.new_password != data.confirm_new_password:
         raise HTTPException(status_code=400, detail="Nova lozinka i potvrda se ne poklapaju.")
-    
+
     if len(data.new_password) < 8:
         raise HTTPException(status_code=400, detail="Nova lozinka mora imati najmanje 8 karaktera.")
-    
-    current_user.password_hash = data.new_password
+
+    current_user.password_hash = hash_password(data.new_password)
     db.add(current_user)
     db.commit()
-    db.refresh(current_user)
 
-    return {
-        "message": "Password uspješno promijenjen"
-    }
+    return {"message": "Lozinka uspješno promijenjena."}
