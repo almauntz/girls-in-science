@@ -1,26 +1,4 @@
 <template>
-  <!--
-    ================================================================
-    WorkshopsAdminView.vue
-    ================================================================
-    Ovo je admin stranica za upravljanje radionicama.
-    Koristi 4 backend endpointa:
-      POST   /workshops/           → kreiranje
-      GET    /workshops/{id}       → učitavanje za edit
-      PATCH  /workshops/{id}       → uređivanje
-      DELETE /workshops/{id}       → brisanje
-
-    Gdje smjestiti ovaj fajl:
-      src/views/workshops/WorkshopsAdminView.vue
-
-    Ruta koju dodaješ u src/router/index.js:
-      {
-        path: '/workshops/admin',
-        component: () => import('../views/workshops/WorkshopsAdminView.vue'),
-        meta: { requiresAuth: true }
-      }
-    ================================================================
-  -->
   <div class="admin-page">
 
     <!-- ── Naslov stranice ── -->
