@@ -156,9 +156,27 @@ def register_student(
     current_user: User = Depends(get_current_user) # Ovo štiti rutu!
 ):
     radionica = db.get(Workshop, podaci.workshop_id)
+
     if not radionica:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena")
 
+
+ #Provjera da li je student već prijavljen na radionicu (preko emaila)
+    postojeca = db.exec(
+        select(Registration).where(
+            Registration.workshop_id == podaci.workshop_id,
+            Registration.email == podaci.email
+        )
+    ).first()
+
+    if postojeca:
+        raise HTTPException(
+            status_code=400,
+            detail="Already registered with this email"
+        )
+    
+
+    # Kapacitet (brojanje)
     broj_prijava = db.execute(
         select(func.count(Registration.id)).where(Registration.workshop_id == podaci.workshop_id)
     ).scalar() or 0
@@ -166,7 +184,6 @@ def register_student(
     
     if broj_prijava >= radionica.capacity:
         raise HTTPException(status_code=400, detail="Nažalost, sva mjesta su popunjena!")
-
     # 4. Kreiranje prijave
     nova_prijava = Registration(**podaci.model_dump())
 
