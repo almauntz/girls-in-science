@@ -89,7 +89,6 @@ class WorkshopDetailRead(BaseModel):
     class Config:
         from_attributes = True
 
-#--elma
 class Registration(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     
@@ -97,18 +96,13 @@ class Registration(SQLModel, table=True):
     last_name: str = Field(min_length=2)
     email: EmailStr 
     phone: str = Field(min_length=9)
-    
-    # OVDJE JE IZMJENA: 
-    # 'workshops' je ime tabele kolega, a 'ID_workshop' je njihov ključ
-    #workshop_id: int = Field(foreign_key="workshops.ID_workshop")
     workshop_id: int = Field()
     previous_experience: Optional[str] = None
     github_profile: Optional[str] = None
 
     
-# L-- elma
 class RegistrationCreate(SQLModel):
-    first_name: str = Field(min_length=2)  # Ovdje mora biti razmak (indentacija)
+    first_name: str = Field(min_length=2) 
     last_name: str = Field(min_length=2)
     email: EmailStr
     phone: str = Field(min_length=9)
