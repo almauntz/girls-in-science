@@ -13,6 +13,7 @@ from app.core.config import settings
 from sqlmodel import SQLModel
 import app.models.user  # noqa: F401
 import app.models.mentor  # noqa: F401
+import app.models.mentor_application  # noqa: F401
 
 from app.database import Base
 

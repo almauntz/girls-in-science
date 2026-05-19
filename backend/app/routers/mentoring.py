@@ -1,10 +1,10 @@
+from fastapi import APIRouter, Depends, Form, UploadFile, File, status
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.models.mentor import Mentor
 
 from pydantic import BaseModel
 
@@ -50,10 +50,35 @@ def mentoring_placeholder():
 
 @router.get("/mentors", response_model=list[MentorOut])
 def get_mentors(
-    skip: int = Query(default=0, ge=0),
-    limit: int = Query(default=10, ge=1, le=100),
+    skip: int = 0,
+    limit: int = 10,
     db: Session = Depends(get_db)
 ):
+    """Get list of approved mentors"""
+    # TODO: Implement mentor listing when your team builds this
+    return []
+
+
+@router.post("/apply", status_code=status.HTTP_201_CREATED)
+async def apply_as_mentor(
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    email: str = Form(...),
+    field_of_expertise: str = Form(...),
+    years_of_experience: int = Form(...),
+    linkedin_url: str = Form(...),
+    bio: str = Form(...),
+    cv_file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
+    """
+    Mentor application endpoint.
+    TODO: Implement full mentor application logic when your team builds this
+    """
+    return {
+        "message": "Application received. Team 2 will process this when implementation is complete.",
+        "status": "pending"
+    }
     mentors = db.query(Mentor).filter(Mentor.is_approved == True).offset(skip).limit(limit).all()
     
     result = []
