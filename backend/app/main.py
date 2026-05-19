@@ -7,6 +7,7 @@ from app.routers import auth, mentoring, forum, workshops, profiles
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.mentor import Mentor
+from app.models.mentor_application import MentorApplication
 
 Base.metadata.create_all(bind=engine)
 
