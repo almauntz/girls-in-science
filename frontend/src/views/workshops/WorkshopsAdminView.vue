@@ -1,26 +1,4 @@
 <template>
-  <!--
-    ================================================================
-    WorkshopsAdminView.vue
-    ================================================================
-    Ovo je admin stranica za upravljanje radionicama.
-    Koristi 4 backend endpointa:
-      POST   /workshops/           → kreiranje
-      GET    /workshops/{id}       → učitavanje za edit
-      PATCH  /workshops/{id}       → uređivanje
-      DELETE /workshops/{id}       → brisanje
- 
-    Gdje smjestiti ovaj fajl:
-      src/views/workshops/WorkshopsAdminView.vue
- 
-    Ruta koju dodaješ u src/router/index.js:
-      {
-        path: '/workshops/admin',
-        component: () => import('../views/workshops/WorkshopsAdminView.vue'),
-        meta: { requiresAuth: true }
-      }
-    ================================================================
-  -->
   <div class="admin-page">
  
     <!-- ── Naslov stranice ── -->
@@ -33,7 +11,6 @@
     <!-- ── Tri kartice (glavni ekran) ── -->
     <div class="actions-row">
  
-      <!-- Kartica 1: Kreiraj -->
       <button class="action-card card-create" @click="openModal('create')">
         <div class="card-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -46,7 +23,6 @@
         <span class="card-hint">Dodaj novu radionicu na platformu</span>
       </button>
  
-      <!-- Kartica 2: Uredi -->
       <button class="action-card card-edit" @click="openModal('edit')">
         <div class="card-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -58,7 +34,6 @@
         <span class="card-hint">Izmijeni podatke postojeće radionice</span>
       </button>
  
-      <!-- Kartica 3: Obriši -->
       <button class="action-card card-delete" @click="openModal('delete')">
         <div class="card-icon">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -74,7 +49,7 @@
  
     </div>
 
-<!-- Otvaranje klikom na kreiraj radionicu-->
+<!-- Modal za kreiranje radionice-->
 
     <Teleport to="body">
       <div v-if="activeModal === 'create'" class="overlay" @click.self="closeModal">
@@ -119,11 +94,6 @@
               <span v-if="errors.description" class="err-msg">{{ errors.description }}</span>
             </div>
  
-            <!--
-              Datum početka i kraja — type="date" (bez vremena).
-              Kada se šalje backendu, konvertujemo u ISO format
-              u funkciji dateToISO() npr. "2025-06-15" → "2025-06-15T00:00:00.000Z"
-            -->
             <div class="field-row">
               <div class="field">
                 <label>Datum početka <span class="req">*</span></label>
@@ -139,7 +109,7 @@
               </div>
             </div>
  
-            <!-- Kapacitet — uži input -->
+            <!-- Kapacitet -->
             <div class="field field-narrow">
               <label>Kapacitet <span class="req">*</span></label>
               <input v-model.number="form.capacity" type="number" min="1" placeholder="20"
@@ -210,7 +180,6 @@
                         placeholder="Ostavi prazno za ne mijenjanje"></textarea>
             </div>
  
-            <!-- Datum bez vremena, isto kao kod kreiranja -->
             <div class="field-row">
               <div class="field">
                 <label>Datum početka</label>
@@ -292,12 +261,7 @@
       </div>
     </Teleport>
  
-    <!-- ================================================================
-         POTVRDNI PROZOR (dijeli se za sve tri akcije)
-         Prikazuje se iznad aktivnog modala (z-index: 50 vs 40).
-         confirmConfig objekt određuje tekst i boju ovisno o akciji.
-         Klik na potvrdu poziva odgovarajuću API funkciju.
-    ================================================================ -->
+    <!-- Potvrdni prozor za sve akcije (create/edit/delete) -->
     <Teleport to="body">
       <div v-if="confirmConfig" class="overlay overlay-top" @click.self="confirmConfig = null">
         <div class="modal modal-narrow confirm-modal">
@@ -329,12 +293,7 @@
       </div>
     </Teleport>
  
-    <!-- ================================================================
-         TOAST NOTIFIKACIJE
-         Prikazuju se dolje desno nakon svake akcije.
-         Nestaju automatski nakon 3.8 sekundi.
-         toast.type = 'success' → zelena | 'error' → crvena
-    ================================================================ -->
+    <!-- Kratke notifikacije dole desno nakon akcije (uspjeh/greška) -->
     <Transition name="toast">
       <div v-if="toast.show" class="toast" :class="`toast-${toast.type}`">
         <svg v-if="toast.type === 'success'" width="14" height="14" viewBox="0 0 24 24"
@@ -355,17 +314,8 @@
 <script setup>
 import { ref, reactive } from 'vue'
  
-// ================================================================
-// KONFIGURACIJA
-// Promijeni BASE_URL ako backend ne radi na defaultnom portu.
-// VITE_API_URL možeš postaviti u .env fajl u root projekta:
-//   VITE_API_URL=http://localhost:8000
-// ================================================================
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
  
-// ================================================================
-// STATE — reaktivne varijable koje kontrolišu UI
-// ================================================================
 const activeModal  = ref(null)   // koji modal je otvoren: 'create' | 'edit' | 'delete' | null
 const confirmConfig = ref(null)  // konfiguracija potvrdnog prozora (ili null ako je zatvoren)
 const busy         = ref(false)  // true dok čekamo odgovor s API-ja (onemogućava dugmad)
@@ -391,7 +341,6 @@ const errors = reactive({
   deleteId: ''  // greška za polje ID-a u delete modalu
 })
  
-// Stanje toast notifikacije
 const toast = reactive({ show: false, type: 'success', message: '' })
  
 // ================================================================
@@ -416,13 +365,11 @@ function dateToISO(dateStr) {
   return new Date(dateStr + 'T00:00:00').toISOString()
 }
  
-// Otvara modal i resetuje svo stanje iz prethodne akcije
 function openModal(type) {
   resetAll()
   activeModal.value = type
 }
  
-// Zatvara sve modalne prozore i čisti stanje
 function closeModal() {
   activeModal.value = null
   confirmConfig.value = null
@@ -430,7 +377,6 @@ function closeModal() {
   resetAll()
 }
  
-// Resetuje formu, greške i pomoćne varijable na početne vrijednosti
 function resetAll() {
   Object.assign(form, {
     title: '', description: '', location: '',
@@ -446,9 +392,7 @@ function resetAll() {
   editStep.value = 1
 }
  
-// ================================================================
 // VALIDACIJA — provjera forme prije slanja
-// ================================================================
  
 // Validira formu za kreiranje. Vraća true ako je sve ok.
 // Greške se postavljaju direktno u errors objekt i prikazuju u UI-u.
@@ -477,11 +421,8 @@ function validateCreate() {
   return ok
 }
  
-// ================================================================
 // OTVARANJE POTVRDNOG PROZORA
-// Svaka akcija ima svoju konfiguraciju (tekst, boja, šta pozvati).
-// Potvrdni prozor se prikazuje iznad aktivnog modala.
-// ================================================================
+
 function askConfirm(action) {
   // Validacija prije otvaranja potvrde
   if (action === 'create' && !validateCreate()) return
@@ -531,12 +472,8 @@ async function runAction() {
   }
 }
  
-// ================================================================
 // API POZIVI
-// ================================================================
- 
 // POST /workshops/ — kreira novu radionicu
-// Šalje sve podatke iz forme, datume konvertuje u ISO format
 async function doCreate() {
   busy.value = true
   try {
@@ -568,7 +505,6 @@ async function doCreate() {
 }
  
 // GET /workshops/{id} — dohvata podatke radionice za popunjavanje edit forme
-// Poziva se klikom na "Dalje →" u koraku 1 edit modala
 async function loadWorkshop() {
   errors.editId = ''
   if (!editId.value || editId.value < 1) {
@@ -660,10 +596,6 @@ async function doDelete() {
   }
 }
  
-// ================================================================
-// TOAST — kratka notifikacija dolje desno
-// Automatski nestaje nakon 3.8 sekundi
-// ================================================================
 function showToast(type, message) {
   toast.show = false
   setTimeout(() => {
