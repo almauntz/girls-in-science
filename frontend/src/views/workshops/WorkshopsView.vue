@@ -56,11 +56,28 @@ function formatDate(dateStr) {
 }
 
 onMounted(async () => {
-  const data = await getActiveWorkshops()
-  if (data.detail) {
-    error.value = "Trenutno nema dostupnih radionica."
-  } else {
-    workshops.value = data
+  try {
+    // DODATO /active NA KRAJ URL-a
+    const response = await fetch('http://127.0.0.1:8000/workshops/active')
+    
+    if (!response.ok) {
+      error.value = "Problem sa serverom (Status: " + response.status + ")"
+      return
+    }
+
+    const data = await response.json()
+    console.log("Podaci koji su stigli na frontend:", data)
+
+    // Proveravamo da li je data zaista niz (Array)
+    if (Array.isArray(data) && data.length > 0) {
+      workshops.value = data
+      error.value = null
+    } else {
+      error.value = "Trenutno nema aktivnih radionica."
+    }
+  } catch (err) {
+    console.error("Greška pri fetch-u:", err)
+    error.value = "Nije moguće kontaktirati server."
   }
 })
 </script>

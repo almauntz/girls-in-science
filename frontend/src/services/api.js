@@ -38,20 +38,28 @@ export async function getWorkshopDetails(workshopId) {
   return response.json()
 }
 
-export async function registerForWorkshop(data, token) {
-  const res = await fetch("http://localhost:8000/registration", {
-    method: "POST",
+// services/api.js
+
+// services/api.js
+
+export const registerForWorkshop = async (formData, token) => {
+  // Puni URL: prefiks iz routera + putanja metode
+  const url = 'http://localhost:8000/workshops/registration'; 
+
+  const response = await fetch(url, {
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}` 
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(formData)
   });
 
-  const result = await res.json();
+  if (!response.ok) {
+    const errorData = await response.json();
+    // Ovo će sada ispisati "Workshop not found" ili "Already registered"
+    throw new Error(errorData.detail || 'Greška pri registraciji');
+  }
 
-  if (!res.ok) {
-    throw new Error(result.detail); }
-
-  return result;
-}
+  return await response.json();
+};

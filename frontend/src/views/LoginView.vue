@@ -66,19 +66,32 @@ export default {
       this.loading = true
       this.error = null
 
-      const response = await loginUser(this.email, this.password)
+      try {
+        const response = await loginUser(this.email, this.password)
 
-      if (response.access_token) {
-        localStorage.setItem('token', response.access_token)
-        const user = await getMe(response.access_token)
-        localStorage.setItem('username', user.full_name)
-        window.location.href = '/'
-      } else {
-        this.error = 'Pogrešan email ili lozinka.'
+        if (response && response.access_token) {
+          // 1. Čistimo stari token
+          localStorage.clear() 
+
+          // 2. Spremamo novi
+          localStorage.setItem('token', response.access_token)
+
+          // 3. Uzimamo podatke o korisniku
+          const user = await getMe(response.access_token)
+          localStorage.setItem('username', user.full_name)
+
+          // 4. Redirect
+          window.location.href = '/'
+        } else {
+          this.error = 'Pogrešan email ili lozinka.'
+        }
+      } catch (err) {
+        console.error("Greška pri prijavi:", err)
+        this.error = 'Server nije dostupan ili su podaci pogrešni.'
+      } finally {
+        this.loading = false
       }
-
-      this.loading = false
-    }
-  }
-}
+    } // Ovdje završava handleLogin
+  } // Ovdje završava methods
+} // Ovdje završava export default
 </script>

@@ -83,8 +83,16 @@
             
             <button
               :disabled="workshop.free_spots === 0 || workshop.status !== 'upcoming'"
-              class="px-5 py-2 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              class="px-5 py-2 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               @click="showForm = true" 
+            >
+              {{ workshop.free_spots === 0 ? 'Nema mjesta' : 'Prijavi se' }}
+            </button>
+
+            <button
+              :disabled="workshop.free_spots === 0 || workshop.status !== 'upcoming'"
+              class="px-5 py-2 rounded-lg bg-green-600 text-white font-bold hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              @click="quickJoin" 
             >
               {{ workshop.free_spots === 0 ? 'Nema mjesta' : 'Pridruži se' }}
             </button>
@@ -100,9 +108,8 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { getWorkshopDetails } from '@/services/api'
-import WorkshopRegistrationForm from '@/components/WorkshopRegistrationForm.vue'
-
+import WorkshopRegistrationForm from './WorkshopRegistrationForm.vue'
+import { getWorkshopDetails } from '../../services/api.js'
 export default {
   components: {
     WorkshopRegistrationForm
@@ -117,38 +124,45 @@ export default {
     const formatDate = (date) => {
       if (!date) return ''
       return new Date(date).toLocaleDateString('hr-HR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
+        day: '2-digit', month: '2-digit', year: 'numeric'
       })
     }
 
     const formatTime = (date) => {
       if (!date) return ''
       return new Date(date).toLocaleTimeString('hr-HR', {
-        hour: '2-digit',
-        minute: '2-digit'
+        hour: '2-digit', minute: '2-digit'
       })
     }
 
     const fetchWorkshop = async () => {
-      try {
-        loading.value = true
-        const data = await getWorkshopDetails(route.params.id)
-        workshop.value = data
-        error.value = null
-      } catch (err) {
-        error.value = 'Greška pri učitavanju radionice'
-        console.error(err)
-      } finally {
-        loading.value = false
-      }
+  try {
+    loading.value = true
+    const workshopId = route.params.id
+    
+    // Pozivamo pravi backend umjesto izmišljenih podataka
+    const response = await fetch(`http://127.0.0.1:8000/workshops/${workshopId}`)
+    
+    if (!response.ok) throw new Error("Radionica nije pronađena")
+    
+    const data = await response.json()
+    workshop.value = data
+    error.value = null
+  } catch (err) {
+    console.error(err)
+    error.value = 'Greška pri učitavanju detalja radionice.'
+  } finally {
+    loading.value = false
+  }
+}
+
+    const quickJoin = () => {
+      alert('Trebate popuniti formu sa detaljima. Kliknite na Prijavi se.')
     }
 
     const handleSuccess = () => {
       showForm.value = false
-      alert('Uspešno ste se prijavlj na radionicu!')
-      fetchWorkshop()
+      alert('Uspješno ste se prijavili na radionicu!')
     }
 
     onMounted(() => {
@@ -159,6 +173,7 @@ export default {
       workshop,
       loading,
       error,
+      quickJoin,
       showForm,
       formatDate,
       formatTime,
@@ -167,9 +182,3 @@ export default {
   }
 }
 </script>
-
-<style scoped>
-.bg-primary {
-  background-color: #7c3aed;
-}
-</style>

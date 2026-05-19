@@ -96,8 +96,7 @@
 <script>
 import { ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { registerForWorkshop } from '@/services/api'
-
+import { registerForWorkshop } from '../../services/api.js'
 export default {
   emits: ['cancel', 'success'],
   setup(props, { emit }) {
@@ -116,26 +115,31 @@ export default {
     })
 
     const submitForm = async () => {
-      try {
-        loading.value = true
-        error.value = null
-        
-        const token = localStorage.getItem('token')
-        if (!token) {
-          error.value = 'Trebate biti ulogovani'
-          return
-        }
-
-        await registerForWorkshop(formData.value, token)
-        
-        emit('success')
-      } catch (err) {
-        error.value = err.message || 'Greška pri registraciji'
-        console.error(err)
-      } finally {
-        loading.value = false
-      }
+  try {
+    loading.value = true
+    error.value = null
+    
+    // Provjeri u LocalStorage-u (F12 -> Application) da li se ključ zove 'token'
+    const token = localStorage.getItem('token') 
+    console.log("Šaljem ovaj token na backend:", token);
+    if (!token) {
+      error.value = 'Morate biti prijavljeni!'
+      loading.value = false
+      return
     }
+
+    // Šaljemo podatke i token u API servis
+    await registerForWorkshop(formData.value, token)
+    
+    alert('Uspješno ste se prijavili na radionicu!')
+    emit('success')
+    
+  } catch (err) {
+    error.value = err.message
+  } finally {
+    loading.value = false
+  }
+}
 
     return {
       formData,
