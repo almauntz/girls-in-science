@@ -5,6 +5,7 @@ from sqlmodel import SQLModel, Field
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 class WorkshopStatus(str, enum.Enum):
+    active = "active"      # Dodaj ovu liniju
     upcoming = "upcoming"
     cancelled = "cancelled"
     completed = "completed"
@@ -23,7 +24,8 @@ class Workshop(WorkshopBase, table=True):
 
     ID_workshop: Optional[int] = Field(default=None, primary_key=True)
     status: WorkshopStatus = Field(default=WorkshopStatus.upcoming)
-    created_by_id: Optional[int] = Field(default=None, foreign_key="users.id")
+    #created_by_id: Optional[int] = Field(default=None, foreign_key="users.id")
+    created_by_id: Optional[int] = Field(default=None)
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
@@ -65,9 +67,11 @@ class WorkshopRead(BaseModel):
 
 
 class WorkshopList(BaseModel):
+    ID_workshop: int
     title: str
     date: datetime
     location: str
+    free_spots: int
     class Config:
         from_attributes = True
 
@@ -96,8 +100,8 @@ class Registration(SQLModel, table=True):
     
     # OVDJE JE IZMJENA: 
     # 'workshops' je ime tabele kolega, a 'ID_workshop' je njihov ključ
-    workshop_id: int = Field(foreign_key="workshops.ID_workshop")
-    
+    #workshop_id: int = Field(foreign_key="workshops.ID_workshop")
+    workshop_id: int = Field()
     previous_experience: Optional[str] = None
     github_profile: Optional[str] = None
 

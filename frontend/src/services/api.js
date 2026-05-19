@@ -42,24 +42,18 @@ export async function getWorkshopDetails(workshopId) {
 
 // services/api.js
 
-export const registerForWorkshop = async (formData, token) => {
-  // Puni URL: prefiks iz routera + putanja metode
-  const url = 'http://localhost:8000/workshops/registration'; 
+// Primjer funkcije za prijavu na radionicu
+export const registerForWorkshop = async (registrationData) => {
+  const token = localStorage.getItem('token'); // Uzimamo token koji je spremljen pri Loginu
 
-  const response = await fetch(url, {
+  const response = await fetch('http://127.0.0.1:8000/workshops/registration', {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` 
+      'Authorization': `Bearer ${token}`, // Ovdje ide taj dio!
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify(formData)
+    body: JSON.stringify(registrationData)
   });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    // Ovo će sada ispisati "Workshop not found" ili "Already registered"
-    throw new Error(errorData.detail || 'Greška pri registraciji');
-  }
-
-  return await response.json();
+  return response.json();
 };

