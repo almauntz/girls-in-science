@@ -245,5 +245,109 @@
       </div>
     </Teleport>
 
-</div>
-</template> 
+    <!-- Modal za brijsanje radionice -->
+     
+    <Teleport to="body">
+      <div v-if="activeModal === 'delete'" class="overlay" @click.self="closeModal">
+        <div class="modal modal-narrow">
+ 
+          <div class="modal-head head-delete">
+            <div class="mh-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+              </svg>
+            </div>
+            <div>
+              <h2>Obriši radionicu</h2>
+              <p>Upiši ID i potvrdi brisanje</p>
+            </div>
+            <button class="close-btn" @click="closeModal">&#x2715;</button>
+          </div>
+ 
+          <div class="modal-body">
+            <div class="field">
+              <label>ID radionice <span class="req">*</span></label>
+              <input v-model.number="deleteId" type="number" min="1" placeholder="npr. 5"
+                     :class="{ 'input-error': errors.deleteId }"/>
+              <span v-if="errors.deleteId" class="err-msg">{{ errors.deleteId }}</span>
+            </div>
+            <!-- Vizuelno upozorenje da je brisanje trajno -->
+            <div class="danger-notice">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+              Brisanje je trajno i ne može se poništiti.
+            </div>
+          </div>
+ 
+          <div class="modal-foot">
+            <button class="btn-secondary" @click="closeModal">Odustani</button>
+            <!-- Provjeri ID pa otvori potvrdu -->
+            <button class="btn-delete" @click="askConfirm('delete')">Nastavi</button>
+          </div>
+ 
+        </div>
+      </div>
+    </Teleport>
+ 
+    <!-- ================================================================
+         POTVRDNI PROZOR (dijeli se za sve tri akcije)
+         Prikazuje se iznad aktivnog modala (z-index: 50 vs 40).
+         confirmConfig objekt određuje tekst i boju ovisno o akciji.
+         Klik na potvrdu poziva odgovarajuću API funkciju.
+    ================================================================ -->
+    <Teleport to="body">
+      <div v-if="confirmConfig" class="overlay overlay-top" @click.self="confirmConfig = null">
+        <div class="modal modal-narrow confirm-modal">
+ 
+          <!-- Ikona mijenja boju ovisno o tipu akcije -->
+          <div class="confirm-icon" :class="confirmConfig.iconClass">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+ 
+          <h3 class="confirm-title">{{ confirmConfig.title }}</h3>
+          <p class="confirm-msg">{{ confirmConfig.message }}</p>
+ 
+          <div class="confirm-actions">
+            <button class="btn-secondary" @click="confirmConfig = null" :disabled="busy">
+              Odustani
+            </button>
+            <!-- Dugme za potvrdu — boja se mijenja (create/edit/delete) -->
+            <button :class="confirmConfig.btnClass" @click="runAction" :disabled="busy">
+              <span v-if="busy" class="spin"></span>
+              {{ busy ? 'U toku…' : confirmConfig.btnLabel }}
+            </button>
+          </div>
+ 
+        </div>
+      </div>
+    </Teleport>
+ 
+    <!-- ================================================================
+         TOAST NOTIFIKACIJE
+         Prikazuju se dolje desno nakon svake akcije.
+         Nestaju automatski nakon 3.8 sekundi.
+         toast.type = 'success' → zelena | 'error' → crvena
+    ================================================================ -->
+    <Transition name="toast">
+      <div v-if="toast.show" class="toast" :class="`toast-${toast.type}`">
+        <svg v-if="toast.type === 'success'" width="14" height="14" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="3">
+          <polyline points="20 6 9 17 4 12"/>
+        </svg>
+        <svg v-else width="14" height="14" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="3">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+        {{ toast.message }}
+      </div>
+    </Transition>
+ 
+  </div>
+</template>
