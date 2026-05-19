@@ -12,6 +12,8 @@ export const applyAsMentor = (formData) => {
       'Content-Type': 'multipart/form-data'
     }
   })
+}
+
 export const getMentorById = (id) => {
   return axios.get(`${API_URL}/mentors/${id}`)
 }
