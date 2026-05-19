@@ -20,17 +20,17 @@ def get_role_model(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profil nije pronađen")
     return role_model
 
-@router.put("/{id}")
-def update_role_model(id: int, data: dict, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+@router.patch("/{id}")
+def update_role_model(id: int, data: RoleModelUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if current_user.role != UserRole.admin:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Samo administratorica može uređivati profile")
+        raise HTTPException(status_code=403, detail="Samo administratorica može uređivati profile")
     role_model = db.get(RoleModel, id)
     if not role_model:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Profil nije pronađen")
-    allowed_fields = {"first_name", "last_name", "stem_field", "institution", "position", "biography", "achievements"}
-    for key, value in data.items():
-        if key in allowed_fields:
-            setattr(role_model, key, value)
+        raise HTTPException(status_code=404, detail="Profil nije pronađen")
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(role_model, key, value)
+    db.add(role_model)
     db.commit()
     db.refresh(role_model)
     return role_model
