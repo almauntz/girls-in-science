@@ -28,3 +28,12 @@ class RoleModelCreate(SQLModel):
     position: str
     biography: str
     achievements: str
+
+class RoleModelUpdate(SQLModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    stem_field: Optional[str] = None
+    institution: Optional[str] = None
+    position: Optional[str] = None
+    biography: Optional[str] = None
+    achievements: Optional[str] = None
