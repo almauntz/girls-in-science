@@ -8,9 +8,9 @@ from app.core.security import get_current_user
 from app.models.user import User
 from sqlmodel import SQLModel
 from app.models.workshops_models import Workshop, Registration
-from app.models.user import User  # Prvo User (jer workshops ovisi o njemu)
+from app.models.user import User 
 Base.metadata.create_all(bind=engine)
-SQLModel.metadata.create_all(engine) # Ovo kreira workshops i registration
+SQLModel.metadata.create_all(engine) 
 
 security = HTTPBearer()
 

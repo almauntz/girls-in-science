@@ -155,40 +155,33 @@ def register_student(
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user) # Ovo štiti rutu!
 ):
-    # 1. Nađi radionicu
     radionica = db.get(Workshop, podaci.workshop_id)
     if not radionica:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena")
 
-    # 2. Brojimo prijave (ispravljen .execute stil)
     broj_prijava = db.execute(
         select(func.count(Registration.id)).where(Registration.workshop_id == podaci.workshop_id)
     ).scalar() or 0
 
-    # 3. Provjera kapaciteta
+    
     if broj_prijava >= radionica.capacity:
         raise HTTPException(status_code=400, detail="Nažalost, sva mjesta su popunjena!")
 
     # 4. Kreiranje prijave
     nova_prijava = Registration(**podaci.model_dump())
-    
-    # DODATAK ZA PROFESORICU: Vežemo prijavu za ulogovanog korisnika ako imaš user_id polje
-    # nova_prijava.user_id = current_user.id 
 
     db.add(nova_prijava)
     db.commit()
     db.refresh(nova_prijava)
 
-    # 5. Izračun preostalih mjesta
     preostalo = radionica.capacity - (broj_prijava + 1)
     
     return {
         "message": "Uspješna prijava!",
-        "free_spots_left": max(0, preostalo) # max(0, ...) osigurava da nikad ne ode u minus
+        "free_spots_left": max(0, preostalo) 
     }
 
 
-# --- NOVA RUTA ZA OTKAZIVANJE (GT1-22) --- elma
 @router.delete("/cancellation/{registration_id}")
 def cancel_registration(registration_id: int, db: Session = Depends(get_db)):
     prijava = db.get(Registration, registration_id)
@@ -202,7 +195,6 @@ def cancel_registration(registration_id: int, db: Session = Depends(get_db)):
 
 
 
-#----------------- STATUS PRIJAVE ----------------
 @router.get("/prijava/status/{workshop_id}")
 def provjeri_status_prijave(
     workshop_id: int,

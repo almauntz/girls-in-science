@@ -38,18 +38,15 @@ export async function getWorkshopDetails(workshopId) {
   return response.json()
 }
 
-// services/api.js
 
-// services/api.js
 
-// Primjer funkcije za prijavu na radionicu
 export const registerForWorkshop = async (registrationData) => {
   const token = localStorage.getItem('token'); // Uzimamo token koji je spremljen pri Loginu
 
   const response = await fetch('http://127.0.0.1:8000/workshops/registration', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`, // Ovdje ide taj dio!
+      'Authorization': `Bearer ${token}`, 
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(registrationData)
