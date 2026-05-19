@@ -14,18 +14,28 @@ def workshops_placeholder():
     return {"message": "Workshops router is working — Team 1 builds here"}
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
+    # 1. Uzimamo sve radionice koje su 'upcoming'
     statement = select(Workshop).where(Workshop.status == WorkshopStatus.upcoming).order_by(Workshop.date)
     workshops = db.execute(statement).scalars().all()
     
-    # Moramo ručno dodati free_spots za svaku radionicu u listi
+    result = []
+    
     for w in workshops:
-        broj_prijava = db.exec(
-            select(func.count()).select_from(Registration).where(Registration.workshop_id == w.ID_workshop)
-        ).scalar()
-        # Dinamički dodajemo atribut (pazi da tvoj WorkshopList model ima free_spots polje)
-        w.free_spots = w.capacity - broj_prijava
+        # 2. Brojimo prijave koristeći .execute i .scalar() (ovo rješava tvoj AttributeError)
+        broj_prijava = db.execute(
+            select(func.count(Registration.id)).where(Registration.workshop_id == w.ID_workshop)
+        ).scalar() or 0
         
-    return workshops
+        # 3. Pretvaramo model iz baze u rječnik da bismo mu dodali polje koje ne postoji u bazi
+        workshop_dict = w.model_dump()
+        
+        # 4. Izračunavamo slobodna mjesta
+        workshop_dict["free_spots"] = w.capacity - broj_prijava
+        
+        result.append(workshop_dict)
+
+    # 5. Vraćamo listu rječnika koju će FastAPI automatski pretvoriti u WorkshopList objekte
+    return result
 
 
 @router.get("/{workshop_id}", response_model=WorkshopDetailRead)
@@ -140,30 +150,41 @@ def delete_workshop(
 
 
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
-def register_student(podaci: RegistrationCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+def register_student(
+    podaci: RegistrationCreate, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user) # Ovo štiti rutu!
+):
+    # 1. Nađi radionicu
     radionica = db.get(Workshop, podaci.workshop_id)
     if not radionica:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena")
 
-    # Brojimo koliko ljudi je već prijavljeno
-    broj_prijava = db.exec(
-        select(func.count()).select_from(Registration).where(Registration.workshop_id == podaci.workshop_id)
-    ).scalar()
+    # 2. Brojimo prijave (ispravljen .execute stil)
+    broj_prijava = db.execute(
+        select(func.count(Registration.id)).where(Registration.workshop_id == podaci.workshop_id)
+    ).scalar() or 0
 
-    # Ako je broj prijava dostigao kapacitet, stopiramo proces
+    # 3. Provjera kapaciteta
     if broj_prijava >= radionica.capacity:
         raise HTTPException(status_code=400, detail="Nažalost, sva mjesta su popunjena!")
 
+    # 4. Kreiranje prijave
     nova_prijava = Registration(**podaci.model_dump())
+    
+    # DODATAK ZA PROFESORICU: Vežemo prijavu za ulogovanog korisnika ako imaš user_id polje
+    # nova_prijava.user_id = current_user.id 
+
     db.add(nova_prijava)
     db.commit()
     db.refresh(nova_prijava)
 
-    # Vraćamo koliko je mjesta ostalo nakon ove prijave
+    # 5. Izračun preostalih mjesta
     preostalo = radionica.capacity - (broj_prijava + 1)
+    
     return {
         "message": "Uspješna prijava!",
-        "free_spots_left": preostalo
+        "free_spots_left": max(0, preostalo) # max(0, ...) osigurava da nikad ne ode u minus
     }
 
 
