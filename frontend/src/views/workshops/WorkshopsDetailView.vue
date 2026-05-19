@@ -11,24 +11,49 @@
       <hr class="border-gray-300" />
 
       <div class="max-w-5xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-2 gap-12">
+        <!-- Opis radionice -->
         <div>
           <h2 class="text-2xl font-bold text-gray-800 mb-4">Opis radionice</h2>
-          <p class="text-gray-600 leading-relaxed bg-white p-6 rounded-xl border border-purple-200">
+          <p class="text-gray-600 leading-relaxed">
             {{ workshop.description }}
           </p>
+
+          <!-- Organizator -->
+          <div class="mt-6">
+            <h3 class="text-xl font-bold text-gray-800 mb-2">Organizator</h3>
+            <p class="text-sm text-gray-600"><strong>Ime i prezime:</strong> {{ workshop.organizer_name }}</p>
+            <p class="text-sm text-gray-600"><strong>Email:</strong> {{ workshop.organizer_email }}</p>
+          </div>
         </div>
 
+        <!-- Detalji radionice -->
         <div class="flex flex-col gap-6">
-          <h2 class="text-2xl font-bold text-gray-800">Detalji</h2>
-          <div class="bg-white p-6 rounded-xl shadow-md space-y-4">
-            <p><strong>Lokacija:</strong> {{ workshop.location }}</p>
-            <p><strong>Kapacitet:</strong> {{ workshop.capacity }} polaznica</p>
-            <p><strong>Slobodna mjesta:</strong> 
-              <span :class="workshop.free_spots === 0 ? 'text-red-500' : 'text-green-600 font-bold'">
+          <h2 class="text-2xl font-bold text-gray-800">Detalji radionice</h2>
+          <p class="text-sm text-gray-500">Važne informacije na jednom mjestu prije prijave.</p>
+
+          <div class="space-y-4">
+            <div>
+              <p class="font-semibold text-gray-800">Datum početka</p>
+              <p class="text-sm text-gray-600">{{ formatDate(workshop.date) }}</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-gray-800">Datum završetka</p>
+              <p class="text-sm text-gray-600">{{ formatDate(workshop.end_time) }}</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-gray-800">Kapacitet</p>
+              <p class="text-sm text-gray-600">{{ workshop.capacity }} polaznika</p>
+            </div>
+
+            <div>
+              <p class="font-semibold text-gray-800">Slobodna mjesta</p>
+              <p class="text-sm" :class="workshop.free_spots === 0 ? 'text-red-500' : 'text-green-600 font-bold'">
                 {{ workshop.free_spots }}
-              </span>
-            </p>
-            
+              </p>
+            </div>
+
             <div class="flex gap-4 pt-4">
               <router-link to="/workshops" class="px-5 py-2 border-2 border-gray-300 rounded-lg font-bold">Nazad</router-link>
               <button 
@@ -76,11 +101,21 @@ export default {
 
     const handleSuccess = () => {
       showForm.value = false
-      fetchWorkshop() // Ovo automatski smanjuje slobodna mjesta na ekranu!
+      fetchWorkshop()
+    }
+
+    // funkcija za promjenu prikaza datuma
+    const formatDate = (dateString) => {
+      if (!dateString) return ''
+      const d = new Date(dateString)
+      const day = String(d.getDate()).padStart(2, '0')
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const year = d.getFullYear()
+      return `${day}.${month}.${year}`   
     }
 
     onMounted(fetchWorkshop)
-    return { workshop, loading, error, showForm, handleSuccess }
+    return { workshop, loading, error, showForm, handleSuccess, formatDate }
   }
 }
 </script>
