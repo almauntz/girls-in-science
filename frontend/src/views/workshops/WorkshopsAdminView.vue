@@ -74,5 +74,89 @@
  
     </div>
 
-  </div>
+<!-- Otvaranje klikom na kreiraj radionicu-->
+
+    <Teleport to="body">
+      <div v-if="activeModal === 'create'" class="overlay" @click.self="closeModal">
+        <div class="modal">
+ 
+          <div class="modal-head head-create">
+            <div class="mh-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </div>
+            <div>
+              <h2>Nova radionica</h2>
+              <p>Popuni sva obavezna polja</p>
+            </div>
+            <button class="close-btn" @click="closeModal">&#x2715;</button>
+          </div>
+ 
+          <div class="modal-body">
+            <!-- Naziv i lokacija u jednom redu -->
+            <div class="field-row">
+              <div class="field">
+                <label>Naziv <span class="req">*</span></label>
+                <input v-model="form.title" type="text" placeholder="npr. Uvod u Python"
+                       :class="{ 'input-error': errors.title }"/>
+                <span v-if="errors.title" class="err-msg">{{ errors.title }}</span>
+              </div>
+              <div class="field">
+                <label>Lokacija <span class="req">*</span></label>
+                <input v-model="form.location" type="text" placeholder="npr. Sala A, PMF"
+                       :class="{ 'input-error': errors.location }"/>
+                <span v-if="errors.location" class="err-msg">{{ errors.location }}</span>
+              </div>
+            </div>
+ 
+            <!-- Opis -->
+            <div class="field">
+              <label>Opis <span class="req">*</span></label>
+              <textarea v-model="form.description" rows="3" placeholder="Kratki opis radionice…"
+                        :class="{ 'input-error': errors.description }"></textarea>
+              <span v-if="errors.description" class="err-msg">{{ errors.description }}</span>
+            </div>
+ 
+            <!--
+              Datum početka i kraja — type="date" (bez vremena).
+              Kada se šalje backendu, konvertujemo u ISO format
+              u funkciji dateToISO() npr. "2025-06-15" → "2025-06-15T00:00:00.000Z"
+            -->
+            <div class="field-row">
+              <div class="field">
+                <label>Datum početka <span class="req">*</span></label>
+                <input v-model="form.date" type="date"
+                       :class="{ 'input-error': errors.date }"/>
+                <span v-if="errors.date" class="err-msg">{{ errors.date }}</span>
+              </div>
+              <div class="field">
+                <label>Datum kraja <span class="req">*</span></label>
+                <input v-model="form.end_time" type="date"
+                       :class="{ 'input-error': errors.end_time }"/>
+                <span v-if="errors.end_time" class="err-msg">{{ errors.end_time }}</span>
+              </div>
+            </div>
+ 
+            <!-- Kapacitet — uži input -->
+            <div class="field field-narrow">
+              <label>Kapacitet <span class="req">*</span></label>
+              <input v-model.number="form.capacity" type="number" min="1" placeholder="20"
+                     :class="{ 'input-error': errors.capacity }"/>
+              <span v-if="errors.capacity" class="err-msg">{{ errors.capacity }}</span>
+            </div>
+          </div>
+ 
+          <div class="modal-foot">
+            <button class="btn-secondary" @click="closeModal">Odustani</button>
+            <!-- Validira formu, pa otvara potvrdni prozor -->
+            <button class="btn-create" @click="askConfirm('create')">Kreiraj radionicu</button>
+          </div>
+ 
+        </div>
+      </div>
+    </Teleport>
+
+</div>
 </template>
