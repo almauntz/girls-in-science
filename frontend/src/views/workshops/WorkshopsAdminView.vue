@@ -672,3 +672,284 @@ function showToast(type, message) {
   }, 40)
 }
 </script>
+
+<style scoped>
+/* ================================================================
+   LAYOUT STRANICE
+   ================================================================ */
+.admin-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 3rem 2rem 5rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+ 
+/* Naslov stranice */
+.page-header { text-align: center; margin-bottom: 3rem; }
+ 
+.admin-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #ede9fe; color: #7c3aed;
+  font-size: 0.68rem; font-weight: 800;
+  letter-spacing: .09em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem;
+  border: 1.5px solid #ddd6fe;
+}
+ 
+.page-header h1 {
+  font-size: 1.75rem; font-weight: 800;
+  color: #1e1b4b; margin: 0 0 0.4rem;
+}
+ 
+.page-sub { color: #9ca3af; font-size: 0.88rem; margin: 0; }
+ 
+/* ================================================================
+   TRI KARTICE (glavni ekran)
+   ================================================================ */
+.actions-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+ 
+.action-card {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.8rem; padding: 2.25rem 1.25rem;
+  border-radius: 18px; border: 2px solid transparent;
+  cursor: pointer; text-align: center; background: #fff;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+.action-card:hover { transform: translateY(-5px); }
+ 
+.card-icon {
+  width: 66px; height: 66px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .18s;
+}
+.action-card:hover .card-icon { transform: scale(1.08); }
+ 
+.card-label { font-size: 1rem; font-weight: 800; color: #1e1b4b; }
+.card-hint  { font-size: 0.77rem; color: #9ca3af; line-height: 1.45; }
+ 
+/* Kartica Kreiraj — lila */
+.card-create { box-shadow: 0 2px 16px rgba(124,58,237,.1); }
+.card-create:hover { border-color: #7c3aed; box-shadow: 0 8px 28px rgba(124,58,237,.18); }
+.card-create .card-icon { background: #ede9fe; color: #7c3aed; }
+ 
+/* Kartica Uredi — žuta */
+.card-edit { box-shadow: 0 2px 16px rgba(217,119,6,.08); }
+.card-edit:hover { border-color: #d97706; box-shadow: 0 8px 28px rgba(217,119,6,.18); }
+.card-edit .card-icon { background: #fef3c7; color: #d97706; }
+ 
+/* Kartica Obriši — crvena */
+.card-delete { box-shadow: 0 2px 16px rgba(220,38,38,.07); }
+.card-delete:hover { border-color: #dc2626; box-shadow: 0 8px 28px rgba(220,38,38,.15); }
+.card-delete .card-icon { background: #fee2e2; color: #dc2626; }
+ 
+/* ================================================================
+   OVERLAY I MODALI
+   ================================================================ */
+ 
+/* Tamna pozadina koja prekriva ostatak stranice */
+.overlay {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(15, 10, 40, .52);
+  backdrop-filter: blur(5px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  animation: fade-in .15s ease;
+}
+/* Potvrdni prozor se prikazuje iznad ostalih modala */
+.overlay-top { z-index: 50; }
+ 
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+ 
+/* Bijeli okvir modala */
+.modal {
+  background: #fff; border-radius: 20px;
+  width: 100%; max-width: 560px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, .22);
+  animation: slide-up .2s ease; overflow: hidden;
+}
+/* Uži modal za delete i potvrdu */
+.modal-narrow { max-width: 440px; }
+ 
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(22px) }
+  to   { opacity: 1; transform: translateY(0) }
+}
+ 
+/* Zaglavlje modala (ikona + naslov + X dugme) */
+.modal-head {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 1.4rem 1.5rem 1.2rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+.modal-head h2 { font-size: 1rem; font-weight: 800; color: #1e1b4b; margin: 0 0 2px; }
+.modal-head p  { font-size: 0.77rem; color: #9ca3af; margin: 0; }
+ 
+/* Kvadratna ikona u zaglavlju — boja ovisno o tipu modala */
+.mh-icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.head-create .mh-icon { background: #ede9fe; color: #7c3aed; }
+.head-edit   .mh-icon { background: #fef3c7; color: #d97706; }
+.head-delete .mh-icon { background: #fee2e2; color: #dc2626; }
+ 
+/* X dugme za zatvaranje modala */
+.close-btn {
+  margin-left: auto; background: #f9fafb; border: 1.5px solid #f3f4f6;
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #9ca3af; font-size: 0.9rem;
+  transition: background .15s;
+}
+.close-btn:hover { background: #f3f4f6; color: #374151; }
+ 
+.modal-body {
+  padding: 1.25rem 1.5rem;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+ 
+.modal-foot {
+  padding: 1rem 1.5rem 1.4rem;
+  display: flex; justify-content: flex-end; gap: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+}
+ 
+/* ================================================================
+   FORMA — polja za unos podataka
+   ================================================================ */
+ 
+/* Dva polja u jednom redu */
+.field-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.field       { display: flex; flex-direction: column; gap: 4px; }
+.field-narrow { max-width: 150px; } /* za kapacitet */
+ 
+.field label { font-size: 0.77rem; font-weight: 700; color: #374151; }
+.req { color: #dc2626; } /* zvjezdica za obavezna polja */
+ 
+.field input,
+.field textarea {
+  background: #fafafa; border: 1.5px solid #e5e7eb;
+  border-radius: 10px; padding: 0.48rem 0.7rem;
+  font-size: 0.86rem; color: #111827; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  font-family: inherit;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
+}
+.field textarea { resize: vertical; min-height: 76px; }
+ 
+/* Crvena ivica na polju s greškom */
+.input-error { border-color: #dc2626 !important; }
+/* Tekst greške ispod polja */
+.err-msg { font-size: 0.71rem; color: #dc2626; font-weight: 600; }
+ 
+/* Sivi tekst s uputom */
+.hint-text { font-size: 0.77rem; color: #9ca3af; margin: 0; }
+ 
+/* Lila baner u edit koraku 2 koji podsjeća na partial update */
+.loaded-label {
+  font-size: 0.77rem; color: #7c3aed; font-weight: 700;
+  background: #ede9fe; padding: 6px 10px; border-radius: 8px; margin: 0;
+}
+ 
+/* ================================================================
+   UPOZORENJE ZA BRISANJE
+   ================================================================ */
+.danger-notice {
+  display: flex; align-items: center; gap: 8px;
+  background: #fef2f2; border: 1.5px solid #fecaca;
+  border-radius: 10px; padding: 0.65rem 0.9rem;
+  font-size: 0.8rem; font-weight: 600; color: #991b1b;
+}
+ 
+/* ================================================================
+   POTVRDNI PROZOR
+   ================================================================ */
+.confirm-modal {
+  padding: 2rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+ 
+/* Okrugla ikona, boja ovisno o akciji */
+.confirm-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.icon-create { background: #ede9fe; color: #7c3aed; }
+.icon-edit   { background: #fef3c7; color: #d97706; }
+.icon-delete { background: #fee2e2; color: #dc2626; }
+ 
+.confirm-title { font-size: 1.05rem; font-weight: 800; color: #1e1b4b; margin: 0; }
+.confirm-msg   { font-size: 0.85rem; color: #6b7280; line-height: 1.6; margin: 0; }
+.confirm-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+ 
+/* ================================================================
+   DUGMAD
+   ================================================================ */
+.btn-secondary,
+.btn-create,
+.btn-edit,
+.btn-delete {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0.5rem 1.2rem; border-radius: 10px;
+  font-size: 0.84rem; font-weight: 700; cursor: pointer;
+  border: none; transition: opacity .15s, transform .12s;
+}
+.btn-create:hover, .btn-edit:hover, .btn-delete:hover { transform: translateY(-1px); }
+.btn-create:disabled, .btn-edit:disabled,
+.btn-delete:disabled, .btn-secondary:disabled {
+  opacity: .55; cursor: not-allowed; transform: none;
+}
+ 
+.btn-secondary { background: #f3f4f6; color: #6b7280; border: 1.5px solid #e5e7eb; }
+.btn-secondary:hover { background: #e5e7eb; }
+ 
+.btn-create {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: #fff; box-shadow: 0 3px 10px rgba(124,58,237,.3);
+}
+.btn-edit {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff; box-shadow: 0 3px 10px rgba(245,158,11,.3);
+}
+.btn-delete {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff; box-shadow: 0 3px 10px rgba(239,68,68,.3);
+}
+ 
+/* ================================================================
+   SPINNER — rotira se dok čekamo API odgovor
+   ================================================================ */
+.spin {
+  display: inline-block; width: 13px; height: 13px;
+  border: 2px solid rgba(255, 255, 255, .4);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .65s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
+ 
+/* ================================================================
+   TOAST NOTIFIKACIJE
+   ================================================================ */
+.toast {
+  position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 9999;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0.7rem 1.2rem; border-radius: 12px;
+  font-size: 0.85rem; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+}
+.toast-success { background: #ecfdf5; color: #065f46; border: 1.5px solid #6ee7b7; }
+.toast-error   { background: #fef2f2; color: #991b1b; border: 1.5px solid #fca5a5; }
+ 
+/* Animacija pojavljivanja/nestajanja toasta */
+.toast-enter-active, .toast-leave-active { transition: all .28s ease; }
+.toast-enter-from { opacity: 0; transform: translateY(8px); }
+.toast-leave-to   { opacity: 0; transform: translateY(-8px); }
+</style>
