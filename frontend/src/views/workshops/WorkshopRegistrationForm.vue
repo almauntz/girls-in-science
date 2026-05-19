@@ -1,6 +1,6 @@
 <template>
   <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6">Forma za prijavu na radionicu</h2>
+    <h2 class="text-2xl font-bold text-gray-800 mb-6"> Prijava na radionicu</h2>
     
     <form @submit.prevent="submitForm" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
