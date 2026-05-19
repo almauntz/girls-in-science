@@ -1,5 +1,12 @@
-from sqlalchemy import Column, Integer, String, Boolean
+import enum
+from sqlalchemy import Column, Integer, String, Boolean, Enum
 from app.database import Base
+
+
+class ApplicationStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
 
 
 class Mentor(Base):
@@ -32,3 +39,9 @@ class Mentor(Base):
     bio = Column(String, nullable=True)
     profile_img_url = Column(String, nullable=True)
     is_approved = Column(Boolean, default=False)
+    status = Column(
+        Enum(ApplicationStatus),
+        default=ApplicationStatus.PENDING,
+        nullable=False,
+        server_default=ApplicationStatus.PENDING.value
+    )
