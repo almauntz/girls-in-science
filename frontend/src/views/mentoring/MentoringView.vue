@@ -1,14 +1,22 @@
 <template>
   <div class="py-8">
 
-    <!-- Button za aplikaciju -->
-    <div class="mb-8">
+    <!-- Button za aplikaciju + Admin Panel dugme -->
+    <div class="flex items-center justify-between mb-8">
       <button
         @click="goToApply"
         class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
       >
         Postani mentor
       </button>
+
+      <router-link
+        v-if="isAdmin"
+        to="/admin/mentor-applications"
+        class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+      >
+        Admin Panel
+      </router-link>
     </div>
 
     <div class="mb-8">
@@ -48,7 +56,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getMentors } from '../../services/mentoring.js'
 import MentorCard from '../../components/MentorCard.vue'
@@ -57,6 +65,17 @@ const router = useRouter()
 const mentors = ref([])
 const loading = ref(true)
 const error = ref(false)
+
+const isAdmin = computed(() => {
+  const token = localStorage.getItem('token')
+  if (!token) return false
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.role === 'admin'
+  } catch {
+    return false
+  }
+})
 
 const goToApply = () => {
   router.push({ name: 'mentor-registration' })
