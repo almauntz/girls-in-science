@@ -33,6 +33,11 @@ const routes = [
     component: () => import('../views/mentoring/MentoringView.vue'),
   },
   {
+    path: '/mentoring/apply',
+    name: 'mentor-registration',
+    component: () => import('../views/mentoring/MentorRegistration.vue'),
+  },
+  {
   path: '/mentoring/:id',
   name: 'mentor-profil',
   component: () => import('../views/mentoring/MentorProfileView.vue')
