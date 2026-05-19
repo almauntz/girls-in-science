@@ -54,6 +54,17 @@ const routes = [
     component: () => import('../views/profiles/ProfilesView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/admin/mentor-applications',
+    name: 'admin-mentor-applications',
+    component: () => import('../views/admin/MentorApplicationsView.vue'),
+    meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/unauthorized',
+    name: 'unauthorized',
+    component: () => import('../views/UnauthorizedView.vue')
+  }
 ]
 
 const router = createRouter({
@@ -63,9 +74,12 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const isLoggedIn = !!localStorage.getItem('token')
+  const userRole = localStorage.getItem('role')
 
   if (to.meta.requiresAuth && !isLoggedIn) {
     next('/login')
+  } else if (to.meta.requiresAdmin && userRole !== 'admin') {
+    next('/unauthorized')
   } else if (to.meta.guestOnly && isLoggedIn) {
     next('/')
   } else {

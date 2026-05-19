@@ -6,6 +6,9 @@ from app.database import Base, engine
 from app.routers import auth, mentoring, forum, workshops, profiles   
 from app.core.security import get_current_user
 from app.models.user import User
+from app.models.mentor import Mentor
+from app.routers import admin  # u import sekciji
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -29,6 +32,7 @@ app.include_router(workshops.router)
 app.include_router(mentoring.router)
 app.include_router(forum.router)
 app.include_router(profiles.router)
+app.include_router(admin.router)  # ispod ostalih routera
 
 @app.get("/")
 def root():
@@ -42,3 +46,4 @@ def get_me(current_user: User = Depends(get_current_user)):
         "full_name": current_user.full_name,
         "role": current_user.role
     }
+
