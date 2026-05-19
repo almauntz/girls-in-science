@@ -14,7 +14,12 @@
              class="bg-white rounded-xl shadow-md p-6 border-t-4 border-purple-500">
           <h3 class="font-bold text-xl mb-2">{{ workshop.title }}</h3>
           <p class="text-sm text-gray-400">Lokacija: {{ workshop.location }}</p>
-
+          <div class="mt-2 text-sm">
+            <span class="text-gray-600">Slobodna mjesta: </span>
+            <span :class="workshop.free_spots === 0 ? 'text-red-500 font-bold' : 'text-green-600 font-bold'">
+            {{ workshop.free_spots }} / {{ workshop.capacity }}
+            </span>
+          </div>
           <div class="mt-6 flex justify-between items-center border-t pt-4">
             <router-link :to="`/workshops/${workshop.ID_workshop}`" class="font-bold text-purple-600">Saznaj više →</router-link>
             
