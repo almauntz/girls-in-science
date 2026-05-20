@@ -97,7 +97,7 @@
 
 <script>
 import { ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { registerForWorkshop } from '../../services/api.js'
 import Swal from 'sweetalert2'
 
@@ -105,6 +105,7 @@ export default {
   emits: ['cancel', 'success'],
   setup(props, { emit }) {
     const route = useRoute()
+    const router = useRouter()
     const loading = ref(false)
     const touched = ref({ first_name: false, last_name: false, email: false, phone: false })
     
@@ -125,6 +126,11 @@ export default {
       try {
         loading.value = true
         const token = localStorage.getItem('token')
+
+        if (!token) {
+          throw new Error("UNAUTHORIZED_GUEST");
+        }
+
         await registerForWorkshop(formData.value, token)
         
         await Swal.fire({
@@ -135,14 +141,36 @@ export default {
           showConfirmButton: false
         })
         emit('success')
+
       } catch (err) {
-        Swal.fire('Greška', err.message || 'Greška pri prijavi.', 'error')
+        if (err.message === "UNAUTHORIZED_GUEST" || (err.response && err.response.status === 401)) {
+          Swal.fire({
+            title: 'Niste prijavljeni',
+            text: 'Morate biti ulogovani da biste se prijavili na radionicu.',
+            icon: 'warning',
+            confirmButtonText: 'Uloguj se',
+            showCancelButton: true,
+            cancelButtonText: 'Odustani'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              router.push('/login')
+            }
+          })
+        } else {
+          Swal.fire('Greška', err.message || 'Greška pri prijavi.', 'error')
+        }
       } finally {
         loading.value = false
       }
     }
 
-    return { formData, touched, loading, submitForm }
+    // OVO JE FALILO:
+    return { 
+      formData, 
+      touched, 
+      loading, 
+      submitForm 
+    }
   }
 }
 </script>

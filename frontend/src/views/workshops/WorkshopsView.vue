@@ -73,21 +73,32 @@ const handleCancel = async (id, title) => {
     icon: 'question',
     showCancelButton: true,
     confirmButtonText: 'Da, otkaži',
+    cancelButtonText: 'Ne',
     confirmButtonColor: '#d33'
   })
 
   if (result.isConfirmed) {
     const token = localStorage.getItem('token')
-    const response = await fetch(`http://127.0.0.1:8000/workshops/registration/${id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${token}` }
-    })
+    
+    // ISPRAVLJENA PUTANJA: mora biti /cancellation/
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/workshops/cancellation/${id}`, {
+        method: 'DELETE',
+        headers: { 
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json' 
+        }
+      })
 
-    if (response.ok) {
-      Swal.fire('Otkazano', 'Prijava je poništena.', 'success')
-      fetchWorkshops()
-    } else {
-      Swal.fire('Ups!', 'Izgleda da niste ni prijavljeni na ovu radionicu.', 'error')
+      if (response.ok) {
+        await Swal.fire('Otkazano', 'Prijava je poništena.', 'success')
+        fetchWorkshops() // Ovo će osvježiti listu i osloboditi mjesto
+      } else {
+        const errorData = await response.json()
+        Swal.fire('Greška', errorData.detail || 'Neuspješno otkazivanje.', 'error')
+      }
+    } catch (err) {
+      Swal.fire('Greška', 'Server nije dostupan.', 'error')
     }
   }
 }

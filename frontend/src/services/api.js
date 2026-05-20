@@ -54,3 +54,22 @@ export const registerForWorkshop = async (registrationData) => {
 
   return response.json();
 };
+
+export const cancelWorkshopRegistration = async (workshopId) => {
+  const token = localStorage.getItem('token');
+
+  const response = await fetch(`${BASE_URL}/workshops/cancellation/${workshopId}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Greška pri otkazivanju prijave.');
+  }
+
+  return response.json();
+};
