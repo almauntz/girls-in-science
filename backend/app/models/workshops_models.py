@@ -4,6 +4,7 @@ import enum
 from sqlmodel import SQLModel, Field
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+  
 class WorkshopStatus(str, enum.Enum):
     active = "active"      # Dodaj ovu liniju
     upcoming = "upcoming"
@@ -99,7 +100,6 @@ class Registration(SQLModel, table=True):
     workshop_id: int = Field()
     previous_experience: Optional[str] = None
     github_profile: Optional[str] = None
-
     
 class RegistrationCreate(SQLModel):
     first_name: str = Field(min_length=2) 

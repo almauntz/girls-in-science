@@ -6,6 +6,7 @@ from app.models.user import User, UserRole
 from app.models.workshops_models import Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead
 from datetime import datetime, timezone
 from sqlalchemy import func
+from app.database import get_db
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
 
@@ -15,7 +16,7 @@ def workshops_placeholder():
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
     # 1. Uzimamo sve radionice koje su 'upcoming'
-    statement = select(Workshop).where(Workshop.status == WorkshopStatus.upcoming).order_by(Workshop.date)
+    statement = select(Workshop)
     workshops = db.execute(statement).scalars().all()
     
     result = []
@@ -153,7 +154,7 @@ def delete_workshop(
 def register_student(
     podaci: RegistrationCreate, 
     db: Session = Depends(get_db), 
-    current_user: User = Depends(get_current_user) # Ovo štiti rutu!
+    current_user: User = Depends(get_current_user)
 ):
     radionica = db.get(Workshop, podaci.workshop_id)
     if not radionica:
@@ -162,14 +163,13 @@ def register_student(
     broj_prijava = db.execute(
         select(func.count(Registration.id)).where(Registration.workshop_id == podaci.workshop_id)
     ).scalar() or 0
-
     
     if broj_prijava >= radionica.capacity:
         raise HTTPException(status_code=400, detail="Nažalost, sva mjesta su popunjena!")
 
-    # 4. Kreiranje prijave
+    # Kreiranje prijave BEZ user_id jer ga baza trenutno ne podržava
     nova_prijava = Registration(**podaci.model_dump())
-
+    
     db.add(nova_prijava)
     db.commit()
     db.refresh(nova_prijava)
@@ -183,15 +183,22 @@ def register_student(
 
 
 @router.delete("/cancellation/{registration_id}")
-def cancel_registration(registration_id: int, db: Session = Depends(get_db)):
+def cancel_registration(registration_id: int, db: Session = Depends(get_db)): # Promijenjeno u get_db
+    # 1. Pronađi prijavu direktno preko njenog ID-a
     prijava = db.get(Registration, registration_id)
+    
+    # 2. Ako prijava ne postoji, baci grešku
     if not prijava:
-        raise HTTPException(status_code=404, detail="Prijava nije pronađena")
-
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Prijava nije pronađena."
+        )
+    
+    # 3. Obriši prijavu
     db.delete(prijava)
     db.commit()
-
-    return {"message": "Uspješno ste se odjavili. Mjesto je sada slobodno."}
+    
+    return {"message": "Uspješno ste odustali od radionice."}
 
 
 
