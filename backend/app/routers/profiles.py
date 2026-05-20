@@ -225,8 +225,8 @@ def register_for_workshop(
 UPLOAD_DIR = "static/avatars"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-DOZVOLJENI_FORMATI = ["jpg", "jpeg", "png"]   
-MAX_VELICINA = 2 * 1024 * 1024    
+ALLOWED_EXTENSIONS = ["jpg", "jpeg", "png"]   
+MAX_FILE_SIZE = 2 * 1024 * 1024    
 
 @router.post("/me/avatar")
 async def upload_avatar(
@@ -235,17 +235,17 @@ async def upload_avatar(
     db: Session = Depends(get_db)  # ← dodaj db parametar
 ):
     extension = file.filename.split(".")[-1].lower()
-    if extension not in DOZVOLJENI_FORMATI:
-        raise HTTPException(status_code=400, detail="Podržani formati su JPG i PNG.")
+    if extension not in ALLOWED_EXTENSIONS:
+        raise HTTPException(status_code=400, detail="Podržani formati su JPG, JPEG i PNG.")
     
-    sadrzaj = await file.read()
-    if len(sadrzaj) > MAX_VELICINA:
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="Slika ne smije biti veća od 2MB.")
 
     filename = f"{uuid.uuid4()}.{extension}"
     file_path = f"{UPLOAD_DIR}/{filename}"
     with open(file_path, "wb") as buffer:
-        buffer.write(sadrzaj)
+        buffer.write(content)
 
     url = f"/static/avatars/{filename}"
 
