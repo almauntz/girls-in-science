@@ -5,7 +5,7 @@ from sqlmodel import SQLModel, Field
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 class WorkshopStatus(str, enum.Enum):
-    active = "active"      # Dodaj ovu liniju
+    active = "active"      
     upcoming = "upcoming"
     cancelled = "cancelled"
     completed = "completed"
@@ -83,8 +83,6 @@ class WorkshopDetailRead(BaseModel):
     end_time: datetime
     capacity: int
     status: WorkshopStatus
-    organizer_name:str
-    organizer_email:str
     free_spots:int
     class Config:
         from_attributes = True
