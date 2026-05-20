@@ -17,13 +17,6 @@
           <p class="text-gray-600 leading-relaxed">
             {{ workshop.description }}
           </p>
-
-          <!-- Organizator -->
-          <div class="mt-6">
-            <h3 class="text-xl font-bold text-gray-800 mb-2">Organizator</h3>
-            <p class="text-sm text-gray-600"><strong>Ime i prezime:</strong> {{ workshop.organizer_name }}</p>
-            <p class="text-sm text-gray-600"><strong>Email:</strong> {{ workshop.organizer_email }}</p>
-          </div>
         </div>
 
         <!-- Detalji radionice -->

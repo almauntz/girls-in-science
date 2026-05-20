@@ -6,37 +6,22 @@ from app.models.user import User, UserRole
 from app.models.workshops_models import Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead
 from datetime import datetime, timezone
 from sqlalchemy import func
+
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
-
-@router.get("/")
-def workshops_placeholder():
-    return {"message": "Workshops router is working — Team 1 builds here"}
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
-    # 1. Uzimamo sve radionice koje su 'upcoming'
-    statement = select(Workshop).where(Workshop.status == WorkshopStatus.upcoming).order_by(Workshop.date)
+    statement = select(Workshop)
     workshops = db.execute(statement).scalars().all()
-    
     result = []
-    
     for w in workshops:
-        # 2. Brojimo prijave koristeći .execute i .scalar() (ovo rješava tvoj AttributeError)
         broj_prijava = db.execute(
             select(func.count(Registration.id)).where(Registration.workshop_id == w.ID_workshop)
         ).scalar() or 0
-        
-        # 3. Pretvaramo model iz baze u rječnik da bismo mu dodali polje koje ne postoji u bazi
         workshop_dict = w.model_dump()
-        
-        # 4. Izračunavamo slobodna mjesta
         workshop_dict["free_spots"] = w.capacity - broj_prijava
-        
         result.append(workshop_dict)
-
-    # 5. Vraćamo listu rječnika koju će FastAPI automatski pretvoriti u WorkshopList objekte
     return result
-
 
 @router.get("/{workshop_id}", response_model=WorkshopDetailRead)
 def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
@@ -57,8 +42,6 @@ def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
         end_time=workshop.end_time,
         capacity=workshop.capacity,
         status=workshop.status,
-        organizer_name=organizer.full_name,
-        organizer_email=organizer.email,
         free_spots=free_spots
     )
 
