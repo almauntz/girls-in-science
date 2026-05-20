@@ -6,7 +6,6 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
   
 class WorkshopStatus(str, enum.Enum):
-    active = "active"      # Dodaj ovu liniju
     upcoming = "upcoming"
     cancelled = "cancelled"
     completed = "completed"

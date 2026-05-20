@@ -15,14 +15,12 @@ def workshops_placeholder():
     return {"message": "Workshops router is working — Team 1 builds here"}
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
-    # 1. Uzimamo sve radionice koje su 'upcoming'
     statement = select(Workshop)
     workshops = db.execute(statement).scalars().all()
     
     result = []
     
     for w in workshops:
-        # 2. Brojimo prijave koristeći .execute i .scalar() (ovo rješava tvoj AttributeError)
         broj_prijava = db.execute(
             select(func.count(Registration.id)).where(Registration.workshop_id == w.ID_workshop)
         ).scalar() or 0
@@ -167,7 +165,6 @@ def register_student(
     if broj_prijava >= radionica.capacity:
         raise HTTPException(status_code=400, detail="Nažalost, sva mjesta su popunjena!")
 
-    # Kreiranje prijave BEZ user_id jer ga baza trenutno ne podržava
     nova_prijava = Registration(**podaci.model_dump())
     
     db.add(nova_prijava)
@@ -187,14 +184,12 @@ def cancel_registration(registration_id: int, db: Session = Depends(get_db)): # 
     # 1. Pronađi prijavu direktno preko njenog ID-a
     prijava = db.get(Registration, registration_id)
     
-    # 2. Ako prijava ne postoji, baci grešku
     if not prijava:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="Prijava nije pronađena."
         )
     
-    # 3. Obriši prijavu
     db.delete(prijava)
     db.commit()
     
