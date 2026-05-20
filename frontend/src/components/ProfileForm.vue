@@ -181,7 +181,7 @@
 </template>
 
 <script>
-import { getMyProfile, updateProfile } from '../services/api.js'
+import { updateProfile } from '../services/api.js'
 
 export default {
   name: 'ProfileForm',
@@ -189,6 +189,7 @@ export default {
   props: {
     fullName: String,
     field: String,
+    biography: String,
     avatarUrl: String
   },
 
@@ -230,28 +231,28 @@ export default {
     }
   },
 
-  async mounted() {
-    await this.loadProfile()
+watch: {
+  fullName: {
+    immediate: true,
+    handler(val) {
+      this.form.full_name = val || ''
+    }
   },
-
+  field: {
+    immediate: true,
+    handler(val) {
+      this.form.field = val || ''
+    }
+  },
+  biography: {
+    immediate: true,
+    handler(val) {
+      this.form.biography = val || ''
+    }
+  }
+},
   methods: {
-    async loadProfile() {
-      try {
-        const token = localStorage.getItem('token')
-        const data = await getMyProfile(token)
-        this.form.full_name = data.full_name || ''
-        this.form.biography = data.biography || ''
-        this.form.field = data.field || ''
-        this.$emit('profile-updated', data)
-       
-        if (data.avatar) {
-          this.$emit('avatar-uploaded', `http://localhost:8000${data.avatar}`)
-        }
-      } catch (error) {
-        this.errorMessage = 'Greška pri učitavanju profila.'
-      }
-    },
-
+  
     validateForm() {
       this.errors = { full_name: '', biography: '' }
       let isValid = true
