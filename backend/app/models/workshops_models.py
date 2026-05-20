@@ -83,8 +83,6 @@ class WorkshopDetailRead(BaseModel):
     end_time: datetime
     capacity: int
     status: WorkshopStatus
-    organizer_name:str
-    organizer_email:str
     free_spots:int
     class Config:
         from_attributes = True

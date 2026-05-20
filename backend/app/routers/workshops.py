@@ -7,35 +7,22 @@ from app.models.workshops_models import Workshop,RegistrationCreate,Registration
 from datetime import datetime, timezone
 from sqlalchemy import func
 from app.database import get_db
+
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
-
-@router.get("/")
-def workshops_placeholder():
-    return {"message": "Workshops router is working — Team 1 builds here"}
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
     statement = select(Workshop)
     workshops = db.execute(statement).scalars().all()
-    
     result = []
-    
     for w in workshops:
         broj_prijava = db.execute(
             select(func.count(Registration.id)).where(Registration.workshop_id == w.ID_workshop)
         ).scalar() or 0
-        
-        # 3. Pretvaramo model iz baze u rječnik da bismo mu dodali polje koje ne postoji u bazi
         workshop_dict = w.model_dump()
-        
-        # 4. Izračunavamo slobodna mjesta
         workshop_dict["free_spots"] = w.capacity - broj_prijava
-        
         result.append(workshop_dict)
-
-    # 5. Vraćamo listu rječnika koju će FastAPI automatski pretvoriti u WorkshopList objekte
     return result
-
 
 @router.get("/{workshop_id}", response_model=WorkshopDetailRead)
 def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
@@ -56,8 +43,6 @@ def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
         end_time=workshop.end_time,
         capacity=workshop.capacity,
         status=workshop.status,
-        organizer_name=organizer.full_name,
-        organizer_email=organizer.email,
         free_spots=free_spots
     )
 
@@ -155,9 +140,27 @@ def register_student(
     current_user: User = Depends(get_current_user)
 ):
     radionica = db.get(Workshop, podaci.workshop_id)
+
     if not radionica:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena")
 
+
+ #Provjera da li je student već prijavljen na radionicu (preko emaila)
+    postojeca = db.exec(
+        select(Registration).where(
+            Registration.workshop_id == podaci.workshop_id,
+            Registration.email == podaci.email
+        )
+    ).first()
+
+    if postojeca:
+        raise HTTPException(
+            status_code=400,
+            detail="Already registered with this email"
+        )
+    
+
+    # Kapacitet (brojanje)
     broj_prijava = db.execute(
         select(func.count(Registration.id)).where(Registration.workshop_id == podaci.workshop_id)
     ).scalar() or 0
