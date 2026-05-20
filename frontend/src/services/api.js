@@ -41,16 +41,22 @@ export async function getWorkshopDetails(workshopId) {
 
 
 export const registerForWorkshop = async (registrationData) => {
-  const token = localStorage.getItem('token'); // Uzimamo token koji je spremljen pri Loginu
+  const token = localStorage.getItem('token');
 
   const response = await fetch('http://127.0.0.1:8000/workshops/registration', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${token}`, 
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(registrationData)
   });
 
-  return response.json();
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw data; 
+  }
+
+  return data;
 };
