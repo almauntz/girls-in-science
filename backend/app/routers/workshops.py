@@ -141,51 +141,41 @@ def register_student(
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
-    # 1. Pronađi radionicu u bazi
     radionica = db.get(Workshop, podaci.workshop_id)
     if not radionica:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena")
 
-    # 2. Provjera da li je student već prijavljen na ovu radionicu (preko emaila)
-    statement = select(Registration).where(
-        Registration.workshop_id == podaci.workshop_id,
-        Registration.email == podaci.email
-    )
-    # Koristimo .execute(...).scalars().first() jer je to ispravno za SQLAlchemy sesiju
-    postojeca = db.execute(statement).scalars().first()
-
-    if postojeca:
-        raise HTTPException(
-            status_code=400,
-            detail="Već ste prijavljeni na ovu radionicu sa ovom email adresom."
-        )
-
-    # 3. Provjera kapaciteta (brojanje trenutnih prijava)
     broj_prijava = db.execute(
-        select(func.count(Registration.id)).where(Registration.workshop_id == podaci.workshop_id)
+        select(func.count(Registration.id)).where(
+            Registration.workshop_id == podaci.workshop_id
+        )
     ).scalar() or 0
-    
     if broj_prijava >= radionica.capacity:
         raise HTTPException(status_code=400, detail="Nažalost, sva mjesta su popunjena!")
 
-    # 4. Kreiranje nove prijave
-    nova_prijava = Registration(**podaci.model_dump())
+    # 
+    postojeca = db.execute(
+        select(Registration).where(
+            Registration.workshop_id == podaci.workshop_id,
+            func.lower(Registration.email) == podaci.email.lower().strip()
+        )
+    ).scalars().first()
+    if postojeca:
+        raise HTTPException(status_code=400, detail="Već ste prijavljeni na ovu radionicu!")
+
     
-    # Ako tvoja baza ima user_id kolonu, otkomentariši liniju ispod:
-    # nova_prijava.user_id = current_user.id 
+    nova_prijava = Registration(**podaci.model_dump())
 
     db.add(nova_prijava)
     db.commit()
     db.refresh(nova_prijava)
 
-    # 5. Izračunaj koliko je mjesta ostalo za odgovor
     preostalo = radionica.capacity - (broj_prijava + 1)
-    
+
     return {
         "message": "Uspješna prijava!",
-        "free_spots_left": max(0, preostalo) 
+        "free_spots_left": max(0, preostalo)
     }
-
 
 @router.delete("/cancellation/{workshop_id}")
 def cancel_registration(

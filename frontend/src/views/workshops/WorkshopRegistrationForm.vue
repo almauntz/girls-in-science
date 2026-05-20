@@ -97,7 +97,7 @@
 
 <script>
 import { ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { registerForWorkshop } from '../../services/api.js'
 import Swal from 'sweetalert2'
 
@@ -105,71 +105,126 @@ export default {
   emits: ['cancel', 'success'],
   setup(props, { emit }) {
     const route = useRoute()
-    const router = useRouter()
     const loading = ref(false)
-    const touched = ref({ first_name: false, last_name: false, email: false, phone: false })
-    
+
+    const touched = ref({
+      first_name: false,
+      last_name: false,
+      email: false,
+      phone: false
+    })
+
     const formData = ref({
-      first_name: '', last_name: '', email: '', phone: '',
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone: '',
       workshop_id: parseInt(route.params.id),
-      previous_experience: '', github_profile: ''
+      previous_experience: '',
+      github_profile: ''
     })
 
     const submitForm = async () => {
+      // označi sva polja kao touched
       Object.keys(touched.value).forEach(k => touched.value[k] = true)
-      
-      if (!formData.value.first_name || !formData.value.last_name || !formData.value.email || !formData.value.phone) {
+
+      // osnovna validacija
+      if (
+        !formData.value.first_name ||
+        !formData.value.last_name ||
+        !formData.value.email ||
+        !formData.value.phone
+      ) {
         Swal.fire('Pažnja', 'Popunite obavezna polja označena crvenom bojom.', 'warning')
         return
       }
 
       try {
         loading.value = true
-        const token = localStorage.getItem('token')
 
-        if (!token) {
-          throw new Error("UNAUTHORIZED_GUEST");
-        }
+        const res = await registerForWorkshop(formData.value)
 
-        await registerForWorkshop(formData.value, token)
-        
         await Swal.fire({
           title: 'Uspješno!',
-          text: 'Prijavljeni ste na radionicu.',
+          text: res.message || 'Prijavljeni ste na radionicu.',
           icon: 'success',
           timer: 2500,
           showConfirmButton: false
         })
+
         emit('success')
 
       } catch (err) {
-        if (err.message === "UNAUTHORIZED_GUEST" || (err.response && err.response.status === 401)) {
-          Swal.fire({
-            title: 'Niste prijavljeni',
-            text: 'Morate biti ulogovani da biste se prijavili na radionicu.',
-            icon: 'warning',
-            confirmButtonText: 'Uloguj se',
-            showCancelButton: true,
-            cancelButtonText: 'Odustani'
-          }).then((result) => {
-            if (result.isConfirmed) {
-              router.push('/login')
-            }
-          })
-        } else {
-          Swal.fire('Greška', err.message || 'Greška pri prijavi.', 'error')
+        console.log(err)
+
+        // 🔴 VALIDACIONE GREŠKE (422 - npr. telefon)
+        if (Array.isArray(err.detail)) {
+          const phoneError = err.detail.find(e => e.loc.includes('phone'))
+
+          if (phoneError) {
+            Swal.fire({
+              title: 'Neispravan broj',
+              text: 'Broj telefona mora imati dovoljan broj cifara.',
+              icon: 'warning'
+            })
+          } else {
+            const poruke = err.detail.map(e => e.msg).join('\n')
+
+            Swal.fire({
+              title: 'Greška u unosu',
+              text: poruke,
+              icon: 'error'
+            })
+          }
         }
+
+        // 🔴 BACKEND PORUKE (400, 404)
+        else if (typeof err.detail === 'string') {
+
+          if (err.detail.includes('Već ste prijavljeni')) {
+            Swal.fire({
+              title: 'Dupla prijava',
+              text: 'Već ste prijavljeni na ovu radionicu.',
+              icon: 'info'
+            })
+          }
+
+          else if (err.detail.includes('popunjena')) {
+            Swal.fire({
+              title: 'Nema mjesta',
+              text: 'Nažalost, radionica je već popunjena.',
+              icon: 'warning'
+            })
+          }
+
+          else {
+            Swal.fire({
+              title: 'Greška',
+              text: err.detail,
+              icon: 'error'
+            })
+          }
+        }
+
+        // 🔴 fallback
+        else {
+          Swal.fire({
+            title: 'Greška',
+            text: 'Greška pri prijavi.',
+            icon: 'error'
+          })
+        }
+
       } finally {
         loading.value = false
       }
     }
 
-    // OVO JE FALILO:
-    return { 
-      formData, 
-      touched, 
-      loading, 
-      submitForm 
+    return {
+      formData,
+      touched,
+      loading,
+      submitForm
     }
   }
 }
