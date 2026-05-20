@@ -1,5 +1,5 @@
 <template>
-  <aside class="w-64 bg-violet-300 flex flex-col">
+  <aside class="w-64 bg-violet-300 flex flex-col" style="position: sticky; top: 0; align-self: flex-start; min-height: 722px;">
     <div class="m-4 rounded-xl bg-violet-600 p-6 flex flex-col items-center">
       <div class="w-16 h-16 rounded-full bg-violet-400 flex items-center justify-center overflow-hidden mb-3">
         <img v-if="avatarUrl" :src="avatarUrl" alt="Profilna slika" class="w-full h-full object-cover" />
