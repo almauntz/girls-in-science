@@ -187,38 +187,28 @@ def register_student(
     }
 
 
-@router.delete("/cancellation/{registration_id}")
-def cancel_registration(registration_id: int, db: Session = Depends(get_db)): # Promijenjeno u get_db
-    # 1. Pronađi prijavu direktno preko njenog ID-a
-    prijava = db.get(Registration, registration_id)
+@router.delete("/cancellation/{workshop_id}")
+def cancel_registration(
+    workshop_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    # Tražimo prijavu na osnovu ID-a radionice i email-a ulogovanog korisnika
+    # Pošto tvoj Registration model ima 'email', ovo će raditi!
+    statement = select(Registration).where(
+        Registration.workshop_id == workshop_id,
+        Registration.email == current_user.email
+    )
     
-    if not prijava:
+    result = db.execute(statement).scalars().first()
+    
+    if not result:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Prijava nije pronađena."
+            status_code=404, 
+            detail="Nije pronađena vaša prijava za ovu radionicu."
         )
     
-    db.delete(prijava)
+    db.delete(result)
     db.commit()
     
     return {"message": "Uspješno ste odustali od radionice."}
-
-
-
-@router.get("/prijava/status/{workshop_id}")
-def provjeri_status_prijave(
-    workshop_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    # Izmjena: koristimo .execute(...).scalars().first()
-    statement = select(Registration).where(
-        Registration.workshop_id == workshop_id,
-        Registration.user_id == current_user.id
-    )
-    existing = db.execute(statement).scalars().first()
-
-    if existing:
-        return {"status": "Prijavljena"}
-
-    return {"status": "Ne prijavljena"}
