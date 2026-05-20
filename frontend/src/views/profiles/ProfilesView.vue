@@ -21,6 +21,7 @@
         v-if="activeTab === 'profil'"
         :fullName="profileData.full_name"
         :field="profileData.field"
+        :biography="profileData.biography"
         :avatarUrl="avatarUrl"
         @profile-updated="profileData = $event"
         @avatar-uploaded="avatarUrl = $event"
@@ -63,7 +64,7 @@ export default {
     return {
       activeTab: 'dashboard',
       avatarUrl: null,
-      profileData: { full_name: '', field: '' },
+      profileData: { full_name: '', field: '' , biography: ''},
       myWorkshops: [],
       newWorkshops: [],
       availableWorkshops: [],
@@ -87,7 +88,8 @@ export default {
       const data = await getMyProfile(token)
       this.profileData = {
         full_name: data.full_name || '',
-        field: data.field || ''
+        field: data.field || '',
+        biography: data.biography || ''
       }
       if (data.avatar) {
         this.avatarUrl = `http://localhost:8000${data.avatar}`
