@@ -7,7 +7,9 @@ from app.models.workshops_models import Workshop,RegistrationCreate,Registration
 from datetime import datetime, timezone
 from sqlalchemy import func
 from app.database import get_db
-
+from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session
+from sqlmodel import select
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
 @router.get("/active", response_model=list[WorkshopList])
@@ -139,28 +141,26 @@ def register_student(
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
+    # 1. Pronađi radionicu u bazi
     radionica = db.get(Workshop, podaci.workshop_id)
-
     if not radionica:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena")
 
-
- #Provjera da li je student već prijavljen na radionicu (preko emaila)
-    postojeca = db.exec(
-        select(Registration).where(
-            Registration.workshop_id == podaci.workshop_id,
-            Registration.email == podaci.email
-        )
-    ).first()
+    # 2. Provjera da li je student već prijavljen na ovu radionicu (preko emaila)
+    statement = select(Registration).where(
+        Registration.workshop_id == podaci.workshop_id,
+        Registration.email == podaci.email
+    )
+    # Koristimo .execute(...).scalars().first() jer je to ispravno za SQLAlchemy sesiju
+    postojeca = db.execute(statement).scalars().first()
 
     if postojeca:
         raise HTTPException(
             status_code=400,
-            detail="Already registered with this email"
+            detail="Već ste prijavljeni na ovu radionicu sa ovom email adresom."
         )
-    
 
-    # Kapacitet (brojanje)
+    # 3. Provjera kapaciteta (brojanje trenutnih prijava)
     broj_prijava = db.execute(
         select(func.count(Registration.id)).where(Registration.workshop_id == podaci.workshop_id)
     ).scalar() or 0
@@ -168,12 +168,17 @@ def register_student(
     if broj_prijava >= radionica.capacity:
         raise HTTPException(status_code=400, detail="Nažalost, sva mjesta su popunjena!")
 
+    # 4. Kreiranje nove prijave
     nova_prijava = Registration(**podaci.model_dump())
     
+    # Ako tvoja baza ima user_id kolonu, otkomentariši liniju ispod:
+    # nova_prijava.user_id = current_user.id 
+
     db.add(nova_prijava)
     db.commit()
     db.refresh(nova_prijava)
 
+    # 5. Izračunaj koliko je mjesta ostalo za odgovor
     preostalo = radionica.capacity - (broj_prijava + 1)
     
     return {
@@ -206,12 +211,12 @@ def provjeri_status_prijave(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    existing = db.exec(
-        select(Registration).where(
-            Registration.ID_workshop == workshop_id,
-            Registration.user_id == current_user.id
-        )
-    ).first()
+    # Izmjena: koristimo .execute(...).scalars().first()
+    statement = select(Registration).where(
+        Registration.workshop_id == workshop_id,
+        Registration.user_id == current_user.id
+    )
+    existing = db.execute(statement).scalars().first()
 
     if existing:
         return {"status": "Prijavljena"}
