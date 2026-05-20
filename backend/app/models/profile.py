@@ -1,8 +1,14 @@
 from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
-from pydantic import field_validator
+from pydantic import BaseModel, field_validator
 from app.models.user import User
+
+
+class ChangePasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+    confirm_new_password: str
 
 # Tabela u bazi
 class Profile(SQLModel, table=True):

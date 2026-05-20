@@ -5,14 +5,6 @@ from sqlmodel import SQLModel, Field
 from sqlalchemy import Column, Enum as SAEnum
 from sqlalchemy.sql import func
 from sqlalchemy import DateTime
-from pydantic import BaseModel
-
-class ChangePasswordRequest(BaseModel):
-    old_password: str
-    new_password: str
-    confirm_new_password: str
-
-
 class UserRole(str, enum.Enum):
     member = "member"
     mentor = "mentor"

@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
 from sqlmodel import Session, select, not_
 from app.database import get_db
 from app.core.security import get_current_user, verify_password, hash_password
-from app.models.user import User, ChangePasswordRequest
-from app.models.profile import Profile, ProfileUpdate, ProfileResponse, Workshop, WorkshopRegistration
+from app.models.user import User
+from app.models.profile import Profile, ProfileUpdate, ProfileResponse, Workshop, WorkshopRegistration, ChangePasswordRequest
 from datetime import datetime
 from typing import Dict, Any
 import uuid
