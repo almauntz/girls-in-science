@@ -23,7 +23,7 @@
         :field="profileData.field"
         :biography="profileData.biography"
         :avatarUrl="avatarUrl"
-        @profile-updated="profileData = $event"
+        @profile-updated="handleProfileUpdated"
         @avatar-uploaded="avatarUrl = $event"
         @avatar-deleted="avatarUrl = null"
       />
@@ -98,6 +98,11 @@ export default {
       console.error('Greška pri učitavanju profila.')
     }
   },
+  handleProfileUpdated(data) {
+  this.profileData.full_name = data.full_name
+  this.profileData.field = data.field
+  this.profileData.biography = data.biography
+},
     getAuthHeaders() {
       const token = localStorage.getItem('token')
       return { headers: { Authorization: `Bearer ${token}` } }
