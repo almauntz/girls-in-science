@@ -183,6 +183,7 @@ const handleCancel = async (id, title) => {
 
     if (response.ok) {
       await Swal.fire('Otkazano', 'Prijava je poništena.', 'success')
+      await checkAllRegistrations()
       fetchWorkshops()
     } else {
       const err = await response.json()
