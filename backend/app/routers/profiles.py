@@ -357,7 +357,7 @@ def update_user_status(
     db.refresh(user_to_update)
 
     action_status = "aktivirana" if is_active else "deaktivirana"
-    reurn {
+    return {
         "message": f"Nalog je uspješno {action_status}.",
         "user_id": user_to_update.id,
         "is_active": user_to_update.is_active
