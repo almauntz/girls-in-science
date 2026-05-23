@@ -50,6 +50,14 @@
             </span>
           </p>
 
+          <!-- REGISTRATION CHECK -->
+          <p
+            v-if="registrations[workshop.ID_workshop] === true"
+            class="text-green-600 text-xs font-semibold"
+          >
+            Već si prijavljen na ovu radionicu
+          </p>
+
           <hr class="border-gray-100 mt-2" />
 
           <div class="flex justify-between items-center">
@@ -61,6 +69,7 @@
             </router-link>
 
             <button
+              v-if="registrations[workshop.ID_workshop]"
               @click="handleCancel(workshop.ID_workshop, workshop.title)"
               class="text-xs font-medium text-gray-400 hover:text-red-500 uppercase tracking-wide"
             >
@@ -80,6 +89,15 @@ import Swal from 'sweetalert2'
 const workshops = ref([])
 const error = ref(null)
 
+/*MAHIR refresh*/
+const refreshWorkshops = async () => {
+  await fetchWorkshops()
+  await checkAllRegistrations()
+}
+
+/* key: workshopId -> true/false */
+const registrations = ref({})
+
 /* ---------------- DATE ---------------- */
 function formatDate(dateStr) {
   if (!dateStr) return ''
@@ -89,7 +107,7 @@ function formatDate(dateStr) {
   ).padStart(2, '0')}.${d.getFullYear()}`
 }
 
-/* ---------------- CAPACITY LOGIC ---------------- */
+/* ---------------- CAPACITY ---------------- */
 const getRegisteredCount = (w) => w.registered_count ?? 0
 
 const getFreeSpots = (w) => {
@@ -100,7 +118,7 @@ const getFreeSpots = (w) => {
 const getCapacityClass = (w) =>
   getFreeSpots(w) > 0 ? 'text-green-600' : 'text-red-500'
 
-/* ---------------- FETCH ---------------- */
+/* ---------------- FETCH WORKSHOPS ---------------- */
 const fetchWorkshops = async () => {
   try {
     const res = await fetch('http://127.0.0.1:8000/workshops/active')
@@ -113,7 +131,36 @@ const fetchWorkshops = async () => {
   }
 }
 
-/* ---------------- CANCEL (UNIFIED) ---------------- */
+/* ---------------- CHECK REGISTRATION FOR EACH WORKSHOP ---------------- */
+const checkRegistration = async (workshopId) => {
+  try {
+    const token = localStorage.getItem('token')
+
+    const res = await fetch(
+      `http://127.0.0.1:8000/workshops/registration/check/${workshopId}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    )
+
+    const data = await res.json()
+    registrations.value[workshopId] = data.registered
+  } catch (err) {
+    registrations.value[workshopId] = false
+  }
+}
+
+/* check for all workshops after fetch */
+const checkAllRegistrations = async () => {
+  await Promise.all(
+    workshops.value.map(w => checkRegistration(w.ID_workshop))
+  )
+}
+
+/* ---------------- CANCEL ---------------- */
 const handleCancel = async (id, title) => {
   const result = await Swal.fire({
     title: 'Otkazivanje?',
@@ -142,7 +189,7 @@ const handleCancel = async (id, title) => {
 
     if (response.ok) {
       await Swal.fire('Otkazano', 'Prijava je poništena.', 'success')
-      fetchWorkshops()
+       await refreshWorkshops()
     } else {
       const err = await response.json()
       Swal.fire('Greška', err.detail || 'Neuspješno otkazivanje.', 'error')
@@ -152,5 +199,9 @@ const handleCancel = async (id, title) => {
   }
 }
 
-onMounted(fetchWorkshops)
+/* ---------------- INIT ---------------- */
+onMounted(async () => {
+   await refreshWorkshops()
+  
+})
 </script>

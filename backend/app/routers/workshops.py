@@ -12,6 +12,36 @@ from sqlalchemy.orm import Session
 from sqlmodel import select
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
+
+@router.delete("/cancellation/{workshop_id}")
+def cancel_registration(
+    workshop_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    ##MAHIR : sada se provjera radi preko USER.ID!
+    statement = select(Registration).where(
+        Registration.workshop_id == workshop_id,
+        Registration.user_id == current_user.id
+    )
+    
+    result = db.execute(statement).scalars().first()
+    
+    if not result:
+        raise HTTPException(
+            status_code=404, 
+            detail="Nije pronađena vaša prijava za ovu radionicu."
+        )
+    
+    db.delete(result)
+    db.commit()
+    
+    return {"message": "Uspješno ste odustali od radionice."}
+
+
+
+
+
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
     statement = select(Workshop)
@@ -137,34 +167,52 @@ def delete_workshop(
 
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
 def register_student(
-    podaci: RegistrationCreate, 
-    db: Session = Depends(get_db), 
+    podaci: RegistrationCreate,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     radionica = db.get(Workshop, podaci.workshop_id)
     if not radionica:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena")
 
+    # broj prijava
     broj_prijava = db.execute(
         select(func.count(Registration.id)).where(
             Registration.workshop_id == podaci.workshop_id
         )
     ).scalar() or 0
+
     if broj_prijava >= radionica.capacity:
         raise HTTPException(status_code=400, detail="Nažalost, sva mjesta su popunjena!")
 
-    # 
-    postojeca = db.execute(
+    #DUPLA PROVJERA: EMAIL
+    postojeca_email = db.execute(
         select(Registration).where(
             Registration.workshop_id == podaci.workshop_id,
             func.lower(Registration.email) == podaci.email.lower().strip()
         )
     ).scalars().first()
-    if postojeca:
-        raise HTTPException(status_code=400, detail="Već ste prijavljeni na ovu radionicu!")
 
-    
-    nova_prijava = Registration(**podaci.model_dump())
+    if postojeca_email:
+        raise HTTPException(status_code=400, detail="Ovaj email već je registrovan!")
+
+    # DUPLA PROVJERA: USER_ID
+    postojeca_user = db.execute(
+        select(Registration).where(
+            Registration.workshop_id == podaci.workshop_id,
+            Registration.user_id == current_user.id
+        )
+    ).scalars().first()
+
+    if postojeca_user:
+        raise HTTPException(status_code=400, detail="Već ste prijavljeni (user)!")
+
+
+    # kreiranje prijave
+    nova_prijava = Registration(
+        **podaci.model_dump(),
+        user_id=current_user.id
+    )
 
     db.add(nova_prijava)
     db.commit()
@@ -202,3 +250,21 @@ def cancel_registration(
     db.commit()
     
     return {"message": "Uspješno ste odustali od radionice."}
+
+
+@router.get("/registration/check/{workshop_id}")
+def check_registration(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    exists = db.execute(
+        select(Registration).where(
+            Registration.workshop_id == workshop_id,
+            Registration.user_id == current_user.id
+        )
+    ).scalars().first()
+
+    return {
+        "registered": exists is not None
+    }
