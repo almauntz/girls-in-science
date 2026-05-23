@@ -3,7 +3,7 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.core.config import settings
 from app.database import get_db
 
@@ -49,4 +49,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise credentials_exception
     
+    # Provjera da li je nalog deaktiviran
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Vaš nalog je deaktiviran. Molimo kontaktirajte administratora."
+        )
+
     return user
