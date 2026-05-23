@@ -89,6 +89,12 @@ import Swal from 'sweetalert2'
 const workshops = ref([])
 const error = ref(null)
 
+/*MAHIR refresh*/
+const refreshWorkshops = async () => {
+  await fetchWorkshops()
+  await checkAllRegistrations()
+}
+
 /* key: workshopId -> true/false */
 const registrations = ref({})
 
@@ -183,8 +189,7 @@ const handleCancel = async (id, title) => {
 
     if (response.ok) {
       await Swal.fire('Otkazano', 'Prijava je poništena.', 'success')
-      await checkAllRegistrations()
-      fetchWorkshops()
+       await refreshWorkshops()
     } else {
       const err = await response.json()
       Swal.fire('Greška', err.detail || 'Neuspješno otkazivanje.', 'error')
@@ -196,7 +201,7 @@ const handleCancel = async (id, title) => {
 
 /* ---------------- INIT ---------------- */
 onMounted(async () => {
-  await fetchWorkshops()
-  await checkAllRegistrations()
+   await refreshWorkshops()
+  
 })
 </script>
