@@ -12,6 +12,37 @@ from sqlalchemy.orm import Session
 from sqlmodel import select
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
+
+@router.delete("/cancellation/{workshop_id}")
+def cancel_registration(
+    workshop_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
+    # Tražimo prijavu na osnovu ID-a radionice i email-a ulogovanog korisnika
+    # Pošto tvoj Registration model ima 'email', ovo će raditi!
+    statement = select(Registration).where(
+        Registration.workshop_id == workshop_id,
+        Registration.email == current_user.email
+    )
+    
+    result = db.execute(statement).scalars().first()
+    
+    if not result:
+        raise HTTPException(
+            status_code=404, 
+            detail="Nije pronađena vaša prijava za ovu radionicu."
+        )
+    
+    db.delete(result)
+    db.commit()
+    
+    return {"message": "Uspješno ste odustali od radionice."}
+
+
+
+
+
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
     statement = select(Workshop)
@@ -164,7 +195,10 @@ def register_student(
         raise HTTPException(status_code=400, detail="Već ste prijavljeni na ovu radionicu!")
 
     
-    nova_prijava = Registration(**podaci.model_dump())
+    nova_prijava = nova_prijava = Registration(
+    **podaci.model_dump(),
+    user_id=current_user.id
+)
 
     db.add(nova_prijava)
     db.commit()

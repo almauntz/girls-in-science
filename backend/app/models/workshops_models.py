@@ -4,6 +4,8 @@ import enum
 from sqlmodel import SQLModel, Field
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, ForeignKey
+from app.database import Base
   
 class WorkshopStatus(str, enum.Enum):
     upcoming = "upcoming"
@@ -87,16 +89,21 @@ class WorkshopDetailRead(BaseModel):
     class Config:
         from_attributes = True
 
-class Registration(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True)
-    
-    first_name: str = Field(min_length=2)
-    last_name: str = Field(min_length=2)
-    email: EmailStr 
-    phone: str = Field(min_length=9)
-    workshop_id: int = Field()
-    previous_experience: Optional[str] = None
-    github_profile: Optional[str] = None
+class Registration(Base):
+    __tablename__ = "registration"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    user_id = Column(Integer, ForeignKey("users.id"))
+
+    first_name = Column(String, nullable=False)
+    last_name = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    phone = Column(String, nullable=False)
+    workshop_id = Column(Integer, nullable=False)
+
+    previous_experience = Column(String, nullable=True)
+    github_profile = Column(String, nullable=True)
     
 class RegistrationCreate(SQLModel):
     first_name: str = Field(min_length=2) 
