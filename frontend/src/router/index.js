@@ -61,6 +61,11 @@ const routes = [
   component: () => import('../views/rolemodels/RoleModelEdit.vue'),
   meta: { requiresAuth: true }
 },
+{
+  path: '/news/:id',
+  name: 'news-detail',
+  component: () => import('../views/news/NewsDetail.vue'),
+},
 ]
 const router = createRouter({
   history: createWebHistory(),
