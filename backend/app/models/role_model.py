@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, DateTime, Text
 from sqlalchemy.sql import func
+from app.models.news import NewsPostRoleModelLink
 
 class RoleModel(SQLModel, table=True):
     __tablename__ = "role_models"
@@ -18,6 +19,8 @@ class RoleModel(SQLModel, table=True):
         default=None,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
+    news_posts: List["NewsPost"] = Relationship(back_populates="role_models", link_model=NewsPostRoleModelLink)
+    
 
 
 class RoleModelCreate(SQLModel):
