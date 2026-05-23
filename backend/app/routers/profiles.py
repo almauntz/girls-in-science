@@ -9,8 +9,6 @@ from typing import Dict, Any
 import uuid
 import os
 
-from backend.app.models import user
-
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
