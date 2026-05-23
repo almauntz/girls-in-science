@@ -1,32 +1,13 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 from app.database import get_db
-from app.core.security import get_current_user
-from app.models.user import User
+from app.models.news import NewsPost
 
 router = APIRouter(prefix="/news", tags=["news"])
 
-# -------------------------------------------------------
-# Team 4 — News & Blog
-# This is your router. All your endpoints go here.
-#
-# News posts are stories, articles, and updates from the centre.
-# A news post can optionally reference a RoleModel — coordinate
-# with Team 3 on the RoleModel model and its ID field.
-#
-# Your team will define the NewsPost model in app/models/news.py
-#
-# Example protected endpoint:
-#
-# @router.get("/")
-# def get_news(
-#     db: Session = Depends(get_db),
-#     current_user: User = Depends(get_current_user)
-# ):
-#     return {"message": "your code here"}
-#
-# -------------------------------------------------------
-
-@router.get("/")
-def news_placeholder():
-    return {"message": "News router is working — Team 4 builds here"}
+@router.get("/{id}")
+def get_news_post(id: int, db: Session = Depends(get_db)):
+    news_post = db.get(NewsPost, id)
+    if not news_post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Objava nije pronađena")
+    return news_post
