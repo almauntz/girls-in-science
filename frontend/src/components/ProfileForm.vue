@@ -198,6 +198,7 @@ export default {
   data() {
     return {
       activeTab: 'info',
+      isEditMode: false,
       passwordForm: {
         old_password: '',
         new_password: '',
