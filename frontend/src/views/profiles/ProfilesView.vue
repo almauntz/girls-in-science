@@ -1,5 +1,6 @@
 <template>
-<div class="bg-gray-50 flex gap-8 items-stretch p-8">
+  <div class="bg-gray-50 flex h-screen w-full profile-page overflow-hidden">
+    
     <ProfileSidebar
       :activeTab="activeTab"
       :fullName="profileData.full_name"
@@ -10,23 +11,24 @@
       @avatar-deleted="avatarUrl = null"
     />
 
-    <main class="flex-1 overflow-y-auto h-full">
+    <main class="flex-1 p-8 space-y-6 overflow-y-auto h-full">
 
       <div v-if="isLoading" class="flex justify-center items-center py-20">
         <div class="text-gray-400 text-sm">Učitavanje...</div>
       </div>
 
       <div v-else>
-      <ProfileForm
-        v-if="activeTab === 'profil'"
-        :fullName="profileData.full_name"
-        :field="profileData.field"
-        :biography="profileData.biography"
-        :avatarUrl="avatarUrl"
-        @profile-updated="handleProfileUpdated"
-        @avatar-uploaded="avatarUrl = $event"
-        @avatar-deleted="avatarUrl = null"
-      />
+        <ProfileForm
+          v-if="activeTab === 'profil'"
+          :fullName="profileData.full_name"
+          :field="profileData.field"
+          :biography="profileData.biography"
+          :avatarUrl="avatarUrl"
+          @profile-updated="handleProfileUpdated"
+          @avatar-uploaded="avatarUrl = $event"
+          @avatar-deleted="avatarUrl = null"
+        />
+        
         <DashboardTab
           v-if="activeTab === 'dashboard'"
           :myWorkshops="myWorkshops"
@@ -35,6 +37,7 @@
           :dashboardError="dashboardError"
           @register="handleRegister"
         />
+        
         <AktivnostiTab v-if="activeTab === 'aktivnosti'" />
       </div>
 
@@ -98,11 +101,11 @@ export default {
       console.error('Greška pri učitavanju profila.')
     }
   },
-  handleProfileUpdated(data) {
-  this.profileData.full_name = data.full_name
-  this.profileData.field = data.field
-  this.profileData.biography = data.biography
-},
+      handleProfileUpdated(data) {
+      this.profileData.full_name = data.full_name
+      this.profileData.field = data.field
+      this.profileData.biography = data.biography
+    },
     getAuthHeaders() {
       const token = localStorage.getItem('token')
       return { headers: { Authorization: `Bearer ${token}` } }
