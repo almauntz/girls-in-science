@@ -72,3 +72,18 @@ export async function deleteRoleModel(id, token) {
   })
   return response.json()
 }
+
+export async function getNewsPost(id) {
+  const response = await fetch(`${BASE_URL}/news/${id}`)
+  return response.json()
+}
+
+export async function deleteNewsPost(id, token) {
+  const response = await fetch(`${BASE_URL}/news/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  return response.json()
+}
