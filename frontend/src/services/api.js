@@ -71,7 +71,7 @@ export async function getAllUsers(token) {
 
 // Ažuriranje statusa korisnice (aktivna/deaktivirana)
 export async function updateUserStatus(token, userId, isActive) {
-   const response = await fetch(`${BASE_URL}/profiles/${userId}/status?is_active=${isActive}`, {
+   const response = await fetch(`${BASE_URL}/admin/${userId}/status?is_active=${isActive}`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${token}`
