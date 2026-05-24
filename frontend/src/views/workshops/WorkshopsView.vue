@@ -278,7 +278,6 @@ const handleJoinWaitingList = async (workshopId) => {
   }
 }
 
-/* ---------------- CANCEL ---------------- */
 const handleCancel = async (id, title) => {
   const result = await Swal.fire({
     title: 'Otkazivanje?',
@@ -303,12 +302,27 @@ const handleCancel = async (id, title) => {
       }
     )
 
+    const data = await response.json()
+
     if (response.ok) {
-      await Swal.fire('Otkazano', 'Prijava je poništena.', 'success')
+      // 🔥 AKO JE NEKO PROMOTED SA WAITLISTE
+      if (data.promoted_user_id) {
+        await Swal.fire(
+          'Obavijest',
+          'Neko sa liste čekanja je automatski prijavljen!',
+          'info'
+        )
+      } else {
+        await Swal.fire(
+          'Otkazano',
+          'Prijava je poništena.',
+          'success'
+        )
+      }
+
       await refreshWorkshops()
     } else {
-      const err = await response.json()
-      Swal.fire('Greška', err.detail || 'Neuspješno otkazivanje.', 'error')
+      Swal.fire('Greška', data.detail || 'Neuspješno otkazivanje.', 'error')
     }
   } catch (err) {
     if (err.message === 'NO_TOKEN') return

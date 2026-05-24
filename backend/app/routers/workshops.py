@@ -5,7 +5,7 @@ from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.workshops_models import Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WaitingList,RegistrationStatus
 from datetime import datetime, timezone
-from sqlalchemy import func
+from sqlalchemy import func,select
 from app.database import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy.orm import Session
@@ -15,29 +15,63 @@ router = APIRouter(prefix="/workshops", tags=["workshops"])
 
 @router.delete("/cancellation/{workshop_id}")
 def cancel_registration(
-    workshop_id: int, 
-    db: Session = Depends(get_db), 
+    workshop_id: int,
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    ##MAHIR : sada se provjera radi preko USER.ID!
+    # 1. pronađi registraciju korisnika
     statement = select(Registration).where(
         Registration.workshop_id == workshop_id,
         Registration.user_id == current_user.id
     )
-    
-    result = db.execute(statement).scalars().first()
-    
-    if not result:
+
+    registration = db.execute(statement).scalars().first()
+
+    if not registration:
         raise HTTPException(
-            status_code=404, 
+            status_code=404,
             detail="Nije pronađena vaša prijava za ovu radionicu."
         )
-    
-    db.delete(result)
-    db.commit()
-    
-    return {"message": "Uspješno ste odustali od radionice."}
 
+    # 2. obriši registraciju
+    db.delete(registration)
+    db.commit()
+
+    # 3. NAĐI PRVOG NA WAITLISTI (FIFO)
+    waiting_statement = select(WaitingList).where(
+        WaitingList.workshop_id == workshop_id
+    ).order_by(WaitingList.created_at.asc())
+
+    waiting_user = db.execute(waiting_statement).scalars().first()
+
+    promoted_user_id = None
+
+    # 4. PROMOTE
+    if waiting_user:
+        user = db.get(User, waiting_user.user_id)
+
+        if user:
+            new_registration = Registration(
+                user_id=user.id,
+                workshop_id=workshop_id,
+                status="registered",
+                first_name=user.full_name,
+                last_name="",
+                email=user.email,
+                phone=""
+            )
+
+            db.add(new_registration)
+            db.delete(waiting_user)
+            db.commit()
+
+            promoted_user_id = user.id
+
+    # 5. RESPONSE
+    return {
+        "message": "Uspješno ste odustali od radionice.",
+        "promoted_user_id": promoted_user_id
+    }
 
 
 
