@@ -84,3 +84,23 @@ export async function updateUserStatus(token, userId, isActive) {
 
   return response.json()
 }
+
+
+// GIS4-74/75: Ažuriranje uloge korisnice (Studentica, Mentorica, Admin)
+export async function updateUserRole(token, userId, newRole) {
+  const response = await fetch(`${BASE_URL}/admin/${userId}/role`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    // Šaljemo ulogu unutar body-ja kao JSON
+    body: JSON.stringify({ role: newRole })
+  })
+
+  if (!response.ok) {
+    throw new Error('Greška prilikom izmjene uloge na serveru')
+  }
+
+  return response.json()
+}

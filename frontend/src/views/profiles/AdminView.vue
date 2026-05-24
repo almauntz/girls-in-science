@@ -56,11 +56,40 @@
 
     </div>
   </div>
+  <div v-if="isModalOpen" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+      <div class="relative p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+          <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 text-yellow-600 mb-4">
+            ⚠️
+          </div>
+          <h3 class="text-lg leading-6 font-medium text-gray-900">Potvrda promjene uloge</h3>
+          <div class="mt-2 px-7 py-3">
+            <p class="text-sm text-gray-500">
+              Jeste li sigurni da želite promijeniti ulogu ovoj korisnici? Ova akcija će odmah stupiti na snagu.
+            </p>
+          </div>
+          <div class="items-center px-4 py-3 flex justify-center space-x-4">
+            <button 
+              @click="cancelRoleChange" 
+              class="px-4 py-2 bg-gray-100 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+            >
+              Odustani
+            </button>
+            <button 
+              @click="confirmRoleChange" 
+              class="px-4 py-2 bg-blue-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Potvrdi
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
 </template>
 
 <script>
 import StatusToggle from '../../components/StatusToggle.vue'
-import { updateUserStatus, getAllUsers } from '../../services/api.js'
+import { updateUserStatus, getAllUsers, updateUserRole } from '../../services/api.js'
 
 export default {
   name: 'AdminView',
@@ -72,7 +101,13 @@ export default {
 data() {
     return {
       users: [],
-      isLoading: false
+      isLoading: false,
+      // Stanja za modal
+      isModalOpen: false,
+      pendingRoleChange: {
+        userId: null,
+        newRole: null
+      }
     }
   },
 
@@ -109,10 +144,43 @@ data() {
       }
     },
 
-    // GIS4-73: Testna metoda za klik na ulogu
-    async onRoleChange(userId, newRole) {
-      console.log(`UI Test (GIS4-73): Korisnica ${userId} prebačena na ulogu: ${newRole}`);
-      alert(`Kliknut UI! Nova uloga: ${newRole}`);
+    // GIS4-75: Otvaramo modal i pamtimo podatke privremeno
+    onRoleChange(userId, newRole) {
+      this.pendingRoleChange = { userId, newRole };
+      this.isModalOpen = true;
+    },
+
+    // GIS4-75: STVARNI POZIV NA BACKEND NAKON POTVRDE
+    async confirmRoleChange() {
+      this.isModalOpen = false;
+      const { userId, newRole } = this.pendingRoleChange;
+      
+      try {
+        const token = localStorage.getItem('token');
+        console.log(`Šaljem potvrđenu izmjenu na backend: korisnica ${userId} -> ${newRole}`);
+        
+        // Pozivamo naš API sa tokenom, ID-jem i novom ulogom
+        await updateUserRole(token, userId, newRole);
+        
+        alert("Uloga je uspješno promijenjena u bazi!");
+      } catch (error) {
+        console.error("Greška pri promjeni uloge:", error);
+        alert("Greška sa servera: " + error.message);
+      } finally {
+        // Resetujemo stanje i osvježavamo tabelu sa svježim podacima
+        this.pendingRoleChange = { userId: null, newRole: null };
+        await this.loadAllUsers();
+      }
+    },
+
+    // GIS4-75: Ako admin odustane, samo poništavamo akciju
+    async cancelRoleChange() {
+      this.isModalOpen = false;
+      this.pendingRoleChange = { userId: null, newRole: null };
+      
+      // Vraćamo dropdown na staru vrijednost osvježavanjem tabele
+      await this.loadAllUsers();
+      console.log("Promjena uloge otkazana.");
     }
   }
 }
