@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from app.core.config import settings
 from app.database import create_db
-from app.routers import auth, mentoring, workshops, profiles, role_models, news
+from app.routers import auth, mentoring, workshops, profiles, role_models, news, admin
 from app.core.security import get_current_user
 from app.models.user import User
 
@@ -30,7 +30,7 @@ app.include_router(mentoring.router)
 app.include_router(role_models.router)
 app.include_router(news.router)
 app.include_router(profiles.router)
-
+app.include_router(admin.router)
 @app.get("/")
 def root():
     return {"message": f"{settings.APP_NAME} API is running"}
