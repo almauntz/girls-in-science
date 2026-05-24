@@ -110,6 +110,70 @@ const BASE_URL = 'http://127.0.0.1:8000'
 const workshops = ref([])
 const error = ref(null)
 
+
+const checkMyPromotion = async () => {
+  try {
+    const res = await fetch(`${BASE_URL}/workshops/my-promotion`, {
+      method: 'GET',
+      headers: {
+        ...getAuthHeaders()
+      }
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      throw new Error(data.detail || 'Greška pri provjeri promocije.')
+    }
+
+    const promotion = data?.promotion
+
+    if (promotion?.is_promoted) {
+      await Swal.fire(
+        '🎉 Automatska prijava!',
+        `Prebačen si na radionicu (ID: ${promotion.workshop_id}).`,
+        'success'
+      )
+
+      localStorage.setItem('promotion_notified', 'true')
+    }
+
+  } catch (err) {
+    Swal.fire('Greška', err.message || 'Server greška.', 'error')
+  }
+}
+const handleJoinWaitingList = async (workshopId) => {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/workshops/waiting-list/join/${workshopId}`,
+      {
+        method: 'POST',
+        headers: {
+          ...getAuthHeaders()
+        }
+      }
+    )
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      throw new Error(data.detail || 'Neuspješno dodavanje na listu čekanja.')
+    }
+
+    await Swal.fire(
+      'Uspjeh',
+      'Dodani ste na listu čekanja.',
+      'success'
+    )
+
+    await refreshWorkshops()
+
+  } catch (err) {
+    if (err.message === 'NO_TOKEN') return
+    Swal.fire('Greška', err.message || 'Server greška.', 'error')
+  }
+}
+
 /* ---------------- AUTH HELPER ---------------- */
 function getAuthHeaders() {
   const token = localStorage.getItem('token')
@@ -249,35 +313,6 @@ const handleRegister = async (workshopId) => {
 }
 
 /* ---------------- WAITING LIST ---------------- */
-const handleJoinWaitingList = async (workshopId) => {
-  try {
-    const res = await fetch(
-      `${BASE_URL}/workshops/waiting-list/join/${workshopId}`,
-      {
-        method: 'POST',
-        headers: {
-          ...getAuthHeaders()
-        }
-      }
-    )
-
-    const data = await res.json()
-
-    if (!res.ok) throw new Error(data.detail)
-
-    await Swal.fire(
-      'Uspjeh',
-      'Dodani ste na listu čekanja.',
-      'success'
-    )
-
-    await refreshWorkshops()
-  } catch (err) {
-    if (err.message === 'NO_TOKEN') return
-    Swal.fire('Greška', err.message || 'Nešto nije u redu.', 'error')
-  }
-}
-
 const handleCancel = async (id, title) => {
   const result = await Swal.fire({
     title: 'Otkazivanje?',
@@ -304,34 +339,42 @@ const handleCancel = async (id, title) => {
 
     const data = await response.json()
 
-    if (response.ok) {
-      // 🔥 AKO JE NEKO PROMOTED SA WAITLISTE
-      if (data.promoted_user_id) {
-        await Swal.fire(
-          'Obavijest',
-          'Neko sa liste čekanja je automatski prijavljen!',
-          'info'
-        )
-      } else {
-        await Swal.fire(
-          'Otkazano',
-          'Prijava je poništena.',
-          'success'
-        )
-      }
-
-      await refreshWorkshops()
-    } else {
-      Swal.fire('Greška', data.detail || 'Neuspješno otkazivanje.', 'error')
+    if (!response.ok) {
+      throw new Error(data.detail || 'Neuspješno otkazivanje.')
     }
+
+    const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
+
+    // 🎯 PROMOTION LOGIKA
+    if (
+      data.promotion &&
+      currentUser?.id &&
+      data.promotion.user_id === currentUser.id
+    ) {
+      await Swal.fire(
+        '🎉 Automatska prijava!',
+        `Ti si upravo prijavljen na "${title}" jer si bio prvi na listi čekanja.`,
+        'success'
+      )
+    } else {
+      await Swal.fire(
+        'Otkazano',
+        'Prijava je poništena.',
+        'success'
+      )
+    }
+
+    await refreshWorkshops()
+
   } catch (err) {
     if (err.message === 'NO_TOKEN') return
-    Swal.fire('Greška', 'Server nije dostupan.', 'error')
+    Swal.fire('Greška', err.message || 'Server nije dostupan.', 'error')
   }
 }
 
 /* ---------------- INIT ---------------- */
 onMounted(async () => {
   await refreshWorkshops()
+  await checkMyPromotion()
 })
 </script>

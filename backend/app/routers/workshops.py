@@ -13,6 +13,44 @@ from sqlmodel import select
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
 
+@router.get("/my-promotion")
+def my_promotion(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # uzmi zadnju VALID registraciju (ne cancelled)
+    registration = (
+        db.query(Registration)
+        .filter(
+            Registration.user_id == current_user.id,
+            Registration.status.in_(["registered", "waiting"])
+        )
+        .order_by(Registration.created_at.desc())
+        .first()
+    )
+
+    if not registration:
+        return {"promotion": None}
+
+    # provjeri da li je user bio "promoted"
+    is_promoted = registration.status == "registered"
+
+    return {
+        "promotion": {
+            "user_id": current_user.id,
+            "workshop_id": registration.workshop_id,
+            "status": registration.status,
+            "is_promoted": is_promoted
+        }
+    }
+
+
+
+
+
+
+
+
 @router.delete("/cancellation/{workshop_id}")
 def cancel_registration(
     workshop_id: int,
@@ -368,4 +406,36 @@ def waiting_list_status(
     return {
         "on_waiting_list": True,
         "position": position
+    }
+
+
+@router.get("/my-promotion")
+def my_promotion(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # uzmi zadnju VALID registraciju (ne cancelled)
+    registration = (
+        db.query(Registration)
+        .filter(
+            Registration.user_id == current_user.id,
+            Registration.status.in_(["registered", "waiting"])
+        )
+        .order_by(Registration.created_at.desc())
+        .first()
+    )
+
+    if not registration:
+        return {"promotion": None}
+
+    # provjeri da li je user bio "promoted"
+    is_promoted = registration.status == "registered"
+
+    return {
+        "promotion": {
+            "user_id": current_user.id,
+            "workshop_id": registration.workshop_id,
+            "status": registration.status,
+            "is_promoted": is_promoted
+        }
     }
