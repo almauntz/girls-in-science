@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional, List
 from sqlmodel import SQLModel, Field, Relationship
 from pydantic import BaseModel, field_validator
-from app.models.user import User
+from app.models.user import User, UserRole
 
 
 class ChangePasswordRequest(BaseModel):
@@ -76,3 +76,7 @@ class Workshop(SQLModel, table=True):
 
     # Veza sa korisnicima preko pivot tabele
     users: List["User"] = Relationship(link_model=WorkshopRegistration)
+
+
+class UpdateRoleRequest(BaseModel):
+    role: UserRole
