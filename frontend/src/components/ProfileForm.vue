@@ -1,40 +1,61 @@
 <template>
   <div>
-    <!-- HEADER KARTICA -->
-    <div class="bg-violet-600 rounded-xl p-6 mb-6 flex items-center gap-5 max-w-full">
-      <div class="relative cursor-pointer group flex-shrink-0" @click="$refs.fileInput.click()">
-        <div class="w-20 h-20 rounded-full bg-violet-400 flex items-center justify-center overflow-hidden">
-          <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
-          <span v-else class="text-4xl">👤</span>
-        </div>
-        <!-- hover overlay s kamera ikonom -->
-        <div class="absolute inset-0 rounded-full bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
-          <span class="text-white text-xl opacity-0 group-hover:opacity-100">📷</span>
-        </div>
-        <div v-if="isUploading" class="absolute inset-0 rounded-full bg-black bg-opacity-40 flex items-center justify-center">
-          <span class="text-white text-xs">...</span>
-        </div>
-        <!-- X dugme u uglu -->
+   <div class="relative w-full rounded-xl mb-6 overflow-hidden" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%); min-height: 170px;">
+      
+      <div class="absolute top-4 right-4">
         <button
-          v-if="avatarUrl"
+          v-if="!isEditMode && activeTab === 'info'"
           type="button"
-          @click.stop="handleDeleteAvatar"
-          class="absolute -top-1 -right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs transition-colors"
+          @click="isEditMode = true"
+          class="text-sm text-violet-700 bg-white hover:bg-violet-50 font-medium px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
         >
-          ✕
+          ✏️ Edit Profile
         </button>
       </div>
 
-      <input ref="fileInput" type="file" accept=".jpg,.jpeg,.png" class="hidden" @change="handleAvatarChange" />
-
-      <div>
-        <h2 class="text-2xl font-bold text-white">{{ fullName || 'Korisnice' }}</h2>
-        <p class="text-violet-200 text-sm mt-1">{{ field || 'Oblast nije unesena' }}</p>
-        <p v-if="avatarError" class="text-red-200 text-xs mt-2">{{ avatarError }}</p>
-      </div>
+     <div class="absolute w-full left-0 bottom-4 px-6 flex items-end gap-6">
+  
+  <div class="relative cursor-pointer group flex-shrink-0" @click="$refs.fileInput.click()">
+    <div class="w-32 h-32 rounded-3xl border-4 border-white bg-violet-400 flex items-center justify-center overflow-hidden shadow-lg">
+      <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
+      <span v-else class="text-5xl">👤</span> 
     </div>
 
-    <!-- TABOVI -->
+    <div class="absolute inset-0 rounded-3xl bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all duration-200 flex items-center justify-center">
+      <span class="text-white text-xl opacity-0 group-hover:opacity-100">📷</span>
+    </div>
+    
+    <div v-if="isUploading" class="absolute inset-0 rounded-3xl bg-black bg-opacity-40 flex items-center justify-center">
+      <span class="text-white text-xs">...</span>
+    </div>
+
+    <button
+      v-if="avatarUrl"
+      type="button"
+      @click.stop="handleDeleteAvatar"
+      class="absolute -top-1 -right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs transition-colors z-10"
+    >
+      ✕
+    </button>
+  </div>
+  
+  <input ref="fileInput" type="file" accept=".jpg,.jpeg,.png" class="hidden" @change="handleAvatarChange" />
+
+  <div class="mb-2 flex flex-col gap-1">
+    <div class="flex items-center gap-3">
+      <h2 class="text-3xl font-bold text-white leading-none">{{ fullName || 'Korisnice' }}</h2>
+      
+      <span class="bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
+        Student
+      </span>
+    </div>
+    <p class="text-violet-100 text-sm font-medium">{{ form.field || 'Oblast nije unesena' }}</p>
+    <p v-if="avatarError" class="text-red-200 text-xs mt-1">{{ avatarError }}</p>
+  </div>
+
+</div>
+    </div>
+
     <div class="flex border-b border-gray-200 mb-6">
       <button
         @click="activeTab = 'info'"
@@ -45,7 +66,7 @@
             : 'border-transparent text-gray-500 hover:text-gray-700'
         ]"
       >
-        Lični podaci
+        Profil i Biografija
       </button>
       <button
         @click="activeTab = 'security'"
@@ -56,74 +77,114 @@
             : 'border-transparent text-gray-500 hover:text-gray-700'
         ]"
       >
-        Sigurnost
+        Sigurnost i Lozinka
       </button>
     </div>
 
-    <!-- LIČNI PODACI TAB -->
     <div v-if="activeTab === 'info'">
-      <!-- FORMA -->
-      <div class="bg-white rounded-xl shadow-sm p-6 max-w-full min-h-96">
-        <div v-if="successMessage" class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 mb-4 text-sm">
-          {{ successMessage }}
-        </div>
-        <div v-if="errorMessage" class="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 mb-4 text-sm">
-          {{ errorMessage }}
-        </div>
 
-        <form @submit.prevent="saveProfile" class="space-y-5">
-          <div>
-           <label class="block text-sm font-medium text-gray-700 mb-1">Ime i prezime</label>
-            <input
-              v-model="form.full_name"
-              type="text"
-              placeholder="Unesite ime i prezime (obavezno polje)"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-            />
-        <p v-if="errors.full_name" class="text-red-500 text-xs mt-1">{{ errors.full_name }}</p>
+      <div v-if="successMessage" class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 mb-4 text-sm">
+        {{ successMessage }}
       </div>
-                
+      <div v-if="errorMessage" class="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 mb-4 text-sm">
+        {{ errorMessage }}
+      </div>
 
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Oblast</label>
-            <input
-              v-model="form.field"
-              type="text"
-              placeholder="Npr. Softversko inženjerstvo"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Biografija</label>
-            <textarea
-              v-model="form.biography"
-              placeholder="Napišite nešto o sebi..."
-              rows="8"
-              spellcheck="false"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent resize-none"
-            ></textarea>
-            <div class="flex justify-between mt-1">
-              <p v-if="errors.biography" class="text-red-500 text-xs">{{ errors.biography }}</p>
-              <span class="text-xs text-gray-400 ml-auto">{{ form.biography?.length || 0 }}/500</span>
+      <form @submit.prevent="saveProfile" class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        
+        <div class="lg:col-span-1 space-y-6">
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div class="flex items-center gap-2 mb-5">
+              <span class="text-violet-500">👤</span>
+              <h3 class="text-sm font-semibold text-gray-800">Osobne informacije</h3>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Ime i prezime</label>
+              <p v-if="!isEditMode" class="text-sm font-medium text-gray-800">{{ form.full_name || 'Nije uneseno' }}</p>
+              <input
+                v-else
+                v-model="form.full_name"
+                type="text"
+                placeholder="Unesite ime i prezime"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+              />
+              <p v-if="errors.full_name" class="text-red-500 text-xs mt-1">{{ errors.full_name }}</p>
             </div>
           </div>
-
-        <div class="pt-2">
-          <button
-            type="submit"
-            :disabled="!isFormValid"
-            class="w-full bg-violet-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-violet-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Spremi promjene
-          </button>
         </div>
 
-      </form>
-    </div>
+        <div class="lg:col-span-2 space-y-6">
+          
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-violet-500">📚</span>
+              <h3 class="text-sm font-semibold text-gray-800">Primarna Naučna Oblast</h3>
+            </div>
+            <p class="text-xs text-gray-400 mb-4 ml-6">Izaberite svoj primarni fokus istraživanja i usmjerenja</p>
+            
+            <p v-if="!isEditMode" class="text-sm font-medium text-gray-800 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100">
+              {{ form.field || 'Nije odabrano' }}
+            </p>
+            <select
+              v-else
+              v-model="form.field"
+              class="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white appearance-none"
+            >
+              <option value="" disabled>Izaberite oblast...</option>
+              <option v-for="f in fields" :key="f" :value="f">{{ f }}</option>
+            </select>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 min-h-[250px] flex flex-col">
+  
+  <div class="flex items-center gap-2 mb-5">
+    <span class="text-violet-500">📖</span>
+    <h3 class="text-sm font-semibold text-gray-800">Biografija</h3>
   </div>
 
-    <!-- SIGURNOST TAB -->
+  <div v-if="!isEditMode" class="border-l-4 border-violet-200 pl-4 py-1 mb-4 flex-grow">
+    <p class="text-sm text-gray-600 italic leading-relaxed whitespace-pre-wrap">
+      "{{ form.biography || 'Nije uneseno' }}"
+    </p>
+  </div>
+
+            <div v-else>
+              <textarea
+                v-model="form.biography"
+                placeholder="Napišite something o sebi..."
+                rows="10"
+                spellcheck="false"
+                class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"
+              ></textarea>
+              <div class="flex justify-between mt-1">
+                <p v-if="errors.biography" class="text-red-500 text-xs">{{ errors.biography }}</p>
+                <span class="text-xs text-gray-400 ml-auto">{{ form.biography?.length || 0 }}/500</span>
+              </div>
+            </div>
+
+            <div v-if="isEditMode" class="flex gap-3 mt-6 border-t border-gray-100 pt-4">
+              <button
+                type="submit"
+                :disabled="!isFormValid"
+                class="flex-1 bg-violet-600 text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-violet-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Spremi promjene
+              </button>
+              <button
+                type="button"
+                @click="cancelEdit"
+                class="flex-1 border border-gray-300 text-gray-600 py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Odustani
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+      </form>
+    </div>
+
     <div v-if="activeTab === 'security'">
       <div class="bg-white rounded-xl shadow-sm p-6 max-w-full min-h-96">
         <div v-if="passwordSuccess" class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 mb-4 text-sm">
@@ -143,7 +204,6 @@
               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
             />
           </div>
-
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Nova lozinka</label>
             <input
@@ -153,7 +213,6 @@
               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
             />
           </div>
-
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Potvrda nove lozinke</label>
             <input
@@ -163,7 +222,6 @@
               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
             />
           </div>
-
           <div class="pt-2">
             <button
               type="submit"
@@ -196,32 +254,50 @@ export default {
   emits: ['profile-updated', 'avatar-uploaded', 'avatar-deleted'],
 
   data() {
-    return {
-      activeTab: 'info',
-      isEditMode: false,
-      passwordForm: {
-        old_password: '',
-        new_password: '',
-        confirm_new_password: ''
-      },
-      passwordLoading: false,
-      passwordSuccess: '',
-      passwordError: '',
-      form: {
-        full_name: '',
-        biography: '',
-        field: ''
-      },
-      errors: {
-        full_name: '',
-        biography: ''
-      },
-      successMessage: '',
-      errorMessage: '',
-      isUploading: false,
-      avatarError: ''
-    }
-  },
+  return {
+    activeTab: 'info',
+    isEditMode: false,
+    passwordForm: {
+      old_password: '',
+      new_password: '',
+      confirm_new_password: ''
+    },
+    passwordLoading: false,
+    passwordSuccess: '',
+    passwordError: '',
+    form: {
+      full_name: '',
+      biography: '',
+      field: ''
+    },
+    errors: {
+      full_name: '',
+      biography: ''
+    },
+    successMessage: '',
+    errorMessage: '',
+    isUploading: false,
+    avatarError: '', // <-- Dodan zarez ovdje
+
+    fields: [ // <-- Promijenjeno u uglastu zagradu [
+      'Softversko inženjerstvo',
+      'Elektrotehnika',
+      'Telekomunikacije',
+      'Mašinstvo',
+      'Arhitektura',
+      'Biotehnologija',
+      'Hemijsko inženjerstvo',
+      'Građevinarstvo',
+      'Fizika',
+      'Matematika',
+      'Medicina',
+      'Farmacija',
+      'Ekologija',
+      'Ekonomija',
+      'Dizajn' // Uklonjen zarez sa zadnjeg elementa (opcionalno, ali čistije)
+    ] // <-- Promijenjeno u uglastu zagradu ]
+  }
+},
 
   computed: {
     isFormValid() {
@@ -280,12 +356,22 @@ watch: {
           field: this.form.field
         })
         this.successMessage = 'Promjene su uspješno sačuvane!'
+        this.isEditMode = false;
         this.$emit('profile-updated', this.form)
         setTimeout(() => { this.successMessage = '' }, 3000)
       } catch (error) {
         this.errorMessage = 'Greška pri čuvanju. Pokušajte ponovo.'
         setTimeout(() => { this.errorMessage = '' }, 3000)
       }
+    },
+
+        cancelEdit() {
+      this.isEditMode = false
+      // Resetuj formu na originalne vrijednosti
+      this.form.full_name = this.fullName || ''
+      this.form.field = this.field || ''
+      this.form.biography = this.biography || ''
+      this.errors = { full_name: '', biography: '' }
     },
 
     async handleAvatarChange(event) {
