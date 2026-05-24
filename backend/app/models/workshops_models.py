@@ -3,8 +3,7 @@ from typing import Optional
 import enum
 from sqlmodel import SQLModel, Field
 from pydantic import BaseModel, EmailStr
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Index
 from app.database import Base
   
 class WorkshopStatus(str, enum.Enum):
@@ -104,6 +103,18 @@ class Registration(Base):
 
     previous_experience = Column(String, nullable=True)
     github_profile = Column(String, nullable=True)
+
+    #  NOVO
+    status = Column(String, nullable=False, default="registered")
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+# indeks za FIFO + brze upite
+Index(
+    "idx_workshop_status_created",
+    Registration.workshop_id,
+    Registration.status,
+    Registration.created_at
+)
     
 class RegistrationCreate(SQLModel):
     first_name: str = Field(min_length=2) 
@@ -113,3 +124,20 @@ class RegistrationCreate(SQLModel):
     workshop_id: int
     previous_experience: Optional[str] = None
     github_profile: Optional[str] = None
+     # opcionalno (ili ga backend sam setuje)
+    status: Optional[str] = "registered"
+
+class RegistrationStatus(str, enum.Enum):
+    REGISTERED = "registered"
+    WAITING = "waiting"
+    CANCELLED = "cancelled"
+
+
+class WaitingList(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+
+    user_id: int = Column(Integer, ForeignKey("users.id"))
+    workshop_id: int = Field(foreign_key="workshops.ID_workshop")
+
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+  

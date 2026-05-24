@@ -79,3 +79,31 @@ export const cancelWorkshopRegistration = async (workshopId) => {
 
   return response.json();
 };
+
+
+
+export async function joinWaitingList(workshopId) {
+  const response = await fetch(
+    `${BASE_URL}/waiting-list/join/${workshopId}`,
+    {
+      method: 'POST',
+      headers: getAuthHeaders()
+    }
+  )
+
+  return handleResponse(response)
+}
+
+
+export async function getWaitingListStatus(workshopId) {
+  const response = await fetch(
+    `${BASE_URL}/waiting-list/status/${workshopId}`,
+    {
+      headers: getAuthHeaders()
+    }
+  )
+
+  return handleResponse(response)
+}
+
+
