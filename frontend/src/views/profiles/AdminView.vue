@@ -79,18 +79,23 @@ async loadAllUsers() {
       }
     },
     // Poziv prema api.js za ažuriranje statusa na backendu
-    async handleStatusChange(userId, newStatus) {
+    
+async handleStatusChange(userId, newStatus) {
       try {
-        const token = localStorage.getItem('token')
-        await updateUserStatus(token, userId, newStatus)
-         console.log(`Korisnica ${userId} promijenjena u: ${newStatus}`)
-      } catch (error) {
-        alert('Došlo je do greške: Nije moguće izmijeniti status.')
-        // Ako API javi grešku, vraćamo prekidač na stvarno stanje
-        const user = this.users.find(u => u.id === userId)
-        if (user) {
-          user.is_active = !newStatus
+        const token = localStorage.getItem('token'); 
+        
+        console.log("Šaljem zahtjev za izmjenu statusa sa svježim tokenom...");
+        
+        // Pozivamo funkciju iz api.js
+        await updateUserStatus(token, userId, newStatus);
+        
+        // Ponovo učitavamo tabelu da povuče novo stanje iz baze
+        if (typeof this.loadAllUsers === 'function') {
+          await this.loadAllUsers();
         }
+      } catch (error) {
+        console.error("Detaljna greška na frontendu:", error);
+        alert("Greška sa servera: " + error.message);
       }
     }
 

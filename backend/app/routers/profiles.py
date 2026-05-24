@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Body
 from sqlmodel import Session, select, not_
 from app.database import get_db
 from app.core.security import get_current_user, verify_password, hash_password
@@ -336,7 +336,7 @@ def change_password(
 @router.put("/{user_id}/status")
 def update_user_status(
     user_id: int,
-    is_active: bool,
+    is_active: bool,  
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -344,17 +344,20 @@ def update_user_status(
     Endpoint koji omogućava administratoru da 
     aktivira ili deaktivira korisnički nalog.
     """
-    if current_user.role != UserRole.admin:
+    # 1. Provjera uloge (ADMIN) bez obzira na velika/mala slova
+    user_role_str = str(current_user.role).upper()
+    if "ADMIN" not in user_role_str:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, 
                             detail="Samo administratori mogu mijenjati status korisnika.")
 
+    # 2. Pronalaženje korisnika u bazi
     statement = select(User).where(User.id == user_id)
     user_to_update = db.exec(statement).first()
     if not user_to_update:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
                             detail="Korisnica nije pronađena.")
 
-    
+    # 3. Spašavanje novog statusa
     user_to_update.is_active = is_active
     db.add(user_to_update)
     db.commit()
