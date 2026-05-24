@@ -333,39 +333,6 @@ def change_password(
     return {"message": "Lozinka uspješno promijenjena."}
 
 
-@router.put("/{user_id}/status")
-def update_user_status(
-    user_id: int,
-    is_active: bool,  
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    """
-    Endpoint koji omogućava administratoru da 
-    aktivira ili deaktivira korisnički nalog.
-    """
-    # 1. Provjera uloge (ADMIN) bez obzira na velika/mala slova
-    user_role_str = str(current_user.role).upper()
-    if "ADMIN" not in user_role_str:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, 
-                            detail="Samo administratori mogu mijenjati status korisnika.")
 
-    # 2. Pronalaženje korisnika u bazi
-    statement = select(User).where(User.id == user_id)
-    user_to_update = db.exec(statement).first()
-    if not user_to_update:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, 
-                            detail="Korisnica nije pronađena.")
 
-    # 3. Spašavanje novog statusa
-    user_to_update.is_active = is_active
-    db.add(user_to_update)
-    db.commit()
-    db.refresh(user_to_update)
 
-    action_status = "aktivirana" if is_active else "deaktivirana"
-    return {
-        "message": f"Nalog je uspješno {action_status}.",
-        "user_id": user_to_update.id,
-        "is_active": user_to_update.is_active
-    }
