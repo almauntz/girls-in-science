@@ -50,3 +50,20 @@ export async function updateProfile(token, data) {
   })
   return response.json()
 }
+
+
+// Ažuriranje statusa korisnice (aktivna/deaktivirana)
+export async function updateUserStatus(token, userId, isActive) {
+   const response = await fetch(`${BASE_URL}/profiles/${userId}/status?is_active=${isActive}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Greška prilikom izmjene statusa na serveru')
+  }
+
+  return response.json()
+}
