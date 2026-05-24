@@ -1,6 +1,6 @@
 <template>
-  <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8">
-    <h2 class="text-2xl font-bold text-gray-800 mb-6"> Prijava na radionicu</h2>
+  <div class="bg-white p-8 rounded-2xl">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6">Prijava na radionicu</h2>
     
     <form @submit.prevent="submitForm" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -66,6 +66,35 @@
       </div>
 
       <div>
+        <label class="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+          GitHub profil <span class="text-gray-400 font-normal">(opciono)</span>
+          
+          <div class="relative group cursor-help">
+            <span class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold text-gray-400 border border-gray-300 rounded-full group-hover:border-purple-500 group-hover:text-purple-500 transition-colors">
+              ?
+            </span>
+            
+            <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block w-48 p-2 bg-gray-900 text-white text-[11px] leading-tight rounded-lg shadow-xl z-50 text-center font-normal">
+              Ovo nam pomaže da vidimo tvoje dosadašnje projekte.
+              <div class="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-gray-900"></div>
+            </div>
+          </div>
+        </label>
+
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-400">
+            github.com/
+          </span>
+          <input
+            v-model="formData.github_profile"
+            type="text"
+            class="w-full px-4 py-2 pl-[95px] border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+            placeholder="korisnicko-ime"
+          />
+        </div>
+      </div>
+
+      <div>
         <label class="block text-sm font-medium text-gray-700 mb-2">Prethodno iskustvo (opciono)</label>
         <textarea
           v-model="formData.previous_experience"
@@ -79,15 +108,20 @@
         <button
           type="submit"
           :disabled="loading"
-          class="flex-1 px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 disabled:opacity-50"
+          class="flex-1 px-6 py-3 bg-purple-600 text-white font-bold rounded-xl shadow-[0_10px_20px_-5px_rgba(147,51,234,0.5)] hover:shadow-[0_15px_25px_-5px_rgba(147,51,234,0.6)] hover:-translate-y-1 active:translate-y-0.5 transition-all duration-200 disabled:opacity-50 uppercase tracking-wide"
         >
-          {{ loading ? 'Slanje...' : 'Prijavi se' }}
+          {{ loading ? 'Slanje...' : 'Prijavi se ' }}
         </button>
+        
         <button
           type="button"
           @click="$emit('cancel')"
-          class="flex-1 px-6 py-2 border border-gray-400 text-gray-600 font-bold rounded-lg hover:bg-gray-100"
-        >
+          class="flex-1 px-6 py-3 border border-gray-300 text-gray-600 font-bold rounded-xl 
+           bg-white shadow-sm
+           hover:shadow-md hover:bg-gray-50
+           hover:-translate-y-1 active:translate-y-0.5 
+           transition-all duration-200 uppercase tracking-wide"
+          >
           Odustani
         </button>
       </div>
@@ -100,6 +134,7 @@ import { ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { registerForWorkshop } from '../../services/api.js'
 import Swal from 'sweetalert2'
+import confetti from 'canvas-confetti' // Dodato za efekte
 
 export default {
   emits: ['cancel', 'success'],
@@ -124,97 +159,70 @@ export default {
       github_profile: ''
     })
 
+    // Funkcija za ispaljivanje konfeta
+    const triggerConfetti = () => {
+      const end = Date.now() + 2 * 1000;
+      const colors = ['#9333ea', '#ffffff'];
+
+      (function frame() {
+        confetti({
+          particleCount: 3,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: colors
+        });
+        confetti({
+          particleCount: 3,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: colors
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+    }
+
     const submitForm = async () => {
-      // označi sva polja kao touched
+      // Provjera da li je korisnik ulogovan (Token provjera)
+      const token = localStorage.getItem('token')
+      if (!token) {
+        Swal.fire({
+          title: 'Pažnja!',
+          text: 'Morate se prijaviti na nalog da biste izvršili prijavu na radionicu.',
+          icon: 'warning',
+          confirmButtonColor: '#9333ea'
+        })
+        return
+      }
+
       Object.keys(touched.value).forEach(k => touched.value[k] = true)
 
-      // osnovna validacija
-      if (
-        !formData.value.first_name ||
-        !formData.value.last_name ||
-        !formData.value.email ||
-        !formData.value.phone
-      ) {
-        Swal.fire('Pažnja', 'Popunite obavezna polja označena crvenom bojom.', 'warning')
+      if (!formData.value.first_name || !formData.value.last_name || !formData.value.email || !formData.value.phone) {
+        Swal.fire('Greška', 'Popunite obavezna polja.', 'error')
         return
       }
 
       try {
         loading.value = true
+        await registerForWorkshop(formData.value)
 
-        const res = await registerForWorkshop(formData.value)
+        // AKTIVIRAJ KONFETE
+        triggerConfetti()
 
         await Swal.fire({
-          title: 'Uspješno!',
-          text: res.message || 'Prijavljeni ste na radionicu.',
+          title: 'Uspješno! 🎉',
+          text: 'Prijavljeni ste na radionicu.',
           icon: 'success',
-          timer: 2500,
-          showConfirmButton: false
+          confirmButtonColor: '#9333ea'
         })
 
         emit('success')
-
       } catch (err) {
-        console.log(err)
-
-        // 🔴 VALIDACIONE GREŠKE (422 - npr. telefon)
-        if (Array.isArray(err.detail)) {
-          const phoneError = err.detail.find(e => e.loc.includes('phone'))
-
-          if (phoneError) {
-            Swal.fire({
-              title: 'Neispravan broj',
-              text: 'Broj telefona mora imati dovoljan broj cifara.',
-              icon: 'warning'
-            })
-          } else {
-            const poruke = err.detail.map(e => e.msg).join('\n')
-
-            Swal.fire({
-              title: 'Greška u unosu',
-              text: poruke,
-              icon: 'error'
-            })
-          }
-        }
-
-        // 🔴 BACKEND PORUKE (400, 404)
-        else if (typeof err.detail === 'string') {
-
-          if (err.detail.includes('Već ste prijavljeni')) {
-            Swal.fire({
-              title: 'Dupla prijava',
-              text: 'Već ste prijavljeni na ovu radionicu.',
-              icon: 'info'
-            })
-          }
-
-          else if (err.detail.includes('popunjena')) {
-            Swal.fire({
-              title: 'Nema mjesta',
-              text: 'Nažalost, radionica je već popunjena.',
-              icon: 'warning'
-            })
-          }
-
-          else {
-            Swal.fire({
-              title: 'Greška',
-              text: err.detail,
-              icon: 'error'
-            })
-          }
-        }
-
-        // 🔴 fallback
-        else {
-          Swal.fire({
-            title: 'Greška',
-            text: 'Greška pri prijavi.',
-            icon: 'error'
-          })
-        }
-
+        Swal.fire('Greška', err.detail || 'Došlo je do greške.', 'error')
       } finally {
         loading.value = false
       }
