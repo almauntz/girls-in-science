@@ -52,6 +52,23 @@ export async function updateProfile(token, data) {
 }
 
 
+// Dohvatanje svih korisnika za admin panel
+export async function getAllUsers(token) {
+  const response = await fetch(`${BASE_URL}/profiles`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Greška prilikom dohvaćanja liste korisnika')
+  }
+
+  return response.json()
+}
+
+
 // Ažuriranje statusa korisnice (aktivna/deaktivirana)
 export async function updateUserStatus(token, userId, isActive) {
    const response = await fetch(`${BASE_URL}/profiles/${userId}/status?is_active=${isActive}`, {
