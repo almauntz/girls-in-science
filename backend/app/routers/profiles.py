@@ -13,10 +13,16 @@ import os
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 
-# Pomoćna funkcija — dohvat ili kreiranje profila
 @router.get("/")
-def profiles_placeholder():
-    return {"message": "Profiles router is working — Team 4 builds here"}
+def get_all_profiles(db: Session = Depends(get_db)):
+    try:
+        # Pokušavamo prvo povući sve korisnike iz User tabele
+        statement = select(User)
+        users = db.exec(statement).all()
+        return users
+    except Exception as e:
+        print(f"BACKEND GREŠKA: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 def get_or_create_profile(user: User, db: Session) -> Profile:
     # Traži postojeći profil

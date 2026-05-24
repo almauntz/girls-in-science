@@ -30,8 +30,8 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <StatusToggle 
-                  v-model="user.is_active" 
-                  @change="handleStatusChange(user.id, user.is_active)"
+                  :model-value="!!user.is_active" 
+                  @change="handleStatusChange(user.id, !user.is_active)"
                 />
               </td>
             </tr>
@@ -45,7 +45,7 @@
 
 <script>
 import StatusToggle from '../../components/StatusToggle.vue'
-import { updateUserStatus } from '../../services/api.js'
+import { updateUserStatus, getAllUsers } from '../../services/api.js'
 
 export default {
   name: 'AdminView',
@@ -66,6 +66,18 @@ export default {
   },
 
   methods: {
+async loadAllUsers() {
+      this.isLoading = true;
+      try {
+        const token = localStorage.getItem('token');
+        // Pozivamo API funkciju koju smo uvezli
+        this.users = await getAllUsers(token); 
+      } catch (err) {
+        console.error('Greška pri učitavanju korisnica',err);
+      } finally {
+        this.isLoading = false;
+      }
+    },
     // Poziv prema api.js za ažuriranje statusa na backendu
     async handleStatusChange(userId, newStatus) {
       try {
