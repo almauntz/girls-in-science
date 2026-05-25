@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Body
 from sqlmodel import Session, select, not_
 from app.database import get_db
-from app.core.security import get_current_user, verify_password, hash_password
+from app.core.security import get_current_user, verify_password, hash_password, create_access_token
 from app.models.user import User, UserRole
 from app.models.profile import Profile, ProfileUpdate, ProfileResponse, Workshop, WorkshopRegistration, ChangePasswordRequest
 from datetime import datetime
@@ -346,5 +346,49 @@ def deactivate_my_account(
 
     return {"message": "Vaš nalog je uspješno deaktiviran."}
 
+@router.post("/login-check", status_code=200)
+def login_check(
+    email: str = Body(...),
+    password: str = Body(...),
+    db: Session = Depends(get_db)
+):
+    user = db.exec(select(User).where(User.email == email)).first()
+    
+    if not user or not verify_password(password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Neispravni kredencijali.")
+    
+    profile = db.exec(select(Profile).where(Profile.user_id == user.id)).first()
+    
+    if profile and not profile.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail={
+                "message": "Vaš nalog je deaktiviran. Želite li ga reaktivirati?",
+                "reactivatable": True
+            }
+        )
+    
+    token = create_access_token({"sub": str(user.id)})
+    return {"access_token": token, "token_type": "bearer"}
 
+@router.post("/reactivate", status_code=200)
+def reactivate_account(
+    email: str = Body(...),
+    password: str = Body(...),
+    db: Session = Depends(get_db)
+):
+    user = db.exec(select(User).where(User.email == email)).first()
+    
+    if not user or not verify_password(password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Neispravni kredencijali.")
+    
+    profile = db.exec(select(Profile).where(Profile.user_id == user.id)).first()
+    if not profile:
+        raise HTTPException(status_code=404, detail="Profil nije pronađen.")
+    
+    profile.is_active = True
+    db.add(profile)
+    db.commit()
 
+    token = create_access_token({"sub": str(user.id)})
+    return {"access_token": token, "token_type": "bearer"}
