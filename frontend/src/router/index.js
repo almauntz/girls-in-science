@@ -93,4 +93,10 @@ router.beforeEach((to, from, next) => {
   }
 })
 
+{
+  path: '/mentoring/:id/zahtjev',
+  name: 'mentorship-request',
+  component: () => import('../views/mentoring/MentorshipRequestView.vue'),
+  meta: { requiresAuth: true }
+}
 export default router
