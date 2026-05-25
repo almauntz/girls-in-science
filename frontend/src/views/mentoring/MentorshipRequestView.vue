@@ -2,11 +2,9 @@
   <div class="max-w-2xl mx-auto p-4">
 
     <!-- Header -->
-    <div class="border rounded-xl p-4 mb-4">
-      <button @click="router.back()" class="text-sm text-gray-700 hover:text-black font-semibold">
-        ← Profil mentorice
-      </button>
-    </div>
+  <button @click="router.back()" class="mb-4 text-sm text-blue-600 hover:underline">
+  ← Profil mentorice
+  </button>
 
     <!-- Info o mentorici -->
     <div class="border rounded-xl p-6 mb-4" v-if="mentor">
@@ -35,32 +33,37 @@
     <div class="border rounded-xl p-6 mb-4">
 
       <div class="flex gap-4">
-        <!-- Lijeva strana - textarea polja -->
-        <div class="flex-1">
-          <textarea
-            v-model="expectations"
-            placeholder="Očekivanja - Šta očekujete od učešća u mentorskom programu?"
-            class="w-full border rounded-lg p-3 text-sm resize-none h-24 mb-3 focus:outline-none focus:ring-2 focus:ring-purple-400"
-          ></textarea>
+        <div class="flex gap-4">
+      <!-- Lijeva strana - textarea polja -->
+  <div class="flex-1">
+    <textarea
+      v-model="expectations"
+      placeholder="Očekivanja - Šta očekujete od učešća u mentorskom programu?"
+      class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm resize-none h-24 mb-3 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-gray-50 placeholder-gray-400"
+    ></textarea>
 
-          <textarea
-            v-model="skills"
-            placeholder="Vještine - Koje vještine ili znanja želite unaprijediti?"
-            class="w-full border rounded-lg p-3 text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-purple-400"
-          ></textarea>
+    <textarea
+      v-model="skills"
+      placeholder="Vještine - Koje vještine ili znanja želite unaprijediti?"
+      class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-gray-50 placeholder-gray-400"
+    ></textarea>
+  </div>
         </div>
 
         <!-- Desna strana - CV upload -->
-        <div class="flex flex-col items-center justify-center w-32">
-          <label class="cursor-pointer border rounded-lg w-20 h-20 flex items-center justify-center bg-gray-100 hover:bg-gray-200 transition mb-2">
-            <span class="text-2xl">📄</span>
-            <input type="file" accept=".pdf,.doc,.docx" class="hidden" @change="handleFileSelect" />
-          </label>
-          <p class="text-xs text-gray-500 text-center">Priložite CV - samo PDF ili DOC format</p>
-          <p v-if="cvFile" class="text-xs text-green-600 mt-1 text-center font-semibold">{{ cvFile.name }}</p>
-          <p v-if="fileError" class="text-xs text-red-500 mt-1 text-center">{{ fileError }}</p>
-        </div>
-      </div>
+        <div class="flex flex-col items-center justify-center w-36">
+            <label class="cursor-pointer border-2 border-purple-200 rounded-xl w-24 h-24 flex flex-col items-center justify-center bg-purple-50 hover:bg-purple-100 transition mb-2">
+         <svg xmlns="http://www.w3.org/2000/svg" class="w-10 h-10 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <span class="text-xs text-purple-500 font-semibold mt-1">Upload</span>
+      <input type="file" accept=".pdf,.doc,.docx" class="hidden" @change="handleFileSelect" />
+      </label>
+     <p class="text-xs text-gray-400 text-center leading-tight">Priložite CV - samo PDF ili DOC format</p>
+     <p v-if="cvFile" class="text-xs text-green-600 mt-1 text-center font-semibold">{{ cvFile.name }}</p>
+     <p v-if="fileError" class="text-xs text-red-500 mt-1 text-center">{{ fileError }}</p>
+    </div>
+</div>
 
       <!-- Saglasnost -->
       <div class="flex items-center gap-2 mt-4 mb-6">
@@ -90,9 +93,7 @@
           <span v-else-if="buttonState === 'pending'">Status: Na čekanju</span>
         </button>
 
-        <span v-if="buttonState === 'pending'" class="text-sm text-gray-500">
-          Status → na čekanju
-        </span>
+       
       </div>
 
     </div>
@@ -151,7 +152,7 @@ async function submitRequest() {
     formData.append('skills_to_improve', skills.value)
     formData.append('cv', cvFile.value)
 
-    const response = await fetch('http://127.0.0.1:8000/mentoring/requests/', {
+    const response = await fetch('http://127.0.0.1:8000/mentoring/requests', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: formData

@@ -70,7 +70,14 @@ const routes = [
     path: '/unauthorized',
     name: 'unauthorized',
     component: () => import('../views/UnauthorizedView.vue')
+  },
+  {
+  path: '/mentoring/:id/zahtjev',
+  name: 'mentorship-request',
+  component: () => import('../views/mentoring/MentorshipRequestView.vue'),
+  meta: { requiresAuth: true }
   }
+
 ]
 
 const router = createRouter({
@@ -93,10 +100,5 @@ router.beforeEach((to, from, next) => {
   }
 })
 
-{
-  path: '/mentoring/:id/zahtjev',
-  name: 'mentorship-request',
-  component: () => import('../views/mentoring/MentorshipRequestView.vue'),
-  meta: { requiresAuth: true }
-}
+
 export default router

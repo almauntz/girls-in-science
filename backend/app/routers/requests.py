@@ -8,7 +8,13 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.mentorship_request import MentorshipRequest, RequestStatus
 
-router = APIRouter(prefix="/mentoring/requests", tags=["requests"])
+
+
+router = APIRouter(
+    prefix="/mentoring/requests",
+    tags=["requests"],
+    redirect_slashes=False  # Ovo sprečava FastAPI da se buni oko kose crte!
+)
 
 #kreiranje direktorijuma za čuvanje CV-ova ako ne postoji
 UPLOAD_DIR = "storage/cv"
