@@ -33,7 +33,10 @@ def decode_access_token(token: str) -> dict | None:
         return None
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    # 1. Ovdje obavezno importuj modele unutar funkcije
     from app.models.user import User
+    from app.models.profile import Profile # OVO TI JE FALILO
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -51,7 +54,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise credentials_exception
     
+<<<<<<< HEAD
     # 2. Provjeri profil 
+=======
+    # 2. Provjeri profil (ispravno uvučeno)
+>>>>>>> origin/tim4/zajednicka-grana/sprint2
     profile = db.exec(select(Profile).where(Profile.user_id == user.id)).first()
     if profile and not profile.is_active:
         raise HTTPException(
@@ -59,4 +66,5 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
             detail="Vaš nalog je deaktiviran."
         )
 
+    # 3. OVO MORA BITI UVUČENO DA BUDE DIO FUNKCIJE
     return user

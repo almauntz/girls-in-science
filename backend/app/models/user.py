@@ -26,3 +26,7 @@ class User(SQLModel, table=True):
         default=None,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
+<<<<<<< HEAD
+=======
+  
+>>>>>>> origin/tim4/zajednicka-grana/sprint2
