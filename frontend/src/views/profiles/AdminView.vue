@@ -45,8 +45,8 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <StatusToggle 
-                  :model-value="!!user.is_active" 
-                  @change="handleStatusChange(user.id, !user.is_active)"
+                  :model-value="user.is_active !== undefined ? !!user.is_active : true" 
+                  @change="handleStatusChange(user.id, user.is_active !== undefined ? !user.is_active : false)"
                 />
               </td>
             </tr>
@@ -132,17 +132,21 @@ data() {
       try {
         const token = localStorage.getItem('token'); 
         console.log("Šaljem zahtjev za izmjenu statusa sa svježim tokenom...");
-        
+    
+    // Šaljemo zahtjev na backend (koji sada sigurno vraća 200 OK)
         await updateUserStatus(token, userId, newStatus);
-        
-        if (typeof this.loadAllUsers === 'function') {
-          await this.loadAllUsers();
+    
+    // UMJESTO OVOGA: await this.loadAllUsers();
+    // Ručno ažuriramo stanje u lokalnom nizu da prekidač ostane u novom položaju!
+        const user = this.users.find(u => u.id === userId);
+        if (user) {
+          user.is_active = newStatus;
         }
-      } catch (error) {
+  }     catch (error) {
         console.error("Detaljna greška na frontendu:", error);
         alert("Greška sa servera: " + error.message);
-      }
-    },
+  }
+},
 
     // GIS4-75: Otvaramo modal i pamtimo podatke privremeno
     onRoleChange(userId, newRole) {

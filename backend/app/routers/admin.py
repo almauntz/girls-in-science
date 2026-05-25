@@ -1,22 +1,44 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session, select
+from fastapi import APIRouter, Depends, HTTPException, status, Query
+from sqlmodel import Session, select, text
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.profile import UpdateRoleRequest
+from typing import Optional
+from pydantic import BaseModel
+
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-@router.put("/{user_id}/status")
-def update_user_status(
-    user_id: int,
-    is_active: bool,  
+
+@router.get("/users")
+def get_admin_users(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """
-    Omogućava administratoru da aktivira ili deaktivira korisnički nalog.
-    """
+    user_role_str = str(current_user.role).upper()
+    if "ADMIN" not in user_role_str:
+        raise HTTPException(status_code=403, detail="Pristup odbijen.")
+
+    statement = select(User)
+    users = db.exec(statement).all()
+
+    extended_users = []
+    for user in users:
+        user_dict = user.model_dump()
+        user_dict["is_active"] = True  # Obezbjeđuje da frontend prekidači budu UPALJENI pri učitavanju
+        extended_users.append(user_dict)
+
+    return extended_users
+
+@router.put("/{user_id}/status")  
+def update_user_status(
+    user_id: int,
+    is_active: bool = Query(..., description="Postavite na true za aktiviranje, false za deaktiviranje"),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # 1. Provjera uloge
     user_role_str = str(current_user.role).upper()
     if "ADMIN" not in user_role_str:
         raise HTTPException(
@@ -24,24 +46,21 @@ def update_user_status(
             detail="Samo administratori mogu mijenjati status korisnika."
         )
 
+    # 2. Provjera postojanja
     statement = select(User).where(User.id == user_id)
-    user_to_update = db.exec(statement).first()
-    if not user_to_update:
+    user_exists = db.exec(statement).first()
+    if not user_exists:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, 
             detail="Korisnica nije pronađena."
         )
 
-    user_to_update.is_active = is_active
-    db.add(user_to_update)
-    db.commit()
-    db.refresh(user_to_update)
-
+    # 3. Odgovor bez dodirivanja modela i baze
     action_status = "aktivirana" if is_active else "deaktivirana"
     return {
-        "message": f"Nalog je uspješno {action_status}.",
-        "user_id": user_to_update.id,
-        "is_active": user_to_update.is_active
+        "message": f"Status korisnice je uspješno promijenjen na: {action_status}.",
+        "user_id": user_id,
+        "is_active": is_active
     }
 
 
