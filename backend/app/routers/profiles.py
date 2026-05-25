@@ -332,7 +332,19 @@ def change_password(
 
     return {"message": "Lozinka uspješno promijenjena."}
 
+# PATCH /profiles/me/deactivate
+@router.patch("/me/deactivate", status_code=200)
+def deactivate_my_account(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    profile = get_or_create_profile(current_user, db)
+    
+    profile.is_active = False
+    db.add(profile)
+    db.commit()
 
+    return {"message": "Vaš nalog je uspješno deaktiviran."}
 
 
 
