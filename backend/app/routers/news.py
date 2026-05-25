@@ -10,4 +10,5 @@ def get_news_post(id: int, db: Session = Depends(get_db)):
     news_post = db.get(NewsPost, id)
     if not news_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Objava nije pronađena")
+    _ = news_post.role_models
     return news_post
