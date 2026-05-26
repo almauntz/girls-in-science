@@ -231,6 +231,21 @@
               {{ passwordLoading ? 'Spremanje...' : 'Promijeni lozinku' }}
             </button>
           </div>
+
+          <!-- Kontrola računa -->
+          <div class="bg-red-50 border border-red-100 rounded-xl shadow-sm p-6 max-w-full mt-6">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-red-500">⚠️</span>
+              <h3 class="text-sm font-semibold text-gray-800">Kontrola računa</h3>
+            </div>
+            <p class="text-sm text-red-400 mb-4">Deaktivacija će sakriti vaš profil iz javnog pretraživača.</p>
+            <button
+              @click="deactivateAccount"
+              class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2 px-5 rounded-full text-sm font-medium transition-colors duration-200"
+            >
+              🗑️ Deaktiviraj nalog
+            </button>
+          </div>
         </form>
       </div>
     </div>
