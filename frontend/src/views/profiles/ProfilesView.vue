@@ -40,7 +40,7 @@
           @register="handleRegister"
         />
         
-        <AktivnostiTab v-if="activeTab === 'aktivnosti'" />
+      <AktivnostiTab v-if="activeTab === 'aktivnosti'" /> 
       </div>
 
     </main>
@@ -48,7 +48,7 @@
 </template>
 
 <script>
-// import axios from 'axios'
+import axios from 'axios'
 import ProfileSidebar from '../../components/ProfileSidebar.vue'
 import ProfileForm from '../../components/ProfileForm.vue'
 import DashboardTab from '../../components/DashboardTab.vue'
@@ -123,13 +123,15 @@ export default {
       this.dashboardError = null
       try {
         const response = await axios.get(
-          'http://localhost:8000/dashboard',
+          'http://localhost:8000/profiles/dashboard',
           this.getAuthHeaders()
         )
         this.myWorkshops = response.data.my_workshops
         this.newWorkshops = response.data.new_workshops
         this.availableWorkshops = response.data.available_workshops
-      } catch (err) {
+      } catch (error) {
+        console.log("Cijela greska:", error);
+        alert("Status greske: " + error.response?.status + " Poruka: " + error.message);
         this.dashboardError = 'Nije moguće učitati podatke. Provjerite jeste li prijavljeni.'
       }
     },
