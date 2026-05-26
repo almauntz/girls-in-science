@@ -10,6 +10,17 @@
         {{ error }}
       </div>
 
+        <div v-if="isDeactivated" class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-4 text-sm">
+          <p class="font-medium mb-2">Vaš nalog je deaktiviran. Želite li ga reaktivirati?</p>
+          <button
+            @click="reactivateAccount"
+            :disabled="reactivateLoading"
+            class="bg-violet-600 text-white py-1.5 px-4 rounded-lg text-sm font-medium hover:bg-violet-700 transition disabled:opacity-50"
+          >
+            {{ reactivateLoading ? 'Reaktivacija...' : 'Reaktiviraj nalog' }}
+          </button>
+        </div>
+
       <div class="flex flex-col gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -59,7 +70,9 @@ export default {
       email: '',
       password: '',
       loading: false,
-      error: null
+      error: null,
+      isDeactivated: false,
+      reactivateLoading: false
     }
   },
   methods: {
@@ -70,17 +83,54 @@ export default {
       const response = await loginUser(this.email, this.password)
 
       if (response.access_token) {
-        localStorage.setItem('token', response.access_token) // Spasimo token u memoriju
-        //Dohvatimo podatke o korisniku i spasimo njegovo ime
-        const user = await getMe(response.access_token)
-        localStorage.setItem('username', user.full_name)
-        // window.location.href = '/'
-        this.$router.push('/profiles') // preusmjeravanje na dashboard (GIS4-20)
+        localStorage.setItem('token', response.access_token)
+
+        const profileResponse = await fetch('http://localhost:8000/profiles/me', {
+          headers: { 'Authorization': `Bearer ${response.access_token}` }
+        })
+
+        if (profileResponse.status === 403) {
+          localStorage.removeItem('token')
+          this.isDeactivated = true
+        } else {
+          const user = await getMe(response.access_token)
+          localStorage.setItem('username', user.full_name)
+          this.$router.push('/profiles')
+        }
       } else {
         this.error = 'Pogrešan email ili lozinka.'
       }
 
       this.loading = false
+    },
+
+    async reactivateAccount() {
+      this.reactivateLoading = true
+      this.error = null
+
+      try {
+        const response = await fetch('http://localhost:8000/profiles/reactivate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: this.email, password: this.password })
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          localStorage.setItem('token', data.access_token)
+          const user = await getMe(data.access_token)
+          localStorage.setItem('username', user.full_name)
+          this.$router.push('/profiles')
+        } else {
+          this.error = 'Greška pri reaktivaciji. Pokušajte ponovo.'
+          this.isDeactivated = false
+        }
+      } catch (e) {
+        this.error = 'Greška pri reaktivaciji.'
+      } finally {
+        this.reactivateLoading = false
+      }
     }
   }
 }
