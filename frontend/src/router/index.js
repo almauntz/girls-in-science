@@ -45,6 +45,12 @@ const routes = [
     component: () => import('../views/profiles/ProfilesView.vue'),
     meta: { requiresAuth: true }
   },
+
+  {
+  path: '/profiles/:user_id',
+  name: 'public-profile',
+  component: () => import('../views/profiles/PublicProfileView.vue')
+  },
   {
     path: '/admin/users',
     name: 'admin-users',
