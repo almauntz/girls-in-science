@@ -122,10 +122,16 @@ data() {
       try {
         const token = localStorage.getItem('token');
         this.users = await getAllUsers(token); 
-        console.log("DOBIJENI PODACI:");
-        console.log(this.users);     
+        console.log("DOBIJENI PODACI:", this.users);     
       } catch (err) {
-        console.error('Greška pri učitavanju korisnica', err);
+        console.error('Uhvaćena greška na frontendu:', err.message);
+    
+        // Ako je api.js ispalio naš alarm za deaktiviran nalog
+        if (err.message === 'DEAKTIVIRAN_NALOG') {
+          alert("Vaš nalog je deaktiviran! Pristup odbijen.");
+          localStorage.removeItem('token'); // Brišemo token iz browsera
+          this.$router.push('/login');      // Izbacujemo je na login ekran
+        }
       } finally {
         this.isLoading = false;
       }

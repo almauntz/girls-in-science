@@ -62,6 +62,10 @@ export async function getAllUsers(token) {
     }
   })
 
+  if (response.status === 403) {
+    throw new Error('DEAKTIVIRAN_NALOG');
+  }
+
   if (!response.ok) {
     throw new Error('Greška prilikom dohvaćanja liste korisnika')
   }

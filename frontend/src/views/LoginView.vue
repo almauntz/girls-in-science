@@ -67,20 +67,37 @@ export default {
       this.loading = true
       this.error = null
 
-      const response = await loginUser(this.email, this.password)
+      try {
+        const response = await loginUser(this.email, this.password)
 
-      if (response.access_token) {
-        localStorage.setItem('token', response.access_token) // Spasimo token u memoriju
-        //Dohvatimo podatke o korisniku i spasimo njegovo ime i ulogu
-        const user = await getMe(response.access_token)
-        localStorage.setItem('username', user.full_name)
-        localStorage.setItem('user_role', user.role)
-        this.$router.push('/profiles') // preusmjeravanje na dashboard (GIS4-20)
-      } else {
-        this.error = 'Pogrešan email ili lozinka.'
+        if (response.access_token) {
+          localStorage.setItem('token', response.access_token)
+          
+          const user = await getMe(response.access_token)
+          
+          // DIREKTNA PROVJERA: Ako je korisnica deaktivirana, backend vrati 403 
+          // i objekat user NEĆE imati u sebi 'role' ili 'full_name' (ili će imati 'detail' grešku)
+          if (!user || user.detail || !user.role) {
+            this.error = 'Vaš nalog je deaktiviran. Pristup odbijen.'
+            localStorage.removeItem('token') // Brišemo token jer je nevažeći
+            this.loading = false
+            return // ZAUSTAVLJAMO izvršavanje ovdje, ne damo joj na /profiles!
+          }
+          
+          // Ako je sve u redu i korisnica je aktivna, tek tada spremamo podatke i puštamo je
+          localStorage.setItem('username', user.full_name)
+          localStorage.setItem('user_role', user.role)
+          this.$router.push('/profiles')
+          
+        } else {
+          this.error = 'Pogrešan email ili lozinka.'
+        }
+      } catch (err) {
+        console.error("Uhvaćena greška pri prijavi:", err.message)
+        this.error = 'Došlo je do greške na serveru. Pokušajte ponovo.'
+      } finally {
+        this.loading = false
       }
-
-      this.loading = false
     }
   }
 }
