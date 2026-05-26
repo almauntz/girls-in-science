@@ -27,6 +27,7 @@
           @profile-updated="handleProfileUpdated"
           @avatar-uploaded="avatarUrl = $event"
           @avatar-deleted="avatarUrl = null"
+          @account-deactivated="handleDeactivated"
         />
         
         <DashboardTab
@@ -138,7 +139,12 @@ export default {
       } catch (err) {
         alert(err.response?.data?.detail || 'Greška pri prijavi.')
       }
-    }
+    },
+    
+    handleDeactivated() {
+    localStorage.removeItem('token')
+    this.$router.push('/login')
+}
   }
 }
 </script>

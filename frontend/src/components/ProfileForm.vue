@@ -554,7 +554,8 @@ async confirmDeactivation() {
     })
     if (response.ok) {
       this.showDeactivateModal = false
-      this.$emit('account-deactivated')
+      localStorage.removeItem('token')
+      this.$router.push('/login')
     }
   } catch (e) {
     console.error('Greška pri deaktivaciji.')
