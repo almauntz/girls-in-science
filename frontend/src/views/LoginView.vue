@@ -71,10 +71,10 @@ export default {
 
       if (response.access_token) {
         localStorage.setItem('token', response.access_token) // Spasimo token u memoriju
-        //Dohvatimo podatke o korisniku i spasimo njegovo ime
+        //Dohvatimo podatke o korisniku i spasimo njegovo ime i ulogu
         const user = await getMe(response.access_token)
         localStorage.setItem('username', user.full_name)
-        // window.location.href = '/'
+        localStorage.setItem('user_role', user.role)
         this.$router.push('/profiles') // preusmjeravanje na dashboard (GIS4-20)
       } else {
         this.error = 'Pogrešan email ili lozinka.'

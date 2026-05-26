@@ -31,6 +31,7 @@
         
         <DashboardTab
           v-if="activeTab === 'dashboard'"
+          :userRole="userRole"
           :myWorkshops="myWorkshops"
           :newWorkshops="newWorkshops"
           :availableWorkshops="availableWorkshops"
@@ -68,6 +69,7 @@ export default {
       activeTab: 'dashboard',
       avatarUrl: null,
       profileData: { full_name: '', field: '' , biography: ''},
+      userRole: 'member',
       myWorkshops: [],
       newWorkshops: [],
       availableWorkshops: [],
@@ -94,6 +96,11 @@ export default {
         field: data.field || '',
         biography: data.biography || ''
       }
+
+      if (data.role) {
+        this.userRole = data.role.toLowerCase()
+      }
+
       if (data.avatar) {
         this.avatarUrl = `http://localhost:8000${data.avatar}`
       }
