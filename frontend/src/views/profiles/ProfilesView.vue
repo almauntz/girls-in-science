@@ -2,6 +2,7 @@
   <div class="bg-gray-50 flex h-screen w-full profile-page overflow-hidden">
     
     <ProfileSidebar
+      :userRole="userRole" :profileData="profileData"
       :activeTab="activeTab"
       :fullName="profileData.full_name"
       :field="profileData.field"
@@ -32,6 +33,7 @@
         
         <DashboardTab
           v-if="activeTab === 'dashboard'"
+          :userRole="userRole"
           :myWorkshops="myWorkshops"
           :newWorkshops="newWorkshops"
           :availableWorkshops="availableWorkshops"
@@ -39,7 +41,7 @@
           @register="handleRegister"
         />
         
-        <AktivnostiTab v-if="activeTab === 'aktivnosti'" />
+      <AktivnostiTab v-if="activeTab === 'aktivnosti'" /> 
       </div>
 
     </main>
@@ -47,11 +49,11 @@
 </template>
 
 <script>
-// import axios from 'axios'
+import axios from 'axios'
 import ProfileSidebar from '../../components/ProfileSidebar.vue'
 import ProfileForm from '../../components/ProfileForm.vue'
 import DashboardTab from '../../components/DashboardTab.vue'
-// import AktivnostiTab from '../../components/AktivnostiTab.vue'
+//import AktivnostiTab from '../../components/AktivnostiTab.vue'
 import { getMyProfile } from '../../services/api.js'
 
 export default {
@@ -61,7 +63,7 @@ export default {
     ProfileSidebar,
     ProfileForm,
     DashboardTab,
-    // AktivnostiTab
+  //AktivnostiTab
   },
 
   data() {
@@ -69,6 +71,7 @@ export default {
       activeTab: 'dashboard',
       avatarUrl: null,
       profileData: { full_name: '', field: '' , biography: ''},
+      userRole: 'member',
       myWorkshops: [],
       newWorkshops: [],
       availableWorkshops: [],
@@ -95,6 +98,11 @@ export default {
         field: data.field || '',
         biography: data.biography || ''
       }
+
+      if (data.role) {
+        this.userRole = data.role.toLowerCase()
+      }
+
       if (data.avatar) {
         this.avatarUrl = `http://localhost:8000${data.avatar}`
       }
@@ -116,13 +124,15 @@ export default {
       this.dashboardError = null
       try {
         const response = await axios.get(
-          'http://localhost:8000/dashboard',
+          'http://localhost:8000/profiles/dashboard',
           this.getAuthHeaders()
         )
         this.myWorkshops = response.data.my_workshops
         this.newWorkshops = response.data.new_workshops
         this.availableWorkshops = response.data.available_workshops
-      } catch (err) {
+      } catch (error) {
+        console.log("Cijela greska:", error);
+        alert("Status greske: " + error.response?.status + " Poruka: " + error.message);
         this.dashboardError = 'Nije moguće učitati podatke. Provjerite jeste li prijavljeni.'
       }
     },

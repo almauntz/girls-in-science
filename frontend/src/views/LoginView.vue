@@ -75,33 +75,42 @@ export default {
       reactivateLoading: false
     }
   },
-  methods: {
+    methods: {
     async handleLogin() {
       this.loading = true
       this.error = null
+      this.isDeactivated = false
 
-      const response = await loginUser(this.email, this.password)
+      try {
+        const response = await loginUser(this.email, this.password)
 
-      if (response.access_token) {
-        localStorage.setItem('token', response.access_token)
+        if (response.access_token) {
+          localStorage.setItem('token', response.access_token)
+          
+          // Provjera statusa
+          const profileResponse = await fetch('http://localhost:8000/profiles/me', {
+            headers: { 'Authorization': `Bearer ${response.access_token}` }
+          })
 
-        const profileResponse = await fetch('http://localhost:8000/profiles/me', {
-          headers: { 'Authorization': `Bearer ${response.access_token}` }
-        })
-
-        if (profileResponse.status === 403) {
-          localStorage.removeItem('token')
-          this.isDeactivated = true
+          if (profileResponse.status === 403) {
+            localStorage.removeItem('token')
+            this.isDeactivated = true
+            this.error = 'Vaš nalog je trenutno deaktiviran.'
+          } else {
+            const user = await getMe(response.access_token)
+            localStorage.setItem('username', user.full_name)
+            localStorage.setItem('user_role', user.role)
+            this.$router.push('/profiles')
+          }
         } else {
-          const user = await getMe(response.access_token)
-          localStorage.setItem('username', user.full_name)
-          this.$router.push('/profiles')
+          this.error = 'Pogrešan email ili lozinka.'
         }
-      } else {
-        this.error = 'Pogrešan email ili lozinka.'
+      } catch (err) {
+        console.error("Greška pri prijavi:", err)
+        this.error = 'Došlo je do greške na serveru. Pokušajte ponovo.'
+      } finally {
+        this.loading = false
       }
-
-      this.loading = false
     },
 
     async reactivateAccount() {
@@ -134,4 +143,5 @@ export default {
     }
   }
 }
+
 </script>
