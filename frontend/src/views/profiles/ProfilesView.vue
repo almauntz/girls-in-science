@@ -2,6 +2,7 @@
   <div class="bg-gray-50 flex h-screen w-full profile-page overflow-hidden">
     
     <ProfileSidebar
+      :userRole="userRole" :profileData="profileData"
       :activeTab="activeTab"
       :fullName="profileData.full_name"
       :field="profileData.field"
