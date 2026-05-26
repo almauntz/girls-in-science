@@ -3,9 +3,11 @@ from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlmodel import Session, select
+from sqlmodel import Session, select, text
 from app.core.config import settings
 from app.database import get_db
+from app.models.user import User
+from app.models.profile import Profile
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -31,9 +33,7 @@ def decode_access_token(token: str) -> dict | None:
         return None
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    # 1. Ovdje obavezno importuj modele unutar funkcije
     from app.models.user import User
-    from app.models.profile import Profile # OVO TI JE FALILO
     
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
@@ -48,17 +48,22 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user_id is None:
         raise credentials_exception
     
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    user = db.exec(select(User).where(User.id == int(user_id))).first()
     if user is None:
         raise credentials_exception
     
-    # 2. Provjeri profil (ispravno uvučeno)
     profile = db.exec(select(Profile).where(Profile.user_id == user.id)).first()
     if profile and not profile.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Vaš nalog je deaktiviran."
+            detail="Vaš nalog je deaktiviran. Pristup odbijen."
         )
 
-    # 3. OVO MORA BITI UVUČENO DA BUDE DIO FUNKCIJE
+    # Vraćamo puni user objekat. FastAPI SQLModel sesija nam omogućava da ga mapiramo nazad
+    # Ali pošto nam treba stvarni objekat koji ruta očekuje, uvešćemo samo lokalno unutar return-a ako baš mora,
+    # ili ćemo iskoristiti postojeći user iz baze.
+    from app.models.user import User
+    user = db.exec(select(User).where(User.id == int(user_id))).first()
+    
+
     return user

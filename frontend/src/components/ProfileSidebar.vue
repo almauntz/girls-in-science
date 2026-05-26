@@ -9,7 +9,9 @@
       <p class="text-sm font-semibold text-white">{{ fullName || username }}</p>
       <p class="text-xs text-violet-200 mt-0.5" v-if="field">{{ field }}</p>
       <span class="mt-3 text-xs font-bold bg-violet-500 text-white px-3 py-1 rounded-full uppercase tracking-wide">
-        Studentica
+      <span v-if="userRole === 'admin'">Administrator</span>
+      <span v-else-if="userRole === 'mentor'">Mentorica</span>
+      <span v-else>Studentica</span>
       </span>
     </div>
 
@@ -64,7 +66,11 @@ export default {
     activeTab: String,
     fullName: String,
     field: String,
-    avatarUrl: String
+    avatarUrl: String,
+    userRole: {
+      type: String,
+      default: 'member' // Ako ne dobije ništa, biće po defaultu studentica
+    }
   },
 
   emits: ['tab-change'],

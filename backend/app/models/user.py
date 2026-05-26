@@ -5,6 +5,7 @@ from sqlmodel import SQLModel, Field
 from sqlalchemy import Column, Enum as SAEnum
 from sqlalchemy.sql import func
 from sqlalchemy import DateTime
+
 class UserRole(str, enum.Enum):
     member = "member"
     mentor = "mentor"
@@ -25,4 +26,3 @@ class User(SQLModel, table=True):
         default=None,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
-  
