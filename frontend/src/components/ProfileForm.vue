@@ -250,6 +250,33 @@
       </div>
     </div>
 
+    <!-- Modal za potvrdu deaktivacije -->
+<div v-if="showDeactivateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4">
+    <div class="flex items-center gap-2 mb-3">
+      <span class="text-red-500 text-xl">⚠️</span>
+      <h3 class="text-base font-semibold text-gray-800">Deaktivacija naloga</h3>
+    </div>
+    <p class="text-sm text-gray-500 mb-6">
+      Jeste li sigurni da želite deaktivirati nalog? Vaš profil će biti sakriven, ali podaci neće biti obrisani.
+    </p>
+    <div class="flex gap-3">
+      <button
+        @click="closeDeactivateModal"
+        class="flex-1 border border-gray-300 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+      >
+        Odustani
+      </button>
+      <button
+        @click="confirmDeactivation"
+        class="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg text-sm font-medium transition-colors"
+      >
+        Potvrdi
+      </button>
+    </div>
+  </div>
+</div>
+
   </div>
 </template>
 
@@ -310,7 +337,9 @@ export default {
       'Ekologija',
       'Ekonomija',
       'Dizajn' // Uklonjen zarez sa zadnjeg elementa (opcionalno, ali čistije)
-    ] // <-- Promijenjeno u uglastu zagradu ]
+    ], // <-- Promijenjeno u uglastu zagradu ]
+
+    showDeactivateModal: false
   }
 },
 
@@ -507,7 +536,30 @@ watch: {
       } catch (error) {
         this.avatarError = error.message || 'Nije moguće obrisati profilnu sliku.'
       }
+    },
+    deactivateAccount() {
+  this.showDeactivateModal = true
+},
+
+closeDeactivateModal() {
+  this.showDeactivateModal = false
+},
+
+async confirmDeactivation() {
+  try {
+    const token = localStorage.getItem('token')
+    const response = await fetch('http://localhost:8000/profiles/me/deactivate', {
+      method: 'PATCH',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    if (response.ok) {
+      this.showDeactivateModal = false
+      this.$emit('account-deactivated')
     }
+  } catch (e) {
+    console.error('Greška pri deaktivaciji.')
+  }
+},
   }
 }
 </script>
