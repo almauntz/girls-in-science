@@ -19,6 +19,12 @@ def create_news_post(
     news_data: NewsPostCreate,
     db: Session = Depends(get_db)
 ):
+    if not news_data.title or not news_data.content:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Title i content su obavezni"
+        )
 
     news_post = NewsPost(
         title=news_data.title,
