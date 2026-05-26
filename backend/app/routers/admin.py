@@ -1,11 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlmodel import Session, select, text
+from sqlmodel import Session, select
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.models.profile import UpdateRoleRequest
-from typing import Optional
-from pydantic import BaseModel
+from app.models.profile import Profile, UpdateRoleRequest
 
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -17,6 +15,7 @@ def get_admin_users(
     db: Session = Depends(get_db)
 ):
     user_role_str = str(current_user.role).upper()
+
     if "ADMIN" not in user_role_str:
         raise HTTPException(status_code=403, detail="Pristup odbijen.")
 
@@ -24,43 +23,58 @@ def get_admin_users(
     users = db.exec(statement).all()
 
     extended_users = []
+
     for user in users:
-        user_dict = user.model_dump()
-        user_dict["is_active"] = True  # Obezbjeđuje da frontend prekidači budu UPALJENI pri učitavanju
-        extended_users.append(user_dict)
+        profile_statement = select(Profile).where(Profile.user_id == user.id)
+        profile = db.exec(profile_statement).first()
+
+        extended_users.append({
+            "id": user.id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "role": user.role,
+            "is_active": profile.is_active if profile else False
+        })
 
     return extended_users
 
-@router.put("/{user_id}/status")  
+@router.put("/{user_id}/status")
 def update_user_status(
     user_id: int,
     is_active: bool = Query(..., description="Postavite na true za aktiviranje, false za deaktiviranje"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    # 1. Provjera uloge
+    # Provjera admina
     user_role_str = str(current_user.role).upper()
     if "ADMIN" not in user_role_str:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Samo administratori mogu mijenjati status korisnika."
         )
 
-    # 2. Provjera postojanja
-    statement = select(User).where(User.id == user_id)
-    user_exists = db.exec(statement).first()
-    if not user_exists:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Korisnica nije pronađena."
-        )
+    # Tražimo profile preko user_id
+    statement = select(Profile).where(Profile.user_id == user_id)
+    profile_to_update = db.exec(statement).first()
 
-    # 3. Odgovor bez dodirivanja modela i baze
+    # AKO PROFIL NE POSTOJI, KREIRAMO GA ODMAH DA KOD NE PUKNE
+    if not profile_to_update:
+        profile_to_update = Profile(user_id=user_id, is_active=is_active)
+        db.add(profile_to_update)
+    else:
+        # Ako postoji, samo ažuriramo status
+        profile_to_update.is_active = is_active
+        db.add(profile_to_update)
+
+    db.commit()
+    db.refresh(profile_to_update)
+
     action_status = "aktivirana" if is_active else "deaktivirana"
+
     return {
         "message": f"Status korisnice je uspješno promijenjen na: {action_status}.",
         "user_id": user_id,
-        "is_active": is_active
+        "is_active": profile_to_update.is_active
     }
 
 
