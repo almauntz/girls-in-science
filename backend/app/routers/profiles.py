@@ -1,13 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Body
 from sqlmodel import Session, select, not_
 from app.database import get_db
-from app.core.security import get_current_user, verify_password, hash_password, create_access_token
+from app.core.security import get_current_user, verify_password, hash_password, create_access_token,decode_access_token
 from app.models.user import User, UserRole
-from app.models.profile import Profile, ProfileUpdate, ProfileResponse, Workshop, WorkshopRegistration, ChangePasswordRequest
+from app.models.profile import Profile, ProfileUpdate, ProfileResponse, Workshop, WorkshopRegistration, ChangePasswordRequest, PublicProfileResponse
 from datetime import datetime
 from typing import Dict, Any
 import uuid
 import os
+from typing import Optional
 
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
@@ -392,3 +393,33 @@ def reactivate_account(
 
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
+
+@router.get("/{user_id}", response_model=PublicProfileResponse)
+def get_public_profile(
+    user_id: int,
+    db: Session = Depends(get_db),
+    token: Optional[str] = None
+):
+    # Provjeri postoji li korisnica
+    user = db.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="Korisnica nije pronađena.")
+    
+    profile = db.exec(
+        select(Profile).where(Profile.user_id == user_id)
+    ).first()
+
+    # Provjeri token — ako je valjan, uključi email
+    email = None
+    if token:
+        payload = decode_access_token(token)
+        if payload is not None:
+            email = user.email
+
+    return PublicProfileResponse(
+        full_name=user.full_name,
+        field=profile.field if profile else None,
+        biography=profile.biography if profile else None,
+        avatar=profile.avatar if profile else None,
+        email=email
+    )
