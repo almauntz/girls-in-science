@@ -80,3 +80,14 @@ class Workshop(SQLModel, table=True):
 
 class UpdateRoleRequest(BaseModel):
     role: UserRole
+
+# Shema za javni prikaz profila
+class PublicProfileResponse(SQLModel):
+    full_name: str
+    field: Optional[str] = None
+    biography: Optional[str] = None
+    avatar: Optional[str] = None
+    email: Optional[str] = None
+
+    class Config:
+        from_attributes = True
