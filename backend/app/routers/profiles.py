@@ -55,7 +55,8 @@ def get_my_profile(
         biography=profile.biography,
         field=profile.field,
         avatar=profile.avatar,
-        role=current_user.role
+        role=current_user.role,
+        location=profile.location
     )
 
 @router.put("/me", response_model=ProfileResponse)
@@ -75,6 +76,10 @@ def update_my_profile(
         profile.biography = profile_data.biography
     if profile_data.field is not None:
         profile.field = profile_data.field
+    if profile_data.location is not None:
+        profile.location = profile_data.location
+    if profile_data.email is not None:
+        current_user.email = profile_data.email
 
     db.commit()
     db.refresh(current_user)
@@ -88,7 +93,9 @@ def update_my_profile(
         biography=profile.biography,
         field=profile.field,
         avatar=profile.avatar,
-        role=current_user.role
+        role=current_user.role,
+        location=profile.location
+
     )
 @router.get("/dashboard", response_model=Dict[str, Any])
 def get_personal_dashboard(

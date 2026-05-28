@@ -20,12 +20,15 @@ class Profile(SQLModel, table=True):
     field: Optional[str] = Field(default=None)
     avatar: Optional[str] = Field(default=None)
     is_active: bool = Field(default=True)
+    location: Optional[str] = Field(default=None, nullable=True)
 
 # Shema za ažuriranje profila
 class ProfileUpdate(SQLModel):
     full_name: Optional[str] = None
     biography: Optional[str] = None
     field: Optional[str] = None
+    location: Optional[str] = Field(default=None, nullable=True)
+    email: Optional[str] = None
 
     @field_validator('full_name')
     @classmethod
@@ -47,6 +50,7 @@ class ProfileResponse(SQLModel):
     user_id: int
     full_name: str
     email: str
+    location: Optional[str] = Field(default=None, nullable=True)
     biography: Optional[str] = None
     field: Optional[str] = None
     avatar: Optional[str] = None
