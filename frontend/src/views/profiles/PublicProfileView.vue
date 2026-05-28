@@ -32,14 +32,6 @@
         <!-- Informacije -->
         <div class="space-y-4">
 
-          <!-- Email — samo za prijavljene -->
-          <div v-if="profile.email" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <div class="flex items-center gap-2 mb-3">
-              <span class="text-violet-500">✉️</span>
-              <h3 class="text-sm font-semibold text-gray-800">Email</h3>
-            </div>
-            <p class="text-sm text-gray-700">{{ profile.email }}</p>
-          </div>
 
           <!-- Oblast -->
           <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -50,6 +42,15 @@
             <p class="text-sm text-gray-700 px-4 py-3 bg-gray-50 rounded-xl border border-gray-100">
               {{ profile.field || 'Nije uneseno' }}
             </p>
+          </div>
+
+          <!-- Email — samo za prijavljene -->
+          <div v-if="profile.email" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-violet-500">✉️</span>
+              <h3 class="text-sm font-semibold text-gray-800">Email</h3>
+            </div>
+            <p class="text-sm text-gray-700">{{ profile.email }}</p>
           </div>
 
           <!-- Biografija -->
