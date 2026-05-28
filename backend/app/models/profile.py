@@ -22,6 +22,11 @@ class Profile(SQLModel, table=True):
     is_active: bool = Field(default=True)
     location: Optional[str] = Field(default=None, nullable=True)
 
+    # Privacy polja
+    show_biography: bool = Field(default=True)
+    show_field: bool = Field(default=True)
+    show_location: bool = Field(default=True)
+
 # Shema za ažuriranje profila
 class ProfileUpdate(SQLModel):
     full_name: Optional[str] = None
@@ -29,6 +34,11 @@ class ProfileUpdate(SQLModel):
     field: Optional[str] = None
     location: Optional[str] = Field(default=None, nullable=True)
     email: Optional[str] = None
+
+    # Privacy polja
+    show_biography: Optional[bool] = None
+    show_field: Optional[bool] = None
+    show_location: Optional[bool] = None
 
     @field_validator('full_name')
     @classmethod
@@ -55,6 +65,11 @@ class ProfileResponse(SQLModel):
     field: Optional[str] = None
     avatar: Optional[str] = None
     role: str
+
+    # Privacy polja
+    show_biography: bool = True
+    show_field: bool = True
+    show_location: bool = True
 
     class Config:
         from_attributes = True
