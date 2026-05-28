@@ -46,7 +46,9 @@
       <h2 class="text-3xl font-bold text-white leading-none">{{ fullName || 'Korisnice' }}</h2>
       
       <span class="bg-white/20 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-wider">
-        Student
+        <span v-if="userRole === 'admin'">Administrator</span>
+        <span v-else-if="userRole === 'mentor'">Mentorica</span>
+        <span v-else>Studentica</span>
       </span>
     </div>
     <p class="text-violet-100 text-sm font-medium">{{ form.field || 'Oblast nije unesena' }}</p>
@@ -290,7 +292,11 @@ export default {
     fullName: String,
     field: String,
     biography: String,
-    avatarUrl: String
+    avatarUrl: String,
+    userRole: {
+    type: String,
+    default: 'member'
+  }
   },
 
   emits: ['profile-updated', 'avatar-uploaded', 'avatar-deleted'],

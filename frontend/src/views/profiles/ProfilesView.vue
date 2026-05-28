@@ -25,6 +25,7 @@
           :field="profileData.field"
           :biography="profileData.biography"
           :avatarUrl="avatarUrl"
+          :userRole="userRole"
           @profile-updated="handleProfileUpdated"
           @avatar-uploaded="avatarUrl = $event"
           @avatar-deleted="avatarUrl = null"
