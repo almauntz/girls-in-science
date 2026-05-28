@@ -92,6 +92,7 @@ class PublicProfileResponse(SQLModel):
     biography: Optional[str] = None
     avatar: Optional[str] = None
     email: Optional[str] = None
+    location: Optional[str] = Field(default=None, nullable=True)
 
     class Config:
         from_attributes = True

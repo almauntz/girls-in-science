@@ -432,5 +432,6 @@ def get_public_profile(
         field=profile.field if profile else None,
         biography=profile.biography if profile else None,
         avatar=profile.avatar if profile else None,
-        email=email
+        email=email,
+        location=profile.location if profile else None
     )

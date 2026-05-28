@@ -14,21 +14,56 @@
 
       <!-- Profil -->
       <div v-else>
+        <!-- Header -->
+<div
+  class="relative w-full rounded-xl mb-6 overflow-hidden"
+  style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%); min-height: 170px;"
+>
+  
+  <div class="absolute w-full left-0 bottom-4 px-6 flex items-end gap-6">
 
-        <!-- Header banner -->
-        <div class="relative w-full rounded-xl mb-6 overflow-hidden" style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #9333ea 100%); min-height: 170px;">
-          <div class="absolute w-full left-0 bottom-4 px-6 flex items-end gap-6">
-            <div class="w-32 h-32 rounded-3xl border-4 border-white bg-violet-400 flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0 cursor-pointer" @click="showAvatarModal = true">
-              <img v-if="profile.avatar" :src="`http://localhost:8000${profile.avatar}`" alt="Avatar" class="w-full h-full object-cover" />
-              <span v-else class="text-5xl">👤</span>
-            </div>
-            <div class="mb-2 flex flex-col gap-1">
-              <h2 class="text-3xl font-bold text-white leading-none">{{ profile.full_name }}</h2>
-              <p class="text-violet-100 text-sm font-medium">{{ profile.field || 'Nije uneseno' }}</p>
-            </div>
-          </div>
+    <div
+      class="w-32 h-32 rounded-3xl border-4 border-white bg-violet-400 flex items-center justify-center overflow-hidden shadow-lg flex-shrink-0 cursor-pointer"
+      @click="showAvatarModal = true"
+    >
+      <img
+        v-if="profile.avatar"
+        :src="`http://localhost:8000${profile.avatar}`"
+        alt="Avatar"
+        class="w-full h-full object-cover"
+      />
+      <span v-else class="text-5xl">👤</span>
+    </div>
+
+    <div class="mb-2 flex flex-col gap-2">
+      <h2 class="text-3xl font-bold text-white leading-none">
+        {{ profile.full_name }}
+      </h2>
+
+      <div class="flex flex-wrap gap-2 mt-1">
+
+        <div
+          v-if="profile.location"
+          class="bg-indigo-900/40 border border-indigo-400/30 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1.5"
+        >
+          <span>📍</span>
+          {{ profile.location }}
         </div>
 
+        <div
+          v-if="profile.field"
+          class="bg-indigo-900/40 border border-indigo-400/30 text-white text-xs px-3 py-1 rounded-full flex items-center gap-1.5"
+        >
+          <span>📖</span>
+          {{ profile.field }}
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+      
         <!-- Informacije -->
         <div class="space-y-4">
 
