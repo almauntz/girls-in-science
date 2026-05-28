@@ -80,6 +80,14 @@ def update_my_profile(
         profile.location = profile_data.location
     if profile_data.email is not None:
         current_user.email = profile_data.email
+    
+       # Privacy polja
+    if profile_data.show_biography is not None:
+        profile.show_biography = profile_data.show_biography
+    if profile_data.show_field is not None:
+        profile.show_field = profile_data.show_field
+    if profile_data.show_location is not None:
+        profile.show_location = profile_data.show_location
 
     db.commit()
     db.refresh(current_user)
@@ -94,7 +102,10 @@ def update_my_profile(
         field=profile.field,
         avatar=profile.avatar,
         role=current_user.role,
-        location=profile.location
+        location=profile.location,
+        show_biography=profile.show_biography,
+        show_field=profile.show_field,
+        show_location=profile.show_location
 
     )
 @router.get("/dashboard", response_model=Dict[str, Any])
@@ -429,9 +440,9 @@ def get_public_profile(
 
     return PublicProfileResponse(
         full_name=user.full_name,
-        field=profile.field if profile else None,
-        biography=profile.biography if profile else None,
+        field=profile.field if (profile and profile.show_field) else None,
+        biography=profile.biography if (profile and profile.show_biography) else None,
         avatar=profile.avatar if profile else None,
         email=email,
-        location=profile.location if profile else None
+        location=profile.location if (profile and profile.show_location) else None
     )
