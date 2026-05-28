@@ -113,7 +113,41 @@
               <p v-if="errors.full_name" class="text-red-500 text-xs mt-1">{{ errors.full_name }}</p>
             </div>
           </div>
+          
+        <!-- KONTAKT PODACI KARTICA -->
+<div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+  <div class="flex items-center gap-2 mb-5">
+    <span class="text-violet-500">✉️</span>
+    <h3 class="text-sm font-semibold text-gray-800">Kontakt Podaci</h3>
+  </div>
+
+ <div class="mb-4">
+  <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Email adresa</label>
+  <p v-if="!isEditMode" class="text-sm font-medium text-gray-800">{{ form.email || 'Nije uneseno' }}</p>
+  <input
+    v-else
+    v-model="form.email"
+    type="text"
+    placeholder="Npr. tvoj@email.com"
+    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+  />
+  <p v-if="errors.email" class="text-red-500 text-xs mt-1">{{ errors.email }}</p>
+</div>
+
+  <div>
+    <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Lokacija</label>
+    <p v-if="!isEditMode" class="text-sm font-medium text-gray-800">{{ form.location || 'Nije uneseno' }}</p>
+    <input
+      v-else
+      v-model="form.location"
+      type="text"
+      placeholder="Npr. Sarajevo, BiH"
+      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+    />
+  </div>
+</div>
         </div>
+
 
         <div class="lg:col-span-2 space-y-6">
           
@@ -296,7 +330,10 @@ export default {
     userRole: {
     type: String,
     default: 'member'
-  }
+    },
+    email: String,
+    location: String,
+
   },
 
   emits: ['profile-updated', 'avatar-uploaded', 'avatar-deleted'],
@@ -316,11 +353,14 @@ export default {
     form: {
       full_name: '',
       biography: '',
-      field: ''
+      field: '',
+      location: '',
+      email: ''
     },
     errors: {
       full_name: '',
-      biography: ''
+      biography: '',
+      email: '',
     },
     successMessage: '',
     errorMessage: '',
@@ -376,7 +416,19 @@ watch: {
     handler(val) {
       this.form.biography = val || ''
     }
+  },
+  location: {
+  immediate: true,
+  handler(val) {
+    this.form.location = val || ''
   }
+  },
+  email: {
+  immediate: true,
+  handler(val) {
+    this.form.email = val || ''
+  }
+}
 },
   methods: {
   
@@ -391,6 +443,10 @@ watch: {
         this.errors.biography = 'Biografija ne smije biti duža od 500 karaktera.'
         isValid = false
       }
+      if (this.form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.form.email)) {
+        this.errors.email = 'Email adresa nije ispravna.'
+        isValid = false
+      }
       return isValid
     },
 
@@ -403,7 +459,9 @@ watch: {
         await updateProfile(token, {
           full_name: this.form.full_name,
           biography: this.form.biography,
-          field: this.form.field
+          field: this.form.field,
+          location: this.form.location,
+          email: this.form.email
         })
         this.successMessage = 'Promjene su uspješno sačuvane!'
         this.isEditMode = false;

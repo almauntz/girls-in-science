@@ -26,6 +26,8 @@
           :biography="profileData.biography"
           :avatarUrl="avatarUrl"
           :userRole="userRole"
+          :location="profileData.location"
+          :email="profileData.email"
           @profile-updated="handleProfileUpdated"
           @avatar-uploaded="avatarUrl = $event"
           @avatar-deleted="avatarUrl = null"
@@ -77,7 +79,7 @@ export default {
       newWorkshops: [],
       availableWorkshops: [],
       dashboardError: null,
-      isLoading: false
+      isLoading: false,
     }
   },
 
@@ -97,7 +99,9 @@ export default {
       this.profileData = {
         full_name: data.full_name || '',
         field: data.field || '',
-        biography: data.biography || ''
+        biography: data.biography || '',
+        location: data.location || '',
+        email: data.email || ''
       }
 
       if (data.role) {
@@ -115,6 +119,8 @@ export default {
       this.profileData.full_name = data.full_name
       this.profileData.field = data.field
       this.profileData.biography = data.biography
+      this.profileData.location = data.location
+      this.profileData.email = data.email
     },
     getAuthHeaders() {
       const token = localStorage.getItem('token')
