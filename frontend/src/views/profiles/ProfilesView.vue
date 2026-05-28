@@ -28,6 +28,9 @@
           :userRole="userRole"
           :location="profileData.location"
           :email="profileData.email"
+          :showBiography="profileData.show_biography"
+          :showField="profileData.show_field"
+          :showLocation="profileData.show_location"
           @profile-updated="handleProfileUpdated"
           @avatar-uploaded="avatarUrl = $event"
           @avatar-deleted="avatarUrl = null"
@@ -101,7 +104,10 @@ export default {
         field: data.field || '',
         biography: data.biography || '',
         location: data.location || '',
-        email: data.email || ''
+        email: data.email || '',
+        show_biography: data.show_biography ?? true,
+        show_field: data.show_field ?? true,
+        show_location: data.show_location ?? true,
       }
 
       if (data.role) {
@@ -121,6 +127,9 @@ export default {
       this.profileData.biography = data.biography
       this.profileData.location = data.location
       this.profileData.email = data.email
+      this.profileData.show_biography = data.show_biography
+      this.profileData.show_field = data.show_field
+      this.profileData.show_location = data.show_location
     },
     getAuthHeaders() {
       const token = localStorage.getItem('token')

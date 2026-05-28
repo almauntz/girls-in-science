@@ -197,6 +197,50 @@
                 <span class="text-xs text-gray-400 ml-auto">{{ form.biography?.length || 0 }}/500</span>
               </div>
             </div>
+                  <!-- Privacy postavke -->
+            <div v-if="isEditMode" class="mt-4 pt-4 border-t border-gray-100">
+              <div class="flex items-center gap-2 mb-3">
+                <span class="text-violet-500">🔒</span>
+                <h3 class="text-sm font-semibold text-gray-800">
+                  Privatnost — šta je javno vidljivo
+                </h3>
+              </div>
+
+              <div class="space-y-2">
+
+                <label class="flex items-center justify-between gap-3 cursor-pointer">
+                  <span class="text-sm text-gray-600">Prikaži biografiju</span>
+                  <input
+                    type="checkbox"
+                    v-model="form.show_biography"
+                    class="w-4 h-4 accent-violet-600"
+                  />
+                </label>
+
+                <label class="flex items-center justify-between gap-3 cursor-pointer">
+                  <span class="text-sm text-gray-600">Prikaži oblast</span>
+                  <input
+                    type="checkbox"
+                    v-model="form.show_field"
+                    class="w-4 h-4 accent-violet-600"
+                  />
+                </label>
+
+                <label class="flex items-center justify-between gap-3 cursor-pointer">
+                  <span class="text-sm text-gray-600">Prikaži lokaciju</span>
+                  <input
+                    type="checkbox"
+                    v-model="form.show_location"
+                    class="w-4 h-4 accent-violet-600"
+                  />
+                </label>
+
+                <p class="text-xs text-gray-400 mt-1">
+                  🔒 Ime je uvijek javno vidljivo.
+                </p>
+
+              </div>
+            </div>
 
             <div v-if="isEditMode" class="flex gap-3 mt-6 border-t border-gray-100 pt-4">
               <button
@@ -333,6 +377,9 @@ export default {
     },
     email: String,
     location: String,
+    showBiography: { type: Boolean, default: true },
+    showField: { type: Boolean, default: true },
+    showLocation: { type: Boolean, default: true },
 
   },
 
@@ -355,7 +402,10 @@ export default {
       biography: '',
       field: '',
       location: '',
-      email: ''
+      email: '',
+      show_biography: true,
+      show_field: true,
+      show_location: true,
     },
     errors: {
       full_name: '',
@@ -428,7 +478,19 @@ watch: {
   handler(val) {
     this.form.email = val || ''
   }
-}
+  },
+  showBiography: {
+  immediate: true,
+  handler(val) { this.form.show_biography = val }
+},
+showField: {
+  immediate: true,
+  handler(val) { this.form.show_field = val }
+},
+showLocation: {
+  immediate: true,
+  handler(val) { this.form.show_location = val }
+},
 },
   methods: {
   
