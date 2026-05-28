@@ -415,6 +415,9 @@ def get_public_profile(
         select(Profile).where(Profile.user_id == user_id)
     ).first()
 
+    if profile and not profile.is_active:
+        raise HTTPException(status_code=404, detail="Korisnica nije pronađena.")
+
     # Čitaj token iz Authorization headera
     email = None
     auth_header = request.headers.get("Authorization")
