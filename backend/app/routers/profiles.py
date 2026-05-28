@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Body
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Body, Request
 from sqlmodel import Session, select, not_
 from app.database import get_db
 from app.core.security import get_current_user, verify_password, hash_password, create_access_token,decode_access_token
@@ -404,10 +404,9 @@ def reactivate_account(
 @router.get("/{user_id}", response_model=PublicProfileResponse)
 def get_public_profile(
     user_id: int,
-    db: Session = Depends(get_db),
-    token: Optional[str] = None
+    request: Request,
+    db: Session = Depends(get_db)
 ):
-    # Provjeri postoji li korisnica
     user = db.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Korisnica nije pronađena.")
@@ -416,9 +415,11 @@ def get_public_profile(
         select(Profile).where(Profile.user_id == user_id)
     ).first()
 
-    # Provjeri token — ako je valjan, uključi email
+    # Čitaj token iz Authorization headera
     email = None
-    if token:
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1]
         payload = decode_access_token(token)
         if payload is not None:
             email = user.email
