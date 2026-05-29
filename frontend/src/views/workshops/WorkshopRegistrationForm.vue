@@ -130,11 +130,11 @@
 </template>
 
 <script>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { registerForWorkshop } from '../../services/api.js'
+import { registerForWorkshop, getMe } from '../../services/api.js' // PROMIJENJENO: sada je getMe
 import Swal from 'sweetalert2'
-import confetti from 'canvas-confetti' // Dodato za efekte
+import confetti from 'canvas-confetti'
 
 export default {
   emits: ['cancel', 'success'],
@@ -159,7 +159,37 @@ export default {
       github_profile: ''
     })
 
-    // Funkcija za ispaljivanje konfeta
+    // Funkcija za automatsko popunjavanje
+    const fillUserData = async () => {
+      const token = localStorage.getItem('token')
+      if (token) {
+        try {
+          // Pozivamo getMe(token) jer tvoj api.js prima token kao parametar
+          const user = await getMe(token)
+          
+          if (user) {
+            // Ako tvoj API vraća 'full_name' umjesto odvojenih imena, 
+            // moramo ga razdvojiti na razmaku
+            if (user.full_name) {
+               const parts = user.full_name.split(' ')
+               formData.value.first_name = parts[0] || ''
+               formData.value.last_name = parts.slice(1).join(' ') || ''
+            }
+            
+            formData.value.email = user.email || ''
+            // Popuni telefon ako postoji u odgovoru
+            if (user.phone) formData.value.phone = user.phone
+          }
+        } catch (error) {
+          console.error("Greška prilikom dohvata korisnika:", error)
+        }
+      }
+    }
+
+    onMounted(() => {
+      fillUserData()
+    })
+
     const triggerConfetti = () => {
       const end = Date.now() + 2 * 1000;
       const colors = ['#9333ea', '#ffffff'];
@@ -187,7 +217,6 @@ export default {
     }
 
     const submitForm = async () => {
-      // Provjera da li je korisnik ulogovan (Token provjera)
       const token = localStorage.getItem('token')
       if (!token) {
         Swal.fire({
@@ -210,7 +239,6 @@ export default {
         loading.value = true
         await registerForWorkshop(formData.value)
 
-        // AKTIVIRAJ KONFETE
         triggerConfetti()
 
         await Swal.fire({

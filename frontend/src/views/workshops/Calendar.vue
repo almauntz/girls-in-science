@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-2xl shadow-xl border border-purple-100 overflow-hidden">
+  <div class="bg-white rounded-2xl shadow-xl border border-purple-100 overflow-hidden font-sans">
     <div class="p-6 text-white" style="background-color: #7c3aed">
       <div class="flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="flex items-center gap-3">
@@ -23,32 +23,28 @@
         </div>
       </div>
       
-      <div class="flex justify-between items-center mt-4">
-        <button @click="updateMonth(-1)" class="text-2xl hover:scale-125 transition-transform">←</button>
+      <div class="flex justify-between items-center mt-4 h-12">
+        <button @click="updateMonth(-1)" class="text-2xl hover:scale-125 transition-transform p-2">←</button>
         
-        <Presence exit-before-enter>
-          <Motion 
-            :key="currentMonth + '-' + currentYear"
-            :initial="{ opacity: 0, y: -10 }"
-            :animate="{ opacity: 1, y: 0 }"
-            :transition="{ duration: 0.2 }"
-            class="text-3xl font-extrabold capitalize"
-          >
-            {{ currentMonthName }}
-          </Motion>
-        </Presence>
+        <div class="relative flex-1 flex justify-center overflow-hidden">
+          <Transition name="month-fade" mode="out-in">
+            <h2 :key="currentMonth + '-' + currentYear" class="text-3xl font-extrabold capitalize">
+              {{ currentMonthName }}
+            </h2>
+          </Transition>
+        </div>
 
-        <button @click="updateMonth(1)" class="text-2xl hover:scale-125 transition-transform">→</button>
+        <button @click="updateMonth(1)" class="text-2xl hover:scale-125 transition-transform p-2">→</button>
       </div>
     </div>
 
     <div class="grid grid-cols-3 gap-px bg-purple-50 border-b border-purple-100">
       <div class="p-3 text-center">
-        <p class="text-[10px] text-purple-500 uppercase font-bold tracking-tighter">Ukupno radionica</p>
+        <p class="text-[10px] text-purple-500 uppercase font-bold tracking-tighter">Ukupno</p>
         <p class="text-xl font-black text-purple-800">{{ stats.totalInMonth }}</p>
       </div>
       <div class="p-3 text-center border-x border-purple-100">
-        <p class="text-[10px] text-purple-500 uppercase font-bold tracking-tighter">Slobodnih mjesta</p>
+        <p class="text-[10px] text-purple-500 uppercase font-bold tracking-tighter">Slobodno</p>
         <p class="text-xl font-black text-green-600">{{ stats.freeSpotsInMonth }}</p>
       </div>
       <div class="p-3 text-center">
@@ -80,7 +76,7 @@
 
       <Presence :initial="false">
         <Motion
-          :key="currentMonth + '-' + currentYear"
+          :key="currentMonth + '-' + currentYear + '-grid'"
           :initial="{ opacity: 0, x: direction * 40 }"
           :animate="{ opacity: 1, x: 0 }"
           :exit="{ opacity: 0, x: direction * -40 }"
@@ -91,7 +87,8 @@
 
           <div v-for="n in daysInMonth" :key="n" class="bg-white min-h-[120px] p-2 border-t border-l border-purple-50">
             <span class="text-sm font-semibold mb-1 block transition-all" 
-                  :style="isToday(n) ? 'background-color: #7c3aed; color: white; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; shadow: 0 4px 6px rgba(0,0,0,0.1);' : 'color: #9ca3af;'">
+                  :class="{ 'today-badge': isToday(n) }"
+                  :style="!isToday(n) ? 'color: #9ca3af;' : ''">
               {{ n }}
             </span>
             
@@ -99,8 +96,6 @@
               <Motion 
                 v-for="workshop in filteredWorkshopsForDay(n)" 
                 :key="workshop.ID_workshop"
-                :initial="{ scale: 0.9, opacity: 0 }"
-                :animate="{ scale: 1, opacity: 1 }"
                 @click="$router.push(`/workshops/${workshop.ID_workshop}`)"
                 :style="getFinalStyle(workshop, n)"
                 class="p-2 text-[10px] leading-tight rounded shadow-sm cursor-pointer border-l-[5px] border-solid transition-all relative overflow-hidden"
@@ -108,10 +103,6 @@
               >
                 <div class="flex justify-between items-start">
                   <div class="flex items-center gap-1 min-w-0">
-                    <span v-if="isToday(n)" class="relative flex h-1.5 w-1.5 flex-shrink-0">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-current"></span>
-                    </span>
                     <p class="font-bold truncate" :style="{ color: checkIsRegistered(workshop.ID_workshop) ? 'white' : '#1f2937' }">
                       {{ workshop.title }}
                     </p>
@@ -139,14 +130,16 @@ const props = defineProps({
 })
 
 const searchQuery = ref('')
-const displayedDate = ref(new Date())
 const direction = ref(1)
 
-const monthNames = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"]
+// Reaktivne varijable za datum
+const currentMonth = ref(new Date().getMonth())
+const currentYear = ref(new Date().getFullYear())
 
-const currentMonth = computed(() => displayedDate.value.getMonth())
-const currentYear = computed(() => displayedDate.value.getFullYear())
+const monthNames = ["Januar", "Februar", "Mart", "April", "Maj", "Juni", "Juli", "August", "Septembar", "Oktobar", "Novembar", "Decembar"]
+
 const currentMonthName = computed(() => monthNames[currentMonth.value])
+
 const daysInMonth = computed(() => new Date(currentYear.value, currentMonth.value + 1, 0).getDate())
 
 const firstDayOffset = computed(() => {
@@ -154,7 +147,6 @@ const firstDayOffset = computed(() => {
   return firstDay === 0 ? 6 : firstDay - 1
 })
 
-// --- LOGIKA ZA MINI DASHBOARD ---
 const stats = computed(() => {
   const inMonth = props.workshops.filter(w => {
     const d = new Date(w.date)
@@ -171,7 +163,6 @@ const stats = computed(() => {
   }
 })
 
-// --- LOGIKA ZA SEARCH FILTRIRANJE ---
 const filteredWorkshopsForDay = (n) => {
   return props.workshops.filter(w => {
     const d = new Date(w.date)
@@ -185,16 +176,21 @@ const filteredWorkshopsForDay = (n) => {
 
 const updateMonth = (v) => {
   direction.value = v
-  const tempDate = new Date(displayedDate.value)
-  tempDate.setMonth(tempDate.getMonth() + v)
-  displayedDate.value = tempDate
+  let newMonth = currentMonth.value + v
+  if (newMonth > 11) {
+    currentMonth.value = 0
+    currentYear.value++
+  } else if (newMonth < 0) {
+    currentMonth.value = 11
+    currentYear.value--
+  } else {
+    currentMonth.value = newMonth
+  }
 }
 
 const updateYear = (v) => {
   direction.value = v
-  const tempDate = new Date(displayedDate.value)
-  tempDate.setFullYear(tempDate.getFullYear() + v)
-  displayedDate.value = tempDate
+  currentYear.value += v
 }
 
 const isToday = (n) => {
@@ -225,3 +221,33 @@ const getFinalStyle = (workshop, n) => {
   return style
 }
 </script>
+
+<style scoped>
+/* Tranzicija za promjenu mjeseca */
+.month-fade-enter-active,
+.month-fade-leave-active {
+  transition: all 0.25s ease-out;
+}
+
+.month-fade-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.month-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.today-badge {
+  background-color: #7c3aed;
+  color: white !important;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
