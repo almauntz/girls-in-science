@@ -38,6 +38,30 @@ class Workshop(WorkshopBase, table=True):
     )
 
 
+# Klasa za prijedlog radionice od strane korisnice
+class WorkshopProposal(SQLModel, table=True):
+    __tablename__ = "workshop_proposals"
+ 
+    id: Optional[int] = Field(default=None, primary_key=True)
+ 
+    title: str
+    description: str
+ 
+    proposed_by_id: int = Field()
+    proposed_by_email: str
+ 
+    status: ProposalStatus = Field(default=ProposalStatus.pending)
+ 
+    admin_note: Optional[str] = None
+ 
+    created_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+ 
+    # Ako je prijedlog odobren i automatski kreirana radionica, ovdje čuvamo ID
+    workshop_id: Optional[int] = None
+
+
 ### Schemas -------------------------------------------------------------------
 class WorkshopCreate(BaseModel):
     title: str
