@@ -58,9 +58,6 @@ class WorkshopProposal(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc)
     )
  
-    # Ako je prijedlog odobren i automatski kreirana radionica, ovdje čuvamo ID
-    workshop_id: Optional[int] = None
-
 
 ### Schemas -------------------------------------------------------------------
 class WorkshopCreate(BaseModel):
@@ -111,7 +108,6 @@ class ProposalRead(BaseModel):
     status: ProposalStatus
     admin_note: Optional[str]
     created_at: Optional[datetime]
-    workshop_id: Optional[int]
  
     class Config:
         from_attributes = True
