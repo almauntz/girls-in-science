@@ -129,6 +129,15 @@ class ProposalUserRead(BaseModel):
 class ProposalReject(BaseModel):
     admin_note: Optional[str] = None
 
+class ProposalApprove(BaseModel):
+    admin_note: Optional[str] = None
+    create_workshop: bool = False
+    location: Optional[str] = None
+    date: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    capacity: Optional[int] = None 
+
+### ---------------------------------------------------------------------------
 
 class WorkshopList(BaseModel):
     ID_workshop: int
