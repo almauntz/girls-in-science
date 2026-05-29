@@ -19,6 +19,9 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ newsPost.title }}</h1>
         <p class="text-sm text-gray-400 mb-1">{{ formatDate(newsPost.created_at) }}</p>
         <p v-if="newsPost.author" class="text-sm text-gray-500 mb-6">Autor: {{ newsPost.author }}</p>
+        <div v-if="successMessage" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+          {{ successMessage }}
+        </div>
 
         <div class="flex gap-3 mb-8" v-if="isAdmin">
           <router-link
@@ -28,7 +31,7 @@
             Uredi
           </router-link>
           <button
-            @click="handleDelete"
+            @click="showModal = true"
             class="bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 rounded-lg text-sm transition"
           >
             Obriši
@@ -62,6 +65,12 @@
 
       </div>
     </div>
+    <ConfirmDeleteModal
+  v-if="showModal"
+  message="Da li ste sigurni da želite obrisati ovu objavu?"
+  @confirm="handleDelete"
+  @cancel="showModal = false"
+/>
   </div>
 </template>
 
@@ -69,6 +78,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getNewsPost, deleteNewsPost, getMe } from '../../services/api.js'
+import ConfirmDeleteModal from '../../components/ConfirmDeleteModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -76,6 +86,8 @@ const newsPost = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const isAdmin = ref(false)
+const showModal = ref(false)
+const successMessage = ref('')
 
 function getInitials(first, last) {
   return `${first?.[0] || ''}${last?.[0] || ''}`.toUpperCase()
@@ -89,11 +101,14 @@ function formatDate(dateStr) {
 }
 
 async function handleDelete() {
-  if (!confirm('Da li ste sigurni da želite obrisati ovu objavu?')) return
+  showModal.value = false
   const token = localStorage.getItem('token')
   const result = await deleteNewsPost(newsPost.value.id, token)
   if (result.message) {
-    router.push('/news')
+    successMessage.value = 'Objava je uspješno obrisana!'
+    setTimeout(() => {
+      router.push('/news')
+    }, 1500)
   }
 }
 
