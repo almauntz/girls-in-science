@@ -69,7 +69,7 @@
 
 
           <!-- Oblast -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div v-if="profile.field" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-center gap-2 mb-3">
               <span class="text-violet-500">📚</span>
               <h3 class="text-sm font-semibold text-gray-800">Oblast</h3>
@@ -88,8 +88,17 @@
             <p class="text-sm text-gray-700">{{ profile.email }}</p>
           </div>
 
+          <!-- Lokacija -->
+          <div v-if="profile.location" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-violet-500">📍</span>
+              <h3 class="text-sm font-semibold text-gray-800">Lokacija</h3>
+            </div>
+            <p class="text-sm text-gray-700">{{ profile.location }}</p>
+          </div>
+
           <!-- Biografija -->
-          <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+          <div v-if="profile.biography" class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
             <div class="flex items-center gap-2 mb-3">
               <span class="text-violet-500">📖</span>
               <h3 class="text-sm font-semibold text-gray-800">Biografija</h3>

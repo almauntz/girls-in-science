@@ -468,30 +468,43 @@ watch: {
     }
   },
   location: {
-  immediate: true,
-  handler(val) {
-    this.form.location = val || ''
-  }
+    immediate: true,
+    handler(val) {
+      this.form.location = val || ''
+    }
   },
   email: {
-  immediate: true,
-  handler(val) {
-    this.form.email = val || ''
-  }
+    immediate: true,
+    handler(val) {
+      this.form.email = val || ''
+    }
   },
   showBiography: {
-  immediate: true,
-  handler(val) { this.form.show_biography = val }
+    immediate: true,
+    handler(val) {
+      if (!this.isEditMode) {
+        this.form.show_biography = val ?? true
+      }
+    }
+  },
+  showField: {
+    immediate: true,
+    handler(val) {
+      if (!this.isEditMode) {
+        this.form.show_field = val ?? true
+      }
+    }
+  },
+  showLocation: {
+    immediate: true,
+    handler(val) {
+      if (!this.isEditMode) {
+        this.form.show_location = val ?? true
+      }
+    }
+  },
 },
-showField: {
-  immediate: true,
-  handler(val) { this.form.show_field = val }
-},
-showLocation: {
-  immediate: true,
-  handler(val) { this.form.show_location = val }
-},
-},
+
   methods: {
   
     validateForm() {
@@ -512,28 +525,34 @@ showLocation: {
       return isValid
     },
 
-    async saveProfile() {
-      if (!this.validateForm()) return
-      this.successMessage = ''
-      this.errorMessage = ''
-      try {
-        const token = localStorage.getItem('token')
-        await updateProfile(token, {
-          full_name: this.form.full_name,
-          biography: this.form.biography,
-          field: this.form.field,
-          location: this.form.location,
-          email: this.form.email
-        })
-        this.successMessage = 'Promjene su uspješno sačuvane!'
-        this.isEditMode = false;
-        this.$emit('profile-updated', this.form)
-        setTimeout(() => { this.successMessage = '' }, 3000)
-      } catch (error) {
-        this.errorMessage = 'Greška pri čuvanju. Pokušajte ponovo.'
-        setTimeout(() => { this.errorMessage = '' }, 3000)
-      }
-    },
+   async saveProfile() {
+  if (!this.validateForm()) return
+  this.successMessage = ''
+  this.errorMessage = ''
+
+  try {
+    const token = localStorage.getItem('token')
+    const payload = {
+      full_name: this.form.full_name,
+      biography: this.form.biography,
+      field: this.form.field,
+      location: this.form.location,
+      email: this.form.email,
+      show_biography: this.form.show_biography,
+      show_field: this.form.show_field,
+      show_location: this.form.show_location,
+    }
+    console.log('Payload koji se šalje:', JSON.stringify(payload))
+    await updateProfile(token, payload)
+    this.successMessage = 'Promjene su uspješno sačuvane!'
+    this.isEditMode = false
+    this.$emit('profile-updated', this.form)
+    setTimeout(() => { this.successMessage = '' }, 3000)
+  } catch (error) {
+    this.errorMessage = 'Greška pri čuvanju. Pokušajte ponovo.'
+    setTimeout(() => { this.errorMessage = '' }, 3000)
+  }
+},
 
         cancelEdit() {
       this.isEditMode = false
@@ -542,6 +561,9 @@ showLocation: {
       this.form.field = this.field || ''
       this.form.biography = this.biography || ''
       this.errors = { full_name: '', biography: '' }
+      this.form.show_biography = this.showBiography
+      this.form.show_field = this.showField
+      this.form.show_location = this.showLocation
     },
 
     async handleAvatarChange(event) {

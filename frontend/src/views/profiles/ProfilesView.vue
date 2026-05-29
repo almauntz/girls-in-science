@@ -20,7 +20,7 @@
 
       <div v-else>
         <ProfileForm
-          v-if="activeTab === 'profil'"
+          v-if="activeTab === 'profil' && profileLoaded"
           :fullName="profileData.full_name"
           :field="profileData.field"
           :biography="profileData.biography"
@@ -83,6 +83,7 @@ export default {
       availableWorkshops: [],
       dashboardError: null,
       isLoading: false,
+      profileLoaded: false,
     }
   },
 
@@ -117,6 +118,7 @@ export default {
       if (data.avatar) {
         this.avatarUrl = `http://localhost:8000${data.avatar}`
       }
+      this.profileLoaded = true
     } catch (error) {
       console.error('Greška pri učitavanju profila.')
     }
