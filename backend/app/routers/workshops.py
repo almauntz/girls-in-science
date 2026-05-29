@@ -166,6 +166,25 @@ def delete_workshop(
     db.delete(workshop)
     db.commit()
 
+# -- Proposal endpointi -------------------------------------------------------
+
+@router.post("/proposals", response_model=ProposalUserRead, status_code=status.HTTP_201_CREATED)
+def submit_proposal(
+    data: ProposalCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    proposal = WorkshopProposal(
+        title=data.title,
+        description=data.description,
+        proposed_by_id=current_user.id,
+        proposed_by_email=current_user.email,
+    )
+    db.add(proposal)
+    db.commit()
+    db.refresh(proposal)
+    return proposal
+
 
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
 def register_student(
