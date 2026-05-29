@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from app.database import get_db
@@ -9,7 +11,7 @@ from app.models.workshops_models import (Workshop,RegistrationCreate,Registratio
 from datetime import datetime, timezone
 from sqlalchemy import func
 from app.database import get_db
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Query, Session
 from sqlalchemy.orm import Session
 from sqlmodel import select
 router = APIRouter(prefix="/workshops", tags=["workshops"])
@@ -166,7 +168,7 @@ def delete_workshop(
     db.delete(workshop)
     db.commit()
 
-# -- Proposal endpointi -------------------------------------------------------
+# -- Proposal user endpoints -------------------------------------------------------
 
 @router.post("/proposals", response_model=ProposalUserRead, status_code=status.HTTP_201_CREATED)
 def submit_proposal(
@@ -197,6 +199,10 @@ def get_my_proposals(
     )
     return db.execute(statement).scalars().all()
 
+
+# -- Admin Proposal endpoints -------------------------------------------------------
+
+
 @router.get("/admin", response_model=list[ProposalRead])
 def get_admin_panel(
     status_filter: Optional[ProposalStatus] = Query(default=None, alias="status"),
@@ -219,6 +225,52 @@ def get_proposal_detail(
     if not proposal:
         raise HTTPException(status_code=404, detail="Prijedlog nije pronađen.")
     return proposal
+
+@router.patch("/proposals/{proposal_id}/approve", response_model=ProposalRead)
+def approve_proposal(
+    proposal_id: int,
+    data: ProposalApprove,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    proposal = db.get(WorkshopProposal, proposal_id)
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Prijedlog nije pronađen.")
+    if proposal.status != ProposalStatus.pending:
+        raise HTTPException(status_code=400, detail=f"Prijedlog je već obrađen (status: {proposal.status}).")
+
+    proposal.status = ProposalStatus.accepted
+    proposal.admin_note = data.admin_note
+
+    if data.create_workshop:
+        missing = [f for f, v in {
+            "location": data.location,
+            "date": data.date,
+            "end_time": data.end_time,
+            "capacity": data.capacity
+        }.items() if v is None]
+        if missing:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Za kreiranje radionice nedostaju: {', '.join(missing)}"
+            )
+        workshop = Workshop(
+            title=proposal.title,
+            description=proposal.description,
+            location=data.location,
+            date=data.date,
+            end_time=data.end_time,
+            capacity=data.capacity,
+            created_by_id=admin.id,
+            status=WorkshopStatus.upcoming,
+        )
+        db.add(workshop)
+
+    db.add(proposal)
+    db.commit()
+    db.refresh(proposal)
+    return proposal
+
 
 
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
