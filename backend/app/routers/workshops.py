@@ -185,6 +185,18 @@ def submit_proposal(
     db.refresh(proposal)
     return proposal
 
+@router.get("/proposals/my", response_model=list[ProposalUserRead])
+def get_my_proposals(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    statement = (
+        select(WorkshopProposal)
+        .where(WorkshopProposal.proposed_by_id == current_user.id)
+        .order_by(WorkshopProposal.created_at.desc())
+    )
+    return db.execute(statement).scalars().all()
+
 
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
 def register_student(
