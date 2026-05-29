@@ -12,6 +12,11 @@ class WorkshopStatus(str, enum.Enum):
     cancelled = "cancelled"
     completed = "completed"
 
+class ProposalStatus(str, enum.Enum):
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+
 class WorkshopBase(SQLModel):
     title: str
     description: str
@@ -32,6 +37,27 @@ class Workshop(WorkshopBase, table=True):
         default_factory=lambda: datetime.now(timezone.utc)
     )
 
+
+# Klasa za prijedlog radionice od strane korisnice
+class WorkshopProposal(SQLModel, table=True):
+    __tablename__ = "workshop_proposals"
+ 
+    id: Optional[int] = Field(default=None, primary_key=True)
+ 
+    title: str
+    description: str
+ 
+    proposed_by_id: int = Field()
+    proposed_by_email: str
+ 
+    status: ProposalStatus = Field(default=ProposalStatus.pending)
+ 
+    admin_note: Optional[str] = None
+ 
+    created_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+ 
 
 ### Schemas -------------------------------------------------------------------
 class WorkshopCreate(BaseModel):
@@ -67,6 +93,47 @@ class WorkshopRead(BaseModel):
     class Config:
         from_attributes = True
 
+### Schemas za Workshop proposal -----------------------------------------------
+
+class ProposalCreate(BaseModel):
+    title: str
+    description: str
+
+class ProposalRead(BaseModel):
+    id: int
+    title: str
+    description: str
+    proposed_by_id: int
+    proposed_by_email: str
+    status: ProposalStatus
+    admin_note: Optional[str]
+    created_at: Optional[datetime]
+ 
+    class Config:
+        from_attributes = True
+
+class ProposalUserRead(BaseModel):
+    id: int
+    title: str
+    description: str
+    status: ProposalStatus
+    admin_note: Optional[str]
+    created_at: Optional[datetime]
+    class Config:
+        from_attributes = True
+
+class ProposalReject(BaseModel):
+    admin_note: Optional[str] = None
+
+class ProposalApprove(BaseModel):
+    admin_note: Optional[str] = None
+    create_workshop: bool = False
+    location: Optional[str] = None
+    date: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+    capacity: Optional[int] = None 
+
+### ---------------------------------------------------------------------------
 
 class WorkshopList(BaseModel):
     ID_workshop: int

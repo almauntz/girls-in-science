@@ -3,7 +3,9 @@ from sqlmodel import Session, select
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.workshops_models import Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate, WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead
+from app.models.workshops_models import (Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
+                                          WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WorkshopProposal,
+                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus)
 from datetime import datetime, timezone
 from sqlalchemy import func
 from app.database import get_db
