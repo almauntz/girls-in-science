@@ -271,6 +271,27 @@ def approve_proposal(
     db.refresh(proposal)
     return proposal
 
+@router.patch("/proposals/{proposal_id}/reject", response_model=ProposalRead)
+def reject_proposal(
+    proposal_id: int,
+    data: ProposalReject,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    proposal = db.get(WorkshopProposal, proposal_id)
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Prijedlog nije pronađen.")
+    if proposal.status != ProposalStatus.pending:
+        raise HTTPException(status_code=400, detail=f"Prijedlog je već obrađen (status: {proposal.status}).")
+
+    proposal.status = ProposalStatus.rejected
+    proposal.admin_note = data.admin_note
+
+    db.add(proposal)
+    db.commit()
+    db.refresh(proposal)
+    return proposal
+
 
 
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
