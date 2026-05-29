@@ -96,6 +96,26 @@ class WorkshopRead(BaseModel):
     class Config:
         from_attributes = True
 
+### Schemas za Workshop proposal -----------------------------------------------
+
+class ProposalCreate(BaseModel):
+    title: str
+    description: str
+
+class ProposalRead(BaseModel):
+    id: int
+    title: str
+    description: str
+    proposed_by_id: int
+    proposed_by_email: str
+    status: ProposalStatus
+    admin_note: Optional[str]
+    created_at: Optional[datetime]
+    workshop_id: Optional[int]
+ 
+    class Config:
+        from_attributes = True
+
 
 class WorkshopList(BaseModel):
     ID_workshop: int
