@@ -197,6 +197,29 @@ def get_my_proposals(
     )
     return db.execute(statement).scalars().all()
 
+@router.get("/admin", response_model=list[ProposalRead])
+def get_admin_panel(
+    status_filter: Optional[ProposalStatus] = Query(default=None, alias="status"),
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    statement = select(WorkshopProposal).order_by(WorkshopProposal.created_at.desc())
+    if status_filter:
+        statement = statement.where(WorkshopProposal.status == status_filter)
+    return db.execute(statement).scalars().all()
+
+
+@router.get("/proposals/{proposal_id}", response_model=ProposalRead)
+def get_proposal_detail(
+    proposal_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    proposal = db.get(WorkshopProposal, proposal_id)
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Prijedlog nije pronađen.")
+    return proposal
+
 
 @router.post("/registration", status_code=status.HTTP_201_CREATED)
 def register_student(
