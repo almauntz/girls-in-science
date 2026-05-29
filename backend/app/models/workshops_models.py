@@ -116,6 +116,19 @@ class ProposalRead(BaseModel):
     class Config:
         from_attributes = True
 
+class ProposalUserRead(BaseModel):
+    id: int
+    title: str
+    description: str
+    status: ProposalStatus
+    admin_note: Optional[str]
+    created_at: Optional[datetime]
+    class Config:
+        from_attributes = True
+
+class ProposalReject(BaseModel):
+    admin_note: Optional[str] = None
+
 
 class WorkshopList(BaseModel):
     ID_workshop: int
