@@ -12,6 +12,11 @@ class WorkshopStatus(str, enum.Enum):
     cancelled = "cancelled"
     completed = "completed"
 
+class ProposalStatus(str, enum.Enum):
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
+
 class WorkshopBase(SQLModel):
     title: str
     description: str
