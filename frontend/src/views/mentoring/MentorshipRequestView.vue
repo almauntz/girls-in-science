@@ -113,7 +113,10 @@ const skills = ref('')
 const cvFile = ref(null)
 const fileError = ref('')
 const agreed = ref(false)
-const buttonState = ref('idle')
+
+// 1. ZAHTJEV: Loading varijable (buttonState za dugme, isLoading za generalno učitavanje)
+const buttonState = ref('idle') 
+const isLoadingMentor = ref(false) 
 
 const expertiseTags = computed(() => {
   if (!mentor.value?.field_of_expertise) return []
@@ -127,6 +130,9 @@ const isFormValid = computed(() => {
     agreed.value
 })
 
+// 2. ZAHTJEV: Sve funkcije su potpuno zasebne i imenovane
+
+// Funkcija 1: Rukovanje fajlom
 function handleFileSelect(event) {
   const file = event.target.files[0]
   fileError.value = ''
@@ -142,8 +148,9 @@ function handleFileSelect(event) {
   cvFile.value = file
 }
 
+// Funkcija 2: Slanje zahtjeva na server
 async function submitRequest() {
-  buttonState.value = 'loading'
+  buttonState.value = 'loading' // Postavljanje loading stanja
   try {
     const token = localStorage.getItem('token')
     const formData = new FormData()
@@ -173,12 +180,22 @@ async function submitRequest() {
   }
 }
 
-onMounted(async () => {
+// Funkcija 3: Preuzimanje podataka o mentoru (Sada je potpuno zasebna!)
+async function fetchMentorData() {
+  isLoadingMentor.value = true
   try {
-    const response = await fetch(`http://127.0.0.1:8000/mentoring/mentors/${route.params.id}`)
+   const response = await fetch(`http://127.0.0.1:8000/mentoring/mentors/${route.params.id}`)
+    if (!response.ok) throw new Error()
     mentor.value = await response.json()
   } catch (e) {
     console.error('Greška pri učitavanju mentora')
+  } finally {
+    isLoadingMentor.value = false // Gasi loading bez obzira da li je uspjelo ili puklo
   }
+}
+
+// Kada se komponenta učita, samo pozivamo našu zasebnu funkciju
+onMounted(() => {
+  fetchMentorData()
 })
 </script>

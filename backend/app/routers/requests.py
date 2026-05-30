@@ -13,7 +13,7 @@ from app.models.mentorship_request import MentorshipRequest, RequestStatus
 router = APIRouter(
     prefix="/mentoring/requests",
     tags=["requests"],
-    redirect_slashes=False  # Ovo sprečava FastAPI da se buni oko kose crte!
+    redirect_slashes=False  
 )
 
 #kreiranje direktorijuma za čuvanje CV-ova ako ne postoji
