@@ -8,6 +8,15 @@
         <p class="text-sm text-gray-500 mt-1">Upravljanje korisničkim nalozima</p>
       </div>
 
+      <div class="mb-4">
+        <input
+          v-model="searchQuery"
+          type="text"
+          placeholder="Pretraži po imenu..."
+          class="w-full sm:w-72 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+        />
+      </div>
+
       <div v-if="isLoading" class="flex justify-center items-center py-12">
         <div class="text-primary text-sm font-medium animate-pulse">Učitavanje korisnica...</div>
       </div>
@@ -20,6 +29,9 @@
                 Ime i prezime
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                E-mail
+              </th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Uloga
               </th>
               <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -28,9 +40,12 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-for="user in users" :key="user.id" class="hover:bg-gray-50 transition-colors">
+            <tr v-for="user in filteredUsers" :key="user.id" class="hover:bg-gray-50 transition-colors">
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                 {{ user.full_name }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ user.email }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                 <select 
@@ -102,12 +117,21 @@ data() {
     return {
       users: [],
       isLoading: false,
+      searchQuery: '',
       // Stanja za modal
       isModalOpen: false,
       pendingRoleChange: {
         userId: null,
         newRole: null
       }
+    }
+  },
+
+  computed: {
+    filteredUsers() {
+      if (!this.searchQuery.trim()) return this.users
+      const q = this.searchQuery.toLowerCase()
+      return this.users.filter(u => u.full_name.toLowerCase().includes(q))
     }
   },
 
