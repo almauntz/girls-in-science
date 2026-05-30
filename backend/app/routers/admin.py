@@ -64,6 +64,7 @@ def update_user_status(
     else:
         # Ako postoji, samo ažuriramo status
         profile_to_update.is_active = is_active
+        profile_to_update.deactivated_by = "admin" if not is_active else None
         db.add(profile_to_update)
 
     db.commit()

@@ -365,7 +365,7 @@ def deactivate_my_account(
     db: Session = Depends(get_db)
 ):
     profile = get_or_create_profile(current_user, db)
-    
+    profile.deactivated_by = "user"
     profile.is_active = False
     db.add(profile)
     db.commit()

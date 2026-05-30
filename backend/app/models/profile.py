@@ -21,6 +21,7 @@ class Profile(SQLModel, table=True):
     avatar: Optional[str] = Field(default=None)
     is_active: bool = Field(default=True)
     location: Optional[str] = Field(default=None, nullable=True)
+    deactivated_by: Optional[str] = Field(default=None)
 
     # Privacy polja
     show_biography: bool = Field(default=True)

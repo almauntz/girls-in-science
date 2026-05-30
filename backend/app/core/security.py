@@ -56,8 +56,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if profile and not profile.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Vaš nalog je deaktiviran. Pristup odbijen."
-        )
+            detail={
+                "message": "Vaš nalog je deaktiviran.",
+                "reactivatable": profile.deactivated_by == "user"
+            }
+    )
 
     # Vraćamo puni user objekat. FastAPI SQLModel sesija nam omogućava da ga mapiramo nazad
     # Ali pošto nam treba stvarni objekat koji ruta očekuje, uvešćemo samo lokalno unutar return-a ako baš mora,

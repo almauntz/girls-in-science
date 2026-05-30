@@ -11,15 +11,17 @@
       </div>
 
         <div v-if="isDeactivated" class="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg mb-4 text-sm">
-          <p class="font-medium mb-2">Vaš nalog je deaktiviran. Želite li ga reaktivirati?</p>
-          <button
-            @click="reactivateAccount"
-            :disabled="reactivateLoading"
-            class="bg-violet-600 text-white py-1.5 px-4 rounded-lg text-sm font-medium hover:bg-violet-700 transition disabled:opacity-50"
-          >
-            {{ reactivateLoading ? 'Reaktivacija...' : 'Reaktiviraj nalog' }}
-          </button>
-        </div>
+            <p class="font-medium mb-2">Vaš nalog je deaktiviran.</p>
+            <button
+              v-if="canReactivate"
+              @click="reactivateAccount"
+              :disabled="reactivateLoading"
+              class="bg-violet-600 text-white py-1.5 px-4 rounded-lg text-sm font-medium hover:bg-violet-700 transition disabled:opacity-50"
+            >
+              {{ reactivateLoading ? 'Reaktivacija...' : 'Reaktiviraj nalog' }}
+            </button>
+            <p v-else class="text-sm text-yellow-700 mt-1">Obratite se administratoru za reaktivaciju.</p>
+      </div>
 
       <div class="flex flex-col gap-4">
         <div>
@@ -72,7 +74,8 @@ export default {
       loading: false,
       error: null,
       isDeactivated: false,
-      reactivateLoading: false
+      reactivateLoading: false,
+      canReactivate: false
     }
   },
     methods: {
@@ -93,9 +96,10 @@ export default {
           })
 
           if (profileResponse.status === 403) {
+            const data = await profileResponse.json()
             localStorage.removeItem('token')
             this.isDeactivated = true
-            this.error = 'Vaš nalog je trenutno deaktiviran.'
+            this.canReactivate = data.detail?.reactivatable || false
           } else {
             const user = await getMe(response.access_token)
             localStorage.setItem('username', user.full_name)
