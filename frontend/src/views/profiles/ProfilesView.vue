@@ -47,7 +47,7 @@
           @register="handleRegister"
         />
         
-      <AktivnostiTab v-if="activeTab === 'aktivnosti'" /> 
+      <ActivityHistory v-if="activeTab === 'aktivnosti'" />
       </div>
 
     </main>
@@ -59,7 +59,7 @@ import axios from 'axios'
 import ProfileSidebar from '../../components/ProfileSidebar.vue'
 import ProfileForm from '../../components/ProfileForm.vue'
 import DashboardTab from '../../components/DashboardTab.vue'
-//import AktivnostiTab from '../../components/AktivnostiTab.vue'
+import ActivityHistory from '../../components/ActivityHistory.vue'
 import { getMyProfile } from '../../services/api.js'
 
 export default {
@@ -69,7 +69,7 @@ export default {
     ProfileSidebar,
     ProfileForm,
     DashboardTab,
-  //AktivnostiTab
+  ActivityHistory
   },
 
   data() {

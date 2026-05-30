@@ -397,6 +397,23 @@ def login_check(
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
 
+@router.get("/me/history", response_model=list[Workshop])
+def get_my_workshop_history(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    history = db.exec(
+        select(Workshop)
+        .join(WorkshopRegistration)
+        .where(
+            WorkshopRegistration.user_id == current_user.id,
+            Workshop.date < datetime.utcnow()
+        )
+        .order_by(Workshop.date.desc())
+    ).all()
+    return history
+
+
 @router.post("/reactivate", status_code=200)
 def reactivate_account(
     email: str = Body(...),
