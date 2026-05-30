@@ -17,3 +17,12 @@ export const applyAsMentor = (formData) => {
 export const getMentorById = (id) => {
   return axios.get(`${API_URL}/mentors/${id}`)
 }
+
+export const registerStudent = (formData) => {
+  const token = localStorage.getItem('token')
+  return axios.post(`${API_URL}/students/register`, formData, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+}

@@ -11,6 +11,13 @@
       </button>
 
       <router-link
+        to="/student/apply"
+        class="bg-pink-600 hover:bg-pink-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"
+      >
+        Prijava Studentica
+    </router-link>
+
+      <router-link
         v-if="isAdmin"
         to="/admin/mentor-applications"
         class="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition duration-200"

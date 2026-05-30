@@ -38,6 +38,12 @@ const routes = [
     component: () => import('../views/mentoring/MentorRegistration.vue'),
   },
   {
+    path: '/student/apply',
+    name: 'student-registration',
+    component: () => import('../views/StudentRegistration.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
   path: '/mentoring/:id',
   name: 'mentor-profil',
   component: () => import('../views/mentoring/MentorProfileView.vue')
@@ -70,6 +76,12 @@ const routes = [
     path: '/unauthorized',
     name: 'unauthorized',
     component: () => import('../views/UnauthorizedView.vue')
+  },
+  {
+    path: '/mentoring/apply',
+    name: 'student-apply',
+    component: () => import('../views/mentoring/StudentRegistration.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 
@@ -94,3 +106,4 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router
+
