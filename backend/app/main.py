@@ -8,7 +8,7 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.mentor import Mentor
 from app.routers import admin  # u import sekciji
-
+from app.models.student import Student
 
 Base.metadata.create_all(bind=engine)
 

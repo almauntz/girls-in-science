@@ -4,6 +4,10 @@ from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.mentor import Mentor
+from app.models.student import Student
+import os
+import shutil
+
 
 from pydantic import BaseModel
 
@@ -149,3 +153,59 @@ def get_mentor_profile(id: int, db: Session = Depends(get_db)):
         position=mentor.position,
         institution=mentor.institution
     )
+
+
+UPLOAD_DIR = "uploads/cvs"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+@router.post("/students/register", status_code=status.HTTP_201_CREATED)
+async def register_student(
+    first_name: str = Form(...),
+    last_name: str = Form(...),
+    email: str = Form(...),
+    faculty: str = Form(None),
+    year_of_study: str = Form(None),
+    areas_of_interest: str = Form(None),
+    expectations: str = Form(None),
+    skills_to_improve: str = Form(None),
+    preferred_session_format: str = Form(None),
+    cv: UploadFile = File(None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    existing = db.query(Student).filter(Student.email == email).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Prijava sa ovim emailom već postoji."
+        )
+
+    cv_url = None
+    if cv and cv.filename:
+        file_path = f"{UPLOAD_DIR}/{cv.filename}"
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(cv.file, buffer)
+        cv_url = file_path
+
+    student = Student(
+        first_name=first_name,
+        last_name=last_name,
+        email=email,
+        faculty=faculty,
+        year_of_study=year_of_study,
+        areas_of_interest=areas_of_interest,
+        expectations=expectations,
+        skills_to_improve=skills_to_improve,
+        preferred_session_format=preferred_session_format,
+        cv_url=cv_url
+    )
+
+    db.add(student)
+    db.commit()
+    db.refresh(student)
+
+    return {
+        "message": "Prijava uspješno poslana!",
+        "id": student.id
+    }
