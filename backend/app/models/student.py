@@ -1,5 +1,13 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text
+import enum
+from sqlalchemy import Column, Integer, String, Boolean, Text, DateTime, Enum
+from datetime import datetime
 from app.database import Base
+
+
+class ApplicationStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
 
 
 class Student(Base):
@@ -33,3 +41,12 @@ class Student(Base):
     
     # CV datoteka
     cv_url = Column(String, nullable=True)
+    
+    # Status i timestamp
+    status = Column(
+        Enum(ApplicationStatus),
+        default=ApplicationStatus.PENDING,
+        nullable=False,
+        server_default=ApplicationStatus.PENDING.value
+    )
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
