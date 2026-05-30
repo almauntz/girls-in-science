@@ -1,6 +1,5 @@
 from typing import Optional
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlmodel import Session, select
 from app.database import get_db
 from app.core.security import get_current_user
@@ -8,12 +7,9 @@ from app.models.user import User, UserRole
 from app.models.workshops_models import (Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
                                           WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WorkshopProposal,
                                             ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus)
-from datetime import datetime, timezone
 from sqlalchemy import func
-from app.database import get_db
-from sqlalchemy.orm import Query, Session
 from sqlalchemy.orm import Session
-from sqlmodel import select
+
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
 
@@ -43,9 +39,6 @@ def cancel_registration(
     return {"message": "Uspješno ste odustali od radionice."}
 
 
-
-
-
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
     statement = select(Workshop)
@@ -60,27 +53,6 @@ def get_active_workshops(db: Session = Depends(get_db)):
         result.append(workshop_dict)
     return result
 
-@router.get("/{workshop_id}", response_model=WorkshopDetailRead)
-def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
-    workshop = db.get(Workshop, workshop_id)
-    if not workshop:
-        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
-    organizer = db.get(User, workshop.created_by_id)
-    registrations = db.execute(
-        select(Registration).where(Registration.workshop_id == workshop_id)
-    ).all()
-    free_spots = workshop.capacity - len(registrations)
-    return WorkshopDetailRead(
-        ID_workshop=workshop.ID_workshop,
-        title=workshop.title,
-        description=workshop.description,
-        location=workshop.location,
-        date=workshop.date,
-        end_time=workshop.end_time,
-        capacity=workshop.capacity,
-        status=workshop.status,
-        free_spots=free_spots
-    )
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
     if current_user.role != UserRole.admin:
@@ -91,8 +63,32 @@ def require_admin(current_user: User = Depends(get_current_user)) -> User:
     return current_user
    
 
-### Admin CRUD endpoints -------------------------------------------------------
+@router.get("/admin", response_model=list[ProposalRead])
+def get_admin_panel(
+    status_filter: Optional[ProposalStatus] =  Query(default=None),
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    statement = select(WorkshopProposal).order_by(WorkshopProposal.created_at.desc())
+    if status_filter:
+        statement = statement.where(WorkshopProposal.status == status_filter)
+    return db.execute(statement).scalars().all()
 
+
+@router.get("/proposals/my", response_model=list[ProposalUserRead])
+def get_my_proposals(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    statement = (
+        select(WorkshopProposal)
+        .where(WorkshopProposal.proposed_by_id == current_user.id)
+        .order_by(WorkshopProposal.created_at.desc())
+    )
+    return db.execute(statement).scalars().all()
+
+
+### Admin CRUD endpoints -------------------------------------------------------
 
 @router.post("/", response_model=WorkshopRead, status_code=status.HTTP_201_CREATED)
 def create_workshop(
@@ -170,51 +166,6 @@ def delete_workshop(
 
 # -- Proposal user endpoints -------------------------------------------------------
 
-@router.post("/proposals", response_model=ProposalUserRead, status_code=status.HTTP_201_CREATED)
-def submit_proposal(
-    data: ProposalCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    proposal = WorkshopProposal(
-        title=data.title,
-        description=data.description,
-        proposed_by_id=current_user.id,
-        proposed_by_email=current_user.email,
-    )
-    db.add(proposal)
-    db.commit()
-    db.refresh(proposal)
-    return proposal
-
-@router.get("/proposals/my", response_model=list[ProposalUserRead])
-def get_my_proposals(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    statement = (
-        select(WorkshopProposal)
-        .where(WorkshopProposal.proposed_by_id == current_user.id)
-        .order_by(WorkshopProposal.created_at.desc())
-    )
-    return db.execute(statement).scalars().all()
-
-
-# -- Admin Proposal endpoints -------------------------------------------------------
-
-
-@router.get("/admin", response_model=list[ProposalRead])
-def get_admin_panel(
-    status_filter: Optional[ProposalStatus] = Query(default=None, alias="status"),
-    db: Session = Depends(get_db),
-    admin: User = Depends(require_admin)
-):
-    statement = select(WorkshopProposal).order_by(WorkshopProposal.created_at.desc())
-    if status_filter:
-        statement = statement.where(WorkshopProposal.status == status_filter)
-    return db.execute(statement).scalars().all()
-
-
 @router.get("/proposals/{proposal_id}", response_model=ProposalRead)
 def get_proposal_detail(
     proposal_id: int,
@@ -225,6 +176,7 @@ def get_proposal_detail(
     if not proposal:
         raise HTTPException(status_code=404, detail="Prijedlog nije pronađen.")
     return proposal
+
 
 @router.patch("/proposals/{proposal_id}/approve", response_model=ProposalRead)
 def approve_proposal(
@@ -270,6 +222,25 @@ def approve_proposal(
     db.commit()
     db.refresh(proposal)
     return proposal
+
+
+@router.post("/proposals", response_model=ProposalUserRead, status_code=status.HTTP_201_CREATED)
+def submit_proposal(
+    data: ProposalCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    proposal = WorkshopProposal(
+        title=data.title,
+        description=data.description,
+        proposed_by_id=current_user.id,
+        proposed_by_email=current_user.email,
+    )
+    db.add(proposal)
+    db.commit()
+    db.refresh(proposal)
+    return proposal
+
 
 @router.patch("/proposals/{proposal_id}/reject", response_model=ProposalRead)
 def reject_proposal(
@@ -354,6 +325,7 @@ def register_student(
         "free_spots_left": max(0, preostalo)
     }
 
+
 @router.delete("/cancellation/{workshop_id}")
 def cancel_registration(
     workshop_id: int, 
@@ -397,3 +369,25 @@ def check_registration(
     return {
         "registered": exists is not None
     }
+
+@router.get("/{workshop_id}", response_model=WorkshopDetailRead)
+def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+    organizer = db.get(User, workshop.created_by_id)
+    registrations = db.execute(
+        select(Registration).where(Registration.workshop_id == workshop_id)
+    ).all()
+    free_spots = workshop.capacity - len(registrations)
+    return WorkshopDetailRead(
+        ID_workshop=workshop.ID_workshop,
+        title=workshop.title,
+        description=workshop.description,
+        location=workshop.location,
+        date=workshop.date,
+        end_time=workshop.end_time,
+        capacity=workshop.capacity,
+        status=workshop.status,
+        free_spots=free_spots
+    )
