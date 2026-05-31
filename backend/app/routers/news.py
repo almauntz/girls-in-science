@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.database import get_db
 from app.models.news import NewsPost, NewsPostCreate
 from app.models.role_model import RoleModel
@@ -53,3 +53,8 @@ def create_news_post(
     db.refresh(news_post)
 
     return news_post
+@router.get("/")
+def get_news_posts(db: Session = Depends(get_db)):
+    statement = select(NewsPost).order_by(NewsPost.created_at.desc())
+    news_posts = db.exec(statement).all()
+    return news_posts
