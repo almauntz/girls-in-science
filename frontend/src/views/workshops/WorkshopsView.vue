@@ -100,14 +100,7 @@
               </button>
 
               <!-- Prijava ako ima mjesta -->
-              <button
-                v-else-if="getFreeSpots(workshop) > 0"
-                @click="handleRegister(workshop.ID_workshop)"
-                class="text-xs font-medium text-green-600 hover:text-green-800 uppercase tracking-wide"
-              >
-                Prijavi se
-              </button>
-
+              <span v-else-if="getFreeSpots(workshop) > 0"></span>
               <!-- Waiting list -->
               <button
                 v-else
