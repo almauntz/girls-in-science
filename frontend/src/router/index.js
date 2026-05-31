@@ -38,12 +38,6 @@ const routes = [
     component: () => import('../views/mentoring/MentorRegistration.vue'),
   },
   {
-    path: '/mentoring/my-applications',
-    name: 'mentor-applications',
-    component: () => import('../views/mentoring/MentorApplicationsView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
   path: '/mentoring/:id',
   name: 'mentor-profil',
   component: () => import('../views/mentoring/MentorProfileView.vue')

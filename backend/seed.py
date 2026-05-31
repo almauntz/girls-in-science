@@ -8,11 +8,10 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.database import SessionLocal, engine
 from app.models.user import User, UserRole
-from app.models.mentor import Mentor, MentorshipRequest, RequestStatus
+from app.models.mentor import Mentor
 from app.core.security import hash_password
 from app.database import Base
 
-# Kreiraj sve tablice
 Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
@@ -32,107 +31,22 @@ if not existing_admin:
 else:
     print("ℹ️  Admin već postoji")
 
-# --- Test studentice ---
-test_students = [
-    {"email": "sara@test.com", "full_name": "Sara S.", "password_hash": hash_password("sara123"), "role": UserRole.member},
-    {"email": "mia@test.com", "full_name": "Mia M.", "password_hash": hash_password("mia123"), "role": UserRole.member},
-    {"email": "ana@test.com", "full_name": "Ana A.", "password_hash": hash_password("ana123"), "role": UserRole.member},
-]
-
-student_ids = {}
-for s in test_students:
-    existing = db.query(User).filter(User.email == s["email"]).first()
-    if not existing:
-        user = User(**s)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        student_ids[s["email"]] = user.id
-        print(f"✅ Studentica kreirana: {s['full_name']} ({s['email']})")
-    else:
-        student_ids[s["email"]] = existing.id
-        print(f"ℹ️  Studentica već postoji: {s['email']}")
-
-# --- Test mentorice (odobrene) ---
+# --- Test mentorice (is_approved = False) ---
 test_mentors = [
-    {"first_name": "Lamija", "last_name": "Lara", "email": "lamija@mentor.com", "password": "lamija123", "field_of_expertise": "IT", "is_approved": True, "bio": "Iskusna IT stručnjakinja sa 5+ godina iskustva"},
-    {"first_name": "Lejla", "last_name": "Lelić", "email": "lejla@mentor.com", "password": "lejla123", "field_of_expertise": "Biologija", "is_approved": True, "bio": "Biolog sa diplomom, volim da delim znanje"},
+    {"first_name": "Ana", "last_name": "Anić", "email": "ana@test.com", "field_of_expertise": "IT"},
+    {"first_name": "Mia", "last_name": "Mić", "email": "mia@test.com", "field_of_expertise": "Biologija"},
+    {"first_name": "Lejla", "last_name": "Lejlić", "email": "lejla@test.com", "field_of_expertise": "Hemija"},
 ]
 
-mentor_ids = {}
 for m in test_mentors:
-    email = m["email"]
-    password = m.pop("password")
-    
-    # Prvo kreiraj User ako ne postoji
-    existing_user = db.query(User).filter(User.email == email).first()
-    if not existing_user:
-        user = User(
-            email=email,
-            full_name=f"{m['first_name']} {m['last_name']}",
-            password_hash=hash_password(password),
-            role=UserRole.mentor
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        print(f"✅ User mentorica kreirana: {email}")
-    
-    # Zatim kreiraj Mentor profil ako ne postoji
-    existing = db.query(Mentor).filter(Mentor.email == email).first()
+    existing = db.query(Mentor).filter(Mentor.email == m["email"]).first()
     if not existing:
-        mentor = Mentor(**m)
+        mentor = Mentor(**m, is_approved=False)
         db.add(mentor)
-        db.commit()
-        db.refresh(mentor)
-        mentor_ids[email] = mentor.id
-        print(f"✅ Mentor profil kreiran: {m['first_name']} {m['last_name']}")
+        print(f"✅ Mentorica kreirana: {m['first_name']} {m['last_name']}")
     else:
-        mentor_ids[email] = existing.id
-        print(f"ℹ️  Mentor već postoji: {email}")
+        print(f"ℹ️  Mentorica već postoji: {m['email']}")
 
-# --- Test mentorship requests ---
-if student_ids and mentor_ids:
-    test_requests = [
-        {
-            "student_user_id": student_ids["sara@test.com"],
-            "mentor_id": mentor_ids["lamija@mentor.com"],
-            "message": "Zdravo, željela bih da radim sa vama na IT projektima!",
-            "status": RequestStatus.PENDING
-        },
-        {
-            "student_user_id": student_ids["mia@test.com"],
-            "mentor_id": mentor_ids["lamija@mentor.com"],
-            "message": "Trebam help sa programiranjem, čula sam da ste odličan mentor",
-            "status": RequestStatus.PENDING
-        },
-        {
-            "student_user_id": student_ids["ana@test.com"],
-            "mentor_id": mentor_ids["lejla@mentor.com"],
-            "message": "Zanimaju me biologijske nauke, možete li me mentorirati?",
-            "status": RequestStatus.APPROVED
-        },
-    ]
-    
-    for req in test_requests:
-        existing = db.query(MentorshipRequest).filter(
-            MentorshipRequest.student_user_id == req["student_user_id"],
-            MentorshipRequest.mentor_id == req["mentor_id"]
-        ).first()
-        if not existing:
-            mr = MentorshipRequest(**req)
-            db.add(mr)
-            print(f"✅ Zahtjev kreiran: {req['status'].value} - student {req['student_user_id']} → mentor {req['mentor_id']}")
-        else:
-            print(f"ℹ️  Zahtjev već postoji")
-    
-    db.commit()
-
-print("\n✅ Seed završen!")
-print("\n📝 Test kredencijali:")
-print("   Mentorica (Lamija): lamija@mentor.com / lamija123")
-print("   Studentica (Sara): sara@test.com / sara123")
-print("   Studentica (Mia): mia@test.com / mia123")
-print("   Studentica (Ana): ana@test.com / ana123")
-
+db.commit()
 db.close()
+print("\n✅ Seed završen!")
