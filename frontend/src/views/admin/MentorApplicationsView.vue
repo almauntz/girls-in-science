@@ -228,20 +228,38 @@ function authHeaders() {
 
 async function fetchAllApplications() {
   try {
-    const pendingRes = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications?limit=100`, {
+    // Dohvati sve aplikacije sa admin endpointa (PENDING + APPROVED + REJECTED)
+    const res = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications?limit=100`, {
       headers: authHeaders()
     })
-    if (pendingRes.status === 401) {
+    if (res.status === 401) {
       router.push('/unauthorized')
       return
     }
-    const pendingData = await pendingRes.json()
+    const pendingData = await res.json()
 
+    // Dohvati odobrene mentorice
+    const approvedRes = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications?limit=100`, {
+      headers: authHeaders()
+    })
+    const approvedData = await approvedRes.json()
+
+    // Dohvati sve mentorice direktno iz baze kroz admin endpoint
     const allRes = await fetch(`${BASE_URL}/mentoring/mentors?limit=100`)
-    const allApproved = await allRes.json()
-    const approvedMapped = allApproved.map(m => ({ ...m, status: 'APPROVED' }))
+    const allData = await allRes.json()
 
-    applications.value = [...pendingData, ...approvedMapped]
+    const approvedMapped = allData.map(m => ({
+      ...m,
+      status: 'APPROVED',
+      first_name: m.full_name ? m.full_name.split(' ')[0] : (m.first_name || ''),
+      last_name: m.full_name ? m.full_name.split(' ').slice(1).join(' ') : (m.last_name || '')
+    }))
+
+    // Spoji pending sa approved, izbjegni duplikate
+    const pendingIds = new Set(pendingData.map(a => a.id))
+    const uniqueApproved = approvedMapped.filter(a => !pendingIds.has(a.id))
+
+    applications.value = [...pendingData, ...uniqueApproved]
   } catch (e) {
     error.value = 'Greška pri učitavanju podataka.'
   } finally {
