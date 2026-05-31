@@ -28,17 +28,24 @@ const routes = [
     name: 'workshops',
     component: () => import('../views/workshops/WorkshopsView.vue'),
   },
-  //dodana ruta za detalje radionice
-  {
-   path: '/workshops/:id',
-   name: 'workshops-detail',
-  component: () => import('../views/workshops/WorkshopsDetailView.vue'),
-  },
   // Ruta za admin panel radionica  
   {
   path: '/workshops/admin',
   component: () => import('../views/workshops/WorkshopsAdminView.vue'),
   meta: { requiresAuth: true }
+  },
+  // Ruta za upravljanje prijedlozima radionica u admin panelu
+  {
+  path: '/workshops/admin/proposals',
+  name: 'proposals-admin',
+  component: () => import('../views/workshops/ProposalAdminView.vue'),
+  meta: { requiresAuth: true }
+},
+  //dodana ruta za detalje radionice
+  {
+   path: '/workshops/:id',
+   name: 'workshops-detail',
+  component: () => import('../views/workshops/WorkshopsDetailView.vue'),
   },
   {
     path: '/mentoring',
