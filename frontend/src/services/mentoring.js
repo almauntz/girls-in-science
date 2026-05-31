@@ -17,3 +17,28 @@ export const applyAsMentor = (formData) => {
 export const getMentorById = (id) => {
   return axios.get(`${API_URL}/mentors/${id}`)
 }
+
+export const getMentorApplications = async () => {
+  const token = localStorage.getItem('token')
+  const response = await axios.get(`${API_URL}/my-applications`, {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  return response.data
+}
+
+export const updateApplicationStatus = async (applicationId, status) => {
+  const token = localStorage.getItem('token')
+  const response = await axios.put(
+    `${API_URL}/applications/${applicationId}/status`,
+    { status },
+    {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  )
+  return response.data
+}
