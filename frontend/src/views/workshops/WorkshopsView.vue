@@ -103,6 +103,22 @@
         </div>
       </div>
     </div>
+  <!-- Floating pill button -->
+    <router-link
+      to="/workshops/my-proposals"
+      class="fixed bottom-8 right-8 flex items-center gap-3 text-white text-sm font-bold px-6 py-4 rounded-full shadow-2xl transition-all hover:-translate-y-1 hover:shadow-purple-400/50 hover:shadow-2xl"
+      style="background: linear-gradient(135deg, #7c3aed, #a855f7); box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45);"
+    >
+      <span class="text-xl">💡</span>
+      <span class="flex flex-col leading-tight">
+        <span class="text-xs font-medium opacity-80">Imaš ideju za radionicu?</span>
+        <span class="text-base font-extrabold tracking-wide">Dodaj svoj prijedlog!</span>
+      </span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="opacity-80">
+        <line x1="5" y1="12" x2="19" y2="12"/>
+        <polyline points="12 5 19 12 12 19"/>
+      </svg>
+    </router-link>
   </div>
 </template>
 
