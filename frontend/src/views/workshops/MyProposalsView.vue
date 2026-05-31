@@ -351,3 +351,349 @@ function showToast(type, message) {
   }, 40)
 }
 </script>
+
+<style scoped>
+/* ================================================================
+   LAYOUT STRANICE
+   ================================================================ */
+.proposals-page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 3rem 2rem 5rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+ 
+.page-header { text-align: center; margin-bottom: 2.75rem; }
+ 
+.member-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #ede9fe; color: #7c3aed;
+  font-size: 0.68rem; font-weight: 800;
+  letter-spacing: .09em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem;
+  border: 1.5px solid #ddd6fe;
+}
+.page-header h1 { font-size: 1.75rem; font-weight: 800; color: #1e1b4b; margin: 0 0 0.4rem; }
+.page-sub       { color: #9ca3af; font-size: 0.88rem; margin: 0; }
+ 
+/* ── Dvije kolone ── */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 680px) {
+  .layout { grid-template-columns: 1fr; }
+}
+ 
+/* ================================================================
+   PANELI (forma i lista)
+   ================================================================ */
+.form-panel,
+.list-panel {
+  background: #fff;
+  border-radius: 20px;
+  border: 1.5px solid #e5e7eb;
+  box-shadow: 0 4px 20px rgba(0,0,0,.05);
+  overflow: hidden;
+}
+ 
+.panel-head {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 1.3rem 1.5rem 1.1rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+.panel-head h2 { font-size: 0.97rem; font-weight: 800; color: #1e1b4b; margin: 0 0 2px; }
+.panel-head p  { font-size: 0.77rem; color: #9ca3af; margin: 0; }
+ 
+.panel-icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.icon-purple { background: #ede9fe; color: #7c3aed; }
+.icon-dark   { background: #f3f4f6; color: #374151; }
+ 
+/* ================================================================
+   FORMA ZA PRIJEDLOG
+   ================================================================ */
+.form-body {
+  padding: 1.25rem 1.5rem 1.5rem;
+  display: flex; flex-direction: column; gap: 1rem;
+}
+ 
+.field       { display: flex; flex-direction: column; gap: 4px; }
+.field label { font-size: 0.77rem; font-weight: 700; color: #374151; }
+.req         { color: #dc2626; }
+ 
+.field input,
+.field textarea {
+  background: #fafafa; border: 1.5px solid #e5e7eb;
+  border-radius: 10px; padding: 0.48rem 0.7rem;
+  font-size: 0.86rem; color: #111827; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  font-family: inherit;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
+}
+.field input:disabled,
+.field textarea:disabled { opacity: .6; cursor: not-allowed; }
+.field textarea { resize: vertical; min-height: 120px; }
+ 
+.input-error { border-color: #dc2626 !important; }
+.err-msg     { font-size: 0.71rem; color: #dc2626; font-weight: 600; }
+ 
+.char-count {
+  font-size: 0.71rem; color: #9ca3af; text-align: right;
+  font-weight: 600;
+}
+.count-warn { color: #ef4444; }
+ 
+.btn-submit {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 0.6rem 1.4rem; border-radius: 12px;
+  font-size: 0.88rem; font-weight: 700; cursor: pointer;
+  border: none;
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: #fff; box-shadow: 0 4px 14px rgba(124,58,237,.35);
+  transition: opacity .15s, transform .12s;
+  align-self: flex-end;
+}
+.btn-submit:hover   { transform: translateY(-1px); }
+.btn-submit:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+ 
+/* ================================================================
+   LISTA MOJIH PRIJEDLOGA
+   ================================================================ */
+.list-state {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.6rem; padding: 3rem 1.5rem;
+  color: #9ca3af; font-size: 0.85rem;
+}
+.list-state.empty span { font-size: 0.78rem; }
+ 
+.empty-icon {
+  width: 52px; height: 52px; border-radius: 16px;
+  background: #f9fafb; border: 1.5px solid #e5e7eb;
+  display: flex; align-items: center; justify-content: center;
+  color: #d1d5db;
+}
+ 
+.my-proposals-list {
+  padding: 0.75rem;
+  display: flex; flex-direction: column; gap: 0.6rem;
+  max-height: 520px; overflow-y: auto;
+}
+ 
+.my-proposal-card {
+  background: #fafafa; border: 1.5px solid #e5e7eb;
+  border-radius: 14px; padding: 1rem 1.1rem;
+  cursor: pointer;
+  transition: transform .14s, box-shadow .14s, border-color .14s;
+}
+.my-proposal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0,0,0,.08);
+}
+.card-pending:hover  { border-color: #f59e0b; }
+.card-accepted:hover { border-color: #10b981; }
+.card-rejected:hover { border-color: #ef4444; }
+ 
+.mpc-top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.mpc-date { font-size: 0.72rem; color: #9ca3af; font-weight: 600; }
+ 
+.mpc-title {
+  font-size: 0.92rem; font-weight: 800; color: #1e1b4b;
+  margin: 0 0 0.3rem;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.mpc-desc {
+  font-size: 0.8rem; color: #6b7280; margin: 0;
+  line-height: 1.5;
+}
+ 
+.mpc-note {
+  display: flex; align-items: flex-start; gap: 5px;
+  margin-top: 0.5rem; padding: 0.45rem 0.6rem;
+  background: #f0fdf4; border-radius: 8px;
+  font-size: 0.76rem; color: #059669; font-weight: 600;
+  line-height: 1.4;
+}
+.card-rejected .mpc-note {
+  background: #fef2f2; color: #dc2626;
+}
+ 
+/* ================================================================
+   STATUS BADGE
+   ================================================================ */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 2px 10px; border-radius: 20px;
+  font-size: 0.7rem; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.badge-dot {
+  width: 6px; height: 6px; border-radius: 50; flex-shrink: 0;
+}
+.badge-pending  { background: #fef3c7; color: #92400e; border: 1.5px solid #fde68a; }
+.badge-pending  .badge-dot { background: #f59e0b; border-radius: 50%; }
+.badge-accepted { background: #d1fae5; color: #065f46; border: 1.5px solid #6ee7b7; }
+.badge-accepted .badge-dot { background: #10b981; border-radius: 50%; }
+.badge-rejected { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
+.badge-rejected .badge-dot { background: #ef4444; border-radius: 50%; }
+ 
+/* ================================================================
+   OVERLAY I MODAL
+   ================================================================ */
+.overlay {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(15, 10, 40, .52);
+  backdrop-filter: blur(5px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  animation: fade-in .15s ease;
+}
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+ 
+.modal {
+  background: #fff; border-radius: 20px;
+  width: 100%; max-width: 520px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, .22);
+  animation: slide-up .2s ease; overflow: hidden;
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(22px) }
+  to   { opacity: 1; transform: translateY(0) }
+}
+ 
+.modal-head {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 1.4rem 1.5rem 1.2rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+.modal-head h2 { font-size: 1rem; font-weight: 800; color: #1e1b4b; margin: 0 0 4px; }
+.modal-head p  { margin: 0; }
+ 
+.mh-icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.head-pending  .mh-icon { background: #fef3c7; color: #d97706; }
+.head-accepted .mh-icon { background: #d1fae5; color: #059669; }
+.head-rejected .mh-icon { background: #fee2e2; color: #dc2626; }
+ 
+.close-btn {
+  margin-left: auto; background: #f9fafb; border: 1.5px solid #f3f4f6;
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #9ca3af; font-size: 0.9rem;
+  transition: background .15s;
+}
+.close-btn:hover { background: #f3f4f6; color: #374151; }
+ 
+.modal-body {
+  padding: 1.25rem 1.5rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  max-height: 65vh; overflow-y: auto;
+}
+ 
+.modal-foot {
+  padding: 1rem 1.5rem 1.4rem;
+  display: flex; justify-content: flex-end;
+  border-top: 1px solid #f3f4f6;
+}
+ 
+/* ================================================================
+   DETALJI U MODALU
+   ================================================================ */
+.detail-field { display: flex; flex-direction: column; gap: 3px; }
+.detail-label {
+  font-size: 0.71rem; font-weight: 700; color: #9ca3af;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.detail-value { font-size: 0.9rem; color: #1e1b4b; font-weight: 500; }
+.detail-desc  { line-height: 1.6; color: #374151; white-space: pre-wrap; }
+ 
+/* Status info box */
+.status-info {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.85rem 1rem; border-radius: 12px;
+}
+.info-pending  { background: #fffbeb; border: 1.5px solid #fde68a; }
+.info-accepted { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+.info-rejected { background: #fef2f2; border: 1.5px solid #fecaca; }
+ 
+.si-icon {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.info-pending  .si-icon { background: #fef3c7; color: #d97706; }
+.info-accepted .si-icon { background: #d1fae5; color: #059669; }
+.info-rejected .si-icon { background: #fee2e2; color: #dc2626; }
+ 
+.si-title { font-size: 0.83rem; font-weight: 800; color: #1e1b4b; margin: 0 0 3px; }
+.si-msg   { font-size: 0.79rem; color: #6b7280; margin: 0; line-height: 1.5; }
+ 
+.admin-note-box {
+  background: #f0fdf4; border: 1.5px solid #bbf7d0;
+  border-radius: 10px; padding: 0.75rem 1rem;
+}
+.note-label {
+  display: block; font-size: 0.7rem; font-weight: 800;
+  color: #059669; text-transform: uppercase;
+  letter-spacing: .06em; margin-bottom: 4px;
+}
+.admin-note-box p { font-size: 0.85rem; color: #374151; margin: 0; }
+ 
+/* ================================================================
+   DUGMAD
+   ================================================================ */
+.btn-secondary {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0.5rem 1.2rem; border-radius: 10px;
+  font-size: 0.84rem; font-weight: 700; cursor: pointer;
+  background: #f3f4f6; color: #6b7280;
+  border: 1.5px solid #e5e7eb;
+  transition: background .15s;
+}
+.btn-secondary:hover { background: #e5e7eb; }
+ 
+/* ================================================================
+   SPINNER
+   ================================================================ */
+.spin {
+  display: inline-block; width: 13px; height: 13px;
+  border: 2px solid rgba(255, 255, 255, .4);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .65s linear infinite;
+}
+.spin-dark {
+  border-color: rgba(124,58,237,.2);
+  border-top-color: #7c3aed;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
+ 
+/* ================================================================
+   TOAST
+   ================================================================ */
+.toast {
+  position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 9999;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0.7rem 1.2rem; border-radius: 12px;
+  font-size: 0.85rem; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+}
+.toast-success { background: #ecfdf5; color: #065f46; border: 1.5px solid #6ee7b7; }
+.toast-error   { background: #fef2f2; color: #991b1b; border: 1.5px solid #fca5a5; }
+ 
+.toast-enter-active, .toast-leave-active { transition: all .28s ease; }
+.toast-enter-from { opacity: 0; transform: translateY(8px); }
+.toast-leave-to   { opacity: 0; transform: translateY(-8px); }
+</style>
+ 
