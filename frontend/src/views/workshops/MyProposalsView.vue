@@ -224,3 +224,130 @@
  
   </div>
 </template>
+
+<script setup>
+import { ref, reactive, onMounted } from 'vue'
+ 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+ 
+// ── State ──────────────────────────────────────────────────────────────────
+ 
+const proposals      = ref([])
+const loading        = ref(false)
+const submitting     = ref(false)
+const detailProposal = ref(null)
+ 
+const form = reactive({ title: '', description: '' })
+const errors = reactive({ title: '', description: '' })
+const toast = reactive({ show: false, type: 'success', message: '' })
+ 
+// ── Lifecycle ──────────────────────────────────────────────────────────────
+ 
+onMounted(() => fetchMyProposals())
+ 
+// ── API ────────────────────────────────────────────────────────────────────
+ 
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  }
+}
+ 
+async function fetchMyProposals() {
+  loading.value = true
+  try {
+    const res = await fetch(`${BASE_URL}/workshops/proposals/my`, { headers: authHeaders() })
+    if (!res.ok) throw new Error(`Greška ${res.status}`)
+    proposals.value = await res.json()
+  } catch (e) {
+    showToast('error', e.message || 'Greška pri učitavanju prijedloga.')
+  } finally {
+    loading.value = false
+  }
+}
+ 
+async function submitProposal() {
+  if (!validateForm()) return
+  submitting.value = true
+  try {
+    const body = {
+      title:       form.title.trim(),
+      description: form.description.trim(),
+    }
+    const res = await fetch(`${BASE_URL}/workshops/proposals`, {
+      method:  'POST',
+      headers: authHeaders(),
+      body:    JSON.stringify(body),
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || `Greška ${res.status}`)
+    }
+    const created = await res.json()
+    proposals.value.unshift(created)   // dodaj na vrh liste odmah
+    Object.assign(form, { title: '', description: '' })
+    showToast('success', 'Prijedlog uspješno poslan! Pratiti ćemo status zajedno.')
+  } catch (e) {
+    showToast('error', e.message || 'Slanje nije uspjelo.')
+  } finally {
+    submitting.value = false
+  }
+}
+ 
+// ── Helpers ────────────────────────────────────────────────────────────────
+ 
+function validateForm() {
+  Object.assign(errors, { title: '', description: '' })
+  let ok = true
+  if (!form.title.trim())
+    { errors.title = 'Naziv je obavezan.'; ok = false }
+  if (!form.description.trim())
+    { errors.description = 'Opis je obavezan.'; ok = false }
+  else if (form.description.length > 500)
+    { errors.description = 'Opis ne smije biti duži od 500 znakova.'; ok = false }
+  return ok
+}
+ 
+function openDetail(p) {
+  detailProposal.value = { ...p }
+}
+ 
+function truncate(str, n) {
+  return str && str.length > n ? str.slice(0, n) + '…' : str
+}
+ 
+function formatDate(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+ 
+function statusLabel(s) {
+  return { pending: 'Na čekanju', accepted: 'Odobreno', rejected: 'Odbijeno' }[s] ?? s
+}
+ 
+function statusInfoTitle(s) {
+  return {
+    pending:  'Prijedlog je primljen',
+    accepted: 'Prijedlog je odobren!',
+    rejected: 'Prijedlog nije prihvaćen',
+  }[s] ?? ''
+}
+ 
+function statusInfoMsg(s) {
+  return {
+    pending:  'Admin tima još uvijek pregledava tvoj prijedlog. Javit ćemo ti čim bude obrađen.',
+    accepted: 'Odlična vijest! Admin je odobrio tvoj prijedlog. Pratite platformu za detalje.',
+    rejected: 'Nažalost, ovaj prijedlog nije prihvaćen. Pogledaj napomenu admina ispod za više informacija.',
+  }[s] ?? ''
+}
+ 
+function showToast(type, message) {
+  toast.show = false
+  setTimeout(() => {
+    Object.assign(toast, { show: true, type, message })
+    setTimeout(() => { toast.show = false }, 3800)
+  }, 40)
+}
+</script>
