@@ -41,6 +41,8 @@ const routes = [
     path: '/student/apply',
     name: 'student-registration',
     component: () => import('../views/StudentRegistration.vue'),
+  },
+  {
     path: '/mentoring/my-applications',
     name: 'mentor-applications',
     component: () => import('../views/mentoring/MentorApplicationsView.vue'),
@@ -85,10 +87,12 @@ const routes = [
     name: 'student-apply',
     component: () => import('../views/mentoring/StudentRegistration.vue'),
     meta: { requiresAuth: true }
-  path: '/mentoring/:id/zahtjev',
-  name: 'mentorship-request',
-  component: () => import('../views/mentoring/MentorshipRequestView.vue'),
-  meta: { requiresAuth: true }
+  },
+  {
+    path: '/mentoring/:id/zahtjev',
+    name: 'mentorship-request',
+    component: () => import('../views/mentoring/MentorshipRequestView.vue'),
+    meta: { requiresAuth: true }
   }
 
 ]

@@ -525,11 +525,15 @@ async function fetchAllApplications() {
       router.push('/unauthorized')
       return
     }
-    const pendingData = await pendingRes.json()
-
+    const pendingData = await res.json()
+    
+    // Učitaj sve mentore
     const allRes = await fetch(`${BASE_URL}/mentoring/mentors?limit=100`)
-    const allApproved = await allRes.json()
-    const approvedMapped = allApproved.map(m => {
+    const allMentors = await allRes.json()
+    
+    // Filtriraj mentore koji nisu već u pending-u
+    const pendingIds = new Set(pendingData.map(m => m.id))
+    const approvedMentors = allMentors.filter(m => !pendingIds.has(m.id)).map(m => {
       const nameParts = (m.full_name || '').trim().split(/\s+/)
       const firstName = nameParts[0] || ''
       const lastName = nameParts.slice(1).join(' ') || ''
@@ -537,12 +541,12 @@ async function fetchAllApplications() {
         ...m,
         first_name: firstName,
         last_name: lastName,
-        status: 'APPROVED'
+        status: 'APPROVED',
+        is_approved: true
       }
     })
 
-    applications.value = [...pendingData, ...approvedMapped]
-    applications.value = await res.json()
+    applications.value = [...pendingData, ...approvedMentors]
   } catch (e) {
     error.value = 'Greška pri učitavanju podataka.'
   } finally {
@@ -581,7 +585,10 @@ async function rejectApplication(id) {
   try {
     const res = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${id}/reject`, {
       method: 'PATCH',
-      headers: authHeaders()
+      headers: authHeaders(),
+      body: JSON.stringify({
+        rejection_reason: 'Aplikacija je odbijena'
+      })
     })
     if (res.ok) {
       const updated = await res.json()
