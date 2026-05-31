@@ -1,5 +1,5 @@
 import enum
-from sqlalchemy import Column, Integer, String, Boolean, Enum
+from sqlalchemy import Column, Integer, String, Boolean, Enum, Text
 from app.database import Base
 
 
@@ -45,3 +45,6 @@ class Mentor(Base):
         nullable=False,
         server_default=ApplicationStatus.PENDING.value
     )
+
+    # Razlog odbijanja i ponovna prijava
+    rejection_reason = Column(Text, nullable=True)

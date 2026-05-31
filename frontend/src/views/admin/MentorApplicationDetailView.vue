@@ -59,8 +59,8 @@
       <!-- CV -->
       <div v-if="application.cv_url" class="bg-white border rounded-xl p-6 mb-4">
         <h2 class="font-bold text-lg mb-3">CV datoteka</h2>
-        <p class="text-sm text-gray-600 mb-2">{{ application.cv_url }}</p>
-        <p class="text-xs text-gray-500">Datoteka je pohranjena na serveru</p>
+        <p class="text-sm text-gray-600 mb-3">{{ application.cv_url }}</p>
+        <a :href="`${BASE_URL}/mentoring/cv/${application.cv_url}`" :download="application.cv_url" class="inline-flex items-center gap-2 bg-black text-white text-sm px-4 py-2 rounded-lg hover:bg-gray-800 transition">Preuzmi CV</a>
       </div>
 
       <!-- Akademski naslov -->
@@ -79,6 +79,23 @@
       <div v-if="application.motivation" class="bg-white border rounded-xl p-6 mb-4">
         <h2 class="font-bold text-lg mb-3">Motivacija</h2>
         <p class="text-gray-700 whitespace-pre-wrap">{{ application.motivation }}</p>
+      </div>
+
+      <!-- Razlog odbijanja — prikazuje se samo ako postoji -->
+      <div v-if="application.rejection_reason" class="bg-red-50 border border-red-200 rounded-xl p-6 mb-4">
+        <h2 class="font-bold text-lg mb-3 text-red-700">Razlog odbijanja</h2>
+        <p class="text-red-600 whitespace-pre-wrap">{{ application.rejection_reason }}</p>
+      </div>
+
+      <!-- Textarea za razlog odbijanja — prikazuje se samo za PENDING -->
+      <div v-if="application.status === 'PENDING'" class="bg-white border rounded-xl p-6 mb-4">
+        <h2 class="font-bold text-lg mb-3">Razlog odbijanja (opciono)</h2>
+        <textarea
+          v-model="rejectionReason"
+          placeholder="Unesite razlog odbijanja..."
+          class="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:outline-none focus:border-black"
+          rows="4"
+        ></textarea>
       </div>
 
       <!-- Akcije -->
@@ -102,11 +119,19 @@
             {{ actionLoading ? 'Odbijanje...' : '✕ Odbij' }}
           </button>
           <button
+            v-if="application.status === 'REJECTED'"
+            @click="resubmitApplication"
+            :disabled="actionLoading"
+            class="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+          >
+            {{ actionLoading ? 'Slanje...' : 'Pošalji ponovo na pregled' }}
+          </button>
+          <button
             @click="deleteApplication"
             :disabled="actionLoading"
             class="flex-1 bg-black text-white py-2 rounded-lg font-semibold hover:bg-gray-800 transition disabled:opacity-50"
           >
-            {{ actionLoading ? 'Brisanje...' : '🗑 Obriši' }}
+            {{ actionLoading ? 'Brisanje...' : 'Obriši' }}
           </button>
         </div>
       </div>
@@ -125,6 +150,7 @@ const application = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const actionLoading = ref(false)
+const rejectionReason = ref('')
 
 const BASE_URL = 'http://127.0.0.1:8000'
 
@@ -157,16 +183,13 @@ async function fetchApplication() {
     const response = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${id}`, {
       headers: authHeaders()
     })
-
     if (response.status === 401) {
       router.push('/unauthorized')
       return
     }
-
     if (!response.ok) {
       throw new Error('Nije pronađena aplikacija')
     }
-
     application.value = await response.json()
   } catch (err) {
     error.value = err.message || 'Greška pri učitavanju podataka'
@@ -177,14 +200,12 @@ async function fetchApplication() {
 
 async function approveApplication() {
   if (!confirm('Jeste li sigurni da želite odobrit ovu aplikaciju?')) return
-
   actionLoading.value = true
   try {
     const response = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${application.value.id}/approve`, {
       method: 'PATCH',
       headers: authHeaders()
     })
-
     if (response.ok) {
       application.value = await response.json()
       alert('Aplikacija je odobrena!')
@@ -200,16 +221,16 @@ async function approveApplication() {
 
 async function rejectApplication() {
   if (!confirm('Jeste li sigurni da želite odbiti ovu aplikaciju?')) return
-
   actionLoading.value = true
   try {
     const response = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${application.value.id}/reject`, {
       method: 'PATCH',
-      headers: authHeaders()
+      headers: authHeaders(),
+      body: JSON.stringify({ rejection_reason: rejectionReason.value || null })
     })
-
     if (response.ok) {
       application.value = await response.json()
+      rejectionReason.value = ''
       alert('Aplikacija je odbijena!')
     } else {
       error.value = 'Greška pri odbijanju'
@@ -221,16 +242,35 @@ async function rejectApplication() {
   }
 }
 
+async function resubmitApplication() {
+  if (!confirm('Jeste li sigurni da želite poslati prijavu ponovo na pregled?')) return
+  actionLoading.value = true
+  try {
+    const response = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${application.value.id}/resubmit`, {
+      method: 'PATCH',
+      headers: authHeaders()
+    })
+    if (response.ok) {
+      application.value = await response.json()
+      alert('Prijava je ponovo poslana na pregled!')
+    } else {
+      error.value = 'Greška pri ponovnom slanju'
+    }
+  } catch (err) {
+    error.value = 'Greška pri ponovnom slanju. Provjerite konekciju.'
+  } finally {
+    actionLoading.value = false
+  }
+}
+
 async function deleteApplication() {
   if (!confirm('Jeste li sigurni da želite obrisati ovu aplikaciju?')) return
-
   actionLoading.value = true
   try {
     const response = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${application.value.id}`, {
       method: 'DELETE',
       headers: authHeaders()
     })
-
     if (response.ok) {
       alert('Aplikacija je obrisana!')
       router.push('/admin/mentor-applications')

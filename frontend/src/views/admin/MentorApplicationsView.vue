@@ -108,12 +108,20 @@
                     </span>
                   </td>
                   <td class="px-5 py-3">
-                    <button
-                      @click="deleteApplication(app.id)"
-                      class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-                    >
-                      Obriši
-                    </button>
+                    <div class="flex items-center gap-2">
+                      <button
+                        @click="pregledajPrijavu(app.id)"
+                        class="flex items-center gap-1 text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-gray-600"
+                      >
+                        🔍 Pregledaj
+                      </button>
+                      <button
+                        @click="deleteApplication(app.id)"
+                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
+                      >
+                        Obriši
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -151,12 +159,20 @@
                     </span>
                   </td>
                   <td class="px-5 py-3">
-                    <button
-                      @click="deleteApplication(app.id)"
-                      class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-                    >
-                      Obriši
-                    </button>
+                    <div class="flex items-center gap-2">
+                      <button
+                        @click="pregledajPrijavu(app.id)"
+                        class="flex items-center gap-1 text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-gray-600"
+                      >
+                        🔍 Pregledaj
+                      </button>
+                      <button
+                        @click="deleteApplication(app.id)"
+                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
+                      >
+                        Obriši
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -228,7 +244,6 @@ function authHeaders() {
 
 async function fetchAllApplications() {
   try {
-    // Dohvati sve aplikacije sa admin endpointa (PENDING + APPROVED + REJECTED)
     const res = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications?limit=100`, {
       headers: authHeaders()
     })
@@ -236,30 +251,7 @@ async function fetchAllApplications() {
       router.push('/unauthorized')
       return
     }
-    const pendingData = await res.json()
-
-    // Dohvati odobrene mentorice
-    const approvedRes = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications?limit=100`, {
-      headers: authHeaders()
-    })
-    const approvedData = await approvedRes.json()
-
-    // Dohvati sve mentorice direktno iz baze kroz admin endpoint
-    const allRes = await fetch(`${BASE_URL}/mentoring/mentors?limit=100`)
-    const allData = await allRes.json()
-
-    const approvedMapped = allData.map(m => ({
-      ...m,
-      status: 'APPROVED',
-      first_name: m.full_name ? m.full_name.split(' ')[0] : (m.first_name || ''),
-      last_name: m.full_name ? m.full_name.split(' ').slice(1).join(' ') : (m.last_name || '')
-    }))
-
-    // Spoji pending sa approved, izbjegni duplikate
-    const pendingIds = new Set(pendingData.map(a => a.id))
-    const uniqueApproved = approvedMapped.filter(a => !pendingIds.has(a.id))
-
-    applications.value = [...pendingData, ...uniqueApproved]
+    applications.value = await res.json()
   } catch (e) {
     error.value = 'Greška pri učitavanju podataka.'
   } finally {

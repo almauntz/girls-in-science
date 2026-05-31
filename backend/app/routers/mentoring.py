@@ -1,15 +1,20 @@
 from fastapi import APIRouter, Depends, Form, UploadFile, File, status, HTTPException, Query
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.mentor import Mentor
-
 from pydantic import BaseModel
+import os
+import shutil
+import uuid
 
 router = APIRouter(prefix="/mentoring", tags=["mentoring"])
 
-# POPRAVLJENO: Dodana polja koja admin stranica zahtijeva za pregled prijave
+CV_UPLOAD_DIR = "uploads/cv"
+os.makedirs(CV_UPLOAD_DIR, exist_ok=True)
+
 class MentorOut(BaseModel):
     id: int
     full_name: str
@@ -20,11 +25,9 @@ class MentorOut(BaseModel):
     max_mentees: int
     current_applications_count: int
     is_available: bool
-    # Ova tri polja su falila i rušila frontend:
     email: str | None = None
     years_of_experience: int | None = None
     cv_url: str | None = None
-    # Dodana polja za MentorProfileView:
     position: str | None = None
     institution: str | None = None
 
@@ -43,17 +46,13 @@ def get_mentors(
     limit: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    """Get list of approved mentors"""
     mentors = db.query(Mentor).filter(Mentor.is_approved == True).offset(skip).limit(limit).all()
-    
     result = []
     for mentor in mentors:
         f_name = mentor.first_name or ""
         l_name = mentor.last_name or ""
         full_name = f"{f_name} {l_name}".strip() or "Unknown Mentor"
-
         max_m = mentor.max_mentees or 1
-        
         result.append(MentorOut(
             id=mentor.id,
             full_name=full_name,
@@ -85,16 +84,20 @@ async def apply_as_mentor(
     cv_file: UploadFile = File(...),
     db: Session = Depends(get_db)
 ):
-    """Mentor application endpoint - upisuje mentora na čekanje u bazu podataka."""
-    
     existing_mentor = db.query(Mentor).filter(Mentor.email == email).first()
     if existing_mentor:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Prijava sa ovim emailom već postoji."
         )
 
-    cv_filename = cv_file.filename if cv_file else None
+    # Spremi CV fajl na disk
+    file_extension = os.path.splitext(cv_file.filename)[1]
+    unique_filename = f"{uuid.uuid4()}{file_extension}"
+    file_path = os.path.join(CV_UPLOAD_DIR, unique_filename)
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(cv_file.file, buffer)
 
     new_mentor = Mentor(
         first_name=first_name,
@@ -104,8 +107,8 @@ async def apply_as_mentor(
         years_of_experience=years_of_experience,
         linkedin_url=linkedin_url,
         bio=bio,
-        cv_url=cv_filename,  
-        is_approved=False  
+        cv_url=unique_filename,
+        is_approved=False
     )
 
     db.add(new_mentor)
@@ -118,21 +121,30 @@ async def apply_as_mentor(
     }
 
 
+@router.get("/cv/{filename}")
+def download_cv(filename: str):
+    file_path = os.path.join(CV_UPLOAD_DIR, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="CV fajl nije pronađen."
+        )
+    return FileResponse(
+        path=file_path,
+        filename=filename,
+        media_type="application/octet-stream"
+    )
+
+
 @router.get("/mentors/{id}", response_model=MentorOut)
 def get_mentor_profile(id: int, db: Session = Depends(get_db)):
-    """Get detailed profile of a single mentor"""
     mentor = db.query(Mentor).filter(Mentor.id == id).first()
-    
     if not mentor:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Mentor not found.")
-    
     f_name = mentor.first_name or ""
     l_name = mentor.last_name or ""
     full_name = f"{f_name} {l_name}".strip() or "Unknown Mentor"
-        
     max_m = mentor.max_mentees or 1
-    
-    # POPRAVLJENO: Vraćamo i email, iskustvo i CV da frontend ima šta da iscrta
     return MentorOut(
         id=mentor.id,
         full_name=full_name,
