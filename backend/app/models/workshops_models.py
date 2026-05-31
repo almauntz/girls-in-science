@@ -3,7 +3,7 @@ from typing import Optional
 import enum
 from sqlmodel import SQLModel, Field
 from pydantic import BaseModel, EmailStr
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Index
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Index, Boolean
 from app.database import Base
   
 class WorkshopStatus(str, enum.Enum):
@@ -171,10 +171,10 @@ class Registration(Base):
     previous_experience = Column(String, nullable=True)
     github_profile = Column(String, nullable=True)
 
-    #  NOVO
+    #  NOVO - Mahir
     status = Column(String, nullable=False, default="registered")
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
-
+    was_promoted = Column(Boolean, nullable=False, default=False)
 # indeks za FIFO + brze upite
 Index(
     "idx_workshop_status_created",
@@ -191,7 +191,6 @@ class RegistrationCreate(SQLModel):
     workshop_id: int
     previous_experience: Optional[str] = None
     github_profile: Optional[str] = None
-     # opcionalno (ili ga backend sam setuje)
     status: Optional[str] = "registered"
 
 class RegistrationStatus(str, enum.Enum):

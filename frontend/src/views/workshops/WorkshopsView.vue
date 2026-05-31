@@ -384,7 +384,6 @@ const checkMyPromotion = async () => {
 
     if (!promotion?.is_promoted) return
 
-    // 🔥 ključni dio: već prikazano?
     const alreadyNotified = localStorage.getItem(
       `promotion_notified_${promotion.workshop_id}`
     )
@@ -393,7 +392,7 @@ const checkMyPromotion = async () => {
 
     await Swal.fire(
       '🎉 Automatska prijava!',
-      `Prebačen si na radionicu (ID: ${promotion.workshop_id}).`,
+      `Prebačen si na radionicu: ${promotion.workshop_title}`,
       'success'
     )
 

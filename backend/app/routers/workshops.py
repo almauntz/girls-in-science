@@ -18,7 +18,6 @@ def my_promotion(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # uzmi zadnju VALID registraciju (ne cancelled)
     registration = (
         db.query(Registration)
         .filter(
@@ -32,15 +31,17 @@ def my_promotion(
     if not registration:
         return {"promotion": None}
 
-    # provjeri da li je user bio "promoted"
-    is_promoted = registration.status == "registered"
+    workshop = db.query(Workshop).filter(
+        Workshop.ID_workshop == registration.workshop_id
+    ).first()
 
     return {
         "promotion": {
             "user_id": current_user.id,
             "workshop_id": registration.workshop_id,
+            "workshop_title": workshop.title if workshop else "Radionica",
             "status": registration.status,
-            "is_promoted": is_promoted
+            "is_promoted": registration.was_promoted
         }
     }
 
@@ -89,7 +90,8 @@ def cancel_registration(
                 first_name=user.full_name,
                 last_name="",
                 email=user.email,
-                phone=""
+                phone="",
+                was_promoted=True
             )
 
             db.add(new_registration)
@@ -529,36 +531,7 @@ def waiting_list_status(
     }
 
 
-@router.get("/my-promotion")
-def my_promotion(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    # uzmi zadnju VALID registraciju (ne cancelled)
-    registration = (
-        db.query(Registration)
-        .filter(
-            Registration.user_id == current_user.id,
-            Registration.status.in_(["registered", "waiting"])
-        )
-        .order_by(Registration.created_at.desc())
-        .first()
-    )
 
-    if not registration:
-        return {"promotion": None}
-
-    # provjeri da li je user bio "promoted"
-    is_promoted = registration.status == "registered"
-
-    return {
-        "promotion": {
-            "user_id": current_user.id,
-            "workshop_id": registration.workshop_id,
-            "status": registration.status,
-            "is_promoted": is_promoted
-        }
-    }
 @router.get("/{workshop_id}", response_model=WorkshopDetailRead)
 def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
     workshop = db.get(Workshop, workshop_id)
