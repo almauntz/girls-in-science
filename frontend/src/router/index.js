@@ -40,7 +40,7 @@ const routes = [
   name: 'proposals-admin',
   component: () => import('../views/workshops/ProposalAdminView.vue'),
   meta: { requiresAuth: true }
-},
+  },
   //dodana ruta za detalje radionice
   {
    path: '/workshops/:id',
