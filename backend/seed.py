@@ -8,7 +8,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from app.database import SessionLocal, engine
 from app.models.user import User, UserRole
-from app.models.mentor import Mentor, MentorshipRequest, RequestStatus
+from app.models.mentor import Mentor
+from app.models.mentorship_request import MentorshipRequest, RequestStatus
 from app.core.security import hash_password
 from app.database import Base
 
@@ -95,34 +96,40 @@ for m in test_mentors:
 if student_ids and mentor_ids:
     test_requests = [
         {
-            "student_user_id": student_ids["sara@test.com"],
+            "student_id": student_ids["sara@test.com"],
             "mentor_id": mentor_ids["lamija@mentor.com"],
-            "message": "Zdravo, željela bih da radim sa vama na IT projektima!",
+            "expectations": "Željela bih da nauče programiranje i razvoj veba",
+            "skills_to_improve": "Python, JavaScript, React",
+            "cv_file_path": "/cvs/sara_cv.pdf",
             "status": RequestStatus.PENDING
         },
         {
-            "student_user_id": student_ids["mia@test.com"],
+            "student_id": student_ids["mia@test.com"],
             "mentor_id": mentor_ids["lamija@mentor.com"],
-            "message": "Trebam help sa programiranjem, čula sam da ste odličan mentor",
+            "expectations": "Trebam help sa programiranjem",
+            "skills_to_improve": "Java, Spring Boot, Databases",
+            "cv_file_path": "/cvs/mia_cv.pdf",
             "status": RequestStatus.PENDING
         },
         {
-            "student_user_id": student_ids["ana@test.com"],
+            "student_id": student_ids["ana@test.com"],
             "mentor_id": mentor_ids["lejla@mentor.com"],
-            "message": "Zanimaju me biologijske nauke, možete li me mentorirati?",
-            "status": RequestStatus.APPROVED
+            "expectations": "Biologijske nauke i istraživanja",
+            "skills_to_improve": "Biološka istraživanja, laboratorijska praksa",
+            "cv_file_path": "/cvs/ana_cv.pdf",
+            "status": RequestStatus.ACCEPTED
         },
     ]
     
     for req in test_requests:
         existing = db.query(MentorshipRequest).filter(
-            MentorshipRequest.student_user_id == req["student_user_id"],
+            MentorshipRequest.student_id == req["student_id"],
             MentorshipRequest.mentor_id == req["mentor_id"]
         ).first()
         if not existing:
             mr = MentorshipRequest(**req)
             db.add(mr)
-            print(f"✅ Zahtjev kreiran: {req['status'].value} - student {req['student_user_id']} → mentor {req['mentor_id']}")
+            print(f"✅ Zahtjev kreiran: {req['status'].value} - student {req['student_id']} → mentor {req['mentor_id']}")
         else:
             print(f"ℹ️  Zahtjev već postoji")
     

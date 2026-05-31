@@ -11,12 +11,6 @@ class ApplicationStatus(str, enum.Enum):
     REJECTED = "REJECTED"
 
 
-class RequestStatus(str, enum.Enum):
-    PENDING = "PENDING"
-    APPROVED = "APPROVED"
-    REJECTED = "REJECTED"
-
-
 class Mentor(Base):
     __tablename__ = "mentors"
 
@@ -56,24 +50,3 @@ class Mentor(Base):
 
     # Razlog odbijanja i ponovna prijava
     rejection_reason = Column(Text, nullable=True)
-
-
-class MentorshipRequest(Base):
-    __tablename__ = "mentorship_requests"
-
-    id = Column(Integer, primary_key=True, index=True)
-    student_user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
-    mentor_id = Column(Integer, ForeignKey("mentors.id"), nullable=False, index=True)
-    message = Column(Text, nullable=False)
-    status = Column(
-        Enum(RequestStatus),
-        default=RequestStatus.PENDING,
-        nullable=False,
-        server_default=RequestStatus.PENDING.value
-    )
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
-
-    # Relationships
-    student = relationship("User", foreign_keys=[student_user_id])
-    mentor = relationship("Mentor", foreign_keys=[mentor_id])

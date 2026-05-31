@@ -9,7 +9,8 @@ import os
 import shutil
 
 
-from app.models.mentor import Mentor, MentorshipRequest, RequestStatus
+from app.models.mentor import Mentor
+from app.models.mentorship_request import MentorshipRequest, RequestStatus
 from pydantic import BaseModel
 from datetime import datetime
 import os
@@ -59,36 +60,44 @@ def mentoring_placeholder():
     return {"message": "Mentoring router is working — Team 2 builds here"}
 
 
-@router.get("/mentors", response_model=list[MentorOut])
+@router.get("/test")
+def test_endpoint():
+    return {"status": "OK", "message": "Test endpoint works"}
+
+
+@router.get("/mentors")
 def get_mentors(
     skip: int = Query(default=0, ge=0),
     limit: int = Query(default=10, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    mentors = db.query(Mentor).filter(Mentor.is_approved == True).offset(skip).limit(limit).all()
-    result = []
-    for mentor in mentors:
-        f_name = mentor.first_name or ""
-        l_name = mentor.last_name or ""
-        full_name = f"{f_name} {l_name}".strip() or "Unknown Mentor"
-        max_m = mentor.max_mentees or 1
-        result.append(MentorOut(
-            id=mentor.id,
-            full_name=full_name,
-            bio=mentor.bio,
-            field_of_expertise=mentor.field_of_expertise or "Not specified",
-            linkedin_url=mentor.linkedin_url,
-            preferred_session_format=mentor.preferred_session_format or "Online",
-            max_mentees=max_m,
-            current_applications_count=0,
-            is_available=0 < max_m,
-            email=mentor.email,
-            years_of_experience=mentor.years_of_experience,
-            cv_url=mentor.cv_url,
-            position=mentor.position,
-            institution=mentor.institution
-        ))
-    return result
+    try:
+        print("DEBUG: Starting get_mentors")
+        print(f"DEBUG: db session type: {type(db)}")
+        mentors = db.query(Mentor).offset(skip).limit(limit).all()
+        print(f"DEBUG: Found {len(mentors)} mentors")
+        result = []
+        for mentor in mentors:
+            result.append({
+                "id": mentor.id,
+                "first_name": mentor.first_name,
+                "last_name": mentor.last_name,
+                "email": mentor.email,
+                "field_of_expertise": mentor.field_of_expertise
+            })
+        print("DEBUG: Returning result")
+        return result
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        tb = traceback.format_exc()
+        print(f"ERROR in get_mentors: {error_msg}")
+        print(f"TRACEBACK: {tb}")
+        return {
+            "error": error_msg,
+            "traceback": tb,
+            "type": str(type(e))
+        }
 
 
 @router.post("/apply", status_code=status.HTTP_201_CREATED)
@@ -135,7 +144,9 @@ async def apply_as_mentor(
 
     return {
         "message": "Prijava je uspješno poslana i čeka odobrenje administratora.",
-        "mentor_id": new_mentor.id
+        "mentor_id": new_mentor.id,
+        "first_name": new_mentor.first_name,
+        "email": new_mentor.email
     }
 
 
