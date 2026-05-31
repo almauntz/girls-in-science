@@ -27,6 +27,11 @@ class MentorApplicationOut(BaseModel):
     profile_img_url: Optional[str] = None
     is_approved: bool
     status: ApplicationStatus
+    rejection_reason: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+
+class RejectApplicationRequest(BaseModel):
+    rejection_reason: Optional[str] = None

@@ -108,12 +108,20 @@
                     </span>
                   </td>
                   <td class="px-5 py-3">
-                    <button
-                      @click="deleteApplication(app.id)"
-                      class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-                    >
-                      Obriši
-                    </button>
+                    <div class="flex items-center gap-2">
+                      <button
+                        @click="pregledajPrijavu(app.id)"
+                        class="flex items-center gap-1 text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-gray-600"
+                      >
+                        🔍 Pregledaj
+                      </button>
+                      <button
+                        @click="deleteApplication(app.id)"
+                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
+                      >
+                        Obriši
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -151,12 +159,20 @@
                     </span>
                   </td>
                   <td class="px-5 py-3">
-                    <button
-                      @click="deleteApplication(app.id)"
-                      class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-                    >
-                      Obriši
-                    </button>
+                    <div class="flex items-center gap-2">
+                      <button
+                        @click="pregledajPrijavu(app.id)"
+                        class="flex items-center gap-1 text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-gray-600"
+                      >
+                        🔍 Pregledaj
+                      </button>
+                      <button
+                        @click="deleteApplication(app.id)"
+                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
+                      >
+                        Obriši
+                      </button>
+                    </div>
                   </td>
                 </tr>
               </tbody>
@@ -502,10 +518,10 @@ function authHeaders() {
 
 async function fetchAllApplications() {
   try {
-    const pendingRes = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications?limit=100`, {
+    const res = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications?limit=100`, {
       headers: authHeaders()
     })
-    if (pendingRes.status === 401) {
+    if (res.status === 401) {
       router.push('/unauthorized')
       return
     }
@@ -526,6 +542,7 @@ async function fetchAllApplications() {
     })
 
     applications.value = [...pendingData, ...approvedMapped]
+    applications.value = await res.json()
   } catch (e) {
     error.value = 'Greška pri učitavanju podataka.'
   } finally {

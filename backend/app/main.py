@@ -9,6 +9,8 @@ from app.models.user import User
 from app.models.mentor import Mentor
 from app.routers import admin  # u import sekciji
 from app.models.student import Student
+from app.routers import requests
+from app.models.mentorship_request import MentorshipRequest
 
 Base.metadata.create_all(bind=engine)
 
@@ -37,6 +39,7 @@ app.include_router(forum.router)
 app.include_router(profiles.router)
 app.include_router(students.router)
 app.include_router(admin.router)  # ispod ostalih routera
+app.include_router(requests.router)
 
 @app.get("/")
 def root():
