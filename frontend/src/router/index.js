@@ -66,6 +66,12 @@ const routes = [
   name: 'news-detail',
   component: () => import('../views/news/NewsDetail.vue'),
 },
+{
+  path: '/news/create',
+  name: 'create-news',
+  component: () => import('../views/news/CreateNewsView.vue'),
+  meta: { requiresAuth: true }
+}
 ]
 const router = createRouter({
   history: createWebHistory(),

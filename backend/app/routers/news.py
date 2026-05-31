@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 from app.database import get_db
-from app.models.news import NewsPost
+from app.models.news import NewsPost, NewsPostCreate
+from app.models.role_model import RoleModel
 
 router = APIRouter(prefix="/news", tags=["news"])
 
@@ -11,4 +12,44 @@ def get_news_post(id: int, db: Session = Depends(get_db)):
     if not news_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Objava nije pronađena")
     _ = news_post.role_models
+    return news_post
+
+@router.post("/")
+def create_news_post(
+    news_data: NewsPostCreate,
+    db: Session = Depends(get_db)
+):
+    if not news_data.title or not news_data.content:
+
+        raise HTTPException(
+            status_code=400,
+            detail="Title i content su obavezni"
+        )
+
+    news_post = NewsPost(
+        title=news_data.title,
+        content=news_data.content,
+        author=news_data.author,
+        image_url=news_data.image_url
+    )
+
+    if news_data.role_model_ids:
+
+        role_models = []
+
+        for role_model_id in news_data.role_model_ids:
+
+            role_model = db.get(RoleModel, role_model_id)
+
+            if role_model:
+                role_models.append(role_model)
+
+        news_post.role_models = role_models
+
+    db.add(news_post)
+
+    db.commit()
+
+    db.refresh(news_post)
+
     return news_post
