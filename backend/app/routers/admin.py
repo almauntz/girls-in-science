@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from sqlalchemy.orm import Session
+from datetime import datetime
+from pydantic import BaseModel
 from typing import List, Optional
 from app.database import get_db
 from app.models.mentor import Mentor, ApplicationStatus
+from app.models.student import Student
 from app.models.user import User, UserRole
 from app.core.security import get_current_user
 from app.schemas.mentor import MentorApplicationOut, RejectApplicationRequest
@@ -127,4 +130,163 @@ def get_mentor_application_detail(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Prijava sa ID-em {id} nije pronađena."
         )
+    
     return mentor
+
+
+# ========================================
+# STUDENT APLIKACIJE - Admin panel
+# ========================================
+
+class StudentApplicationOut(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    faculty: str | None = None
+    year_of_study: str | None = None
+    areas_of_interest: str | None = None
+    expectations: str | None = None
+    motivational_message: str | None = None
+    status: str  # String za JSON
+    created_at: datetime | None = None
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/student-applications", response_model=List[StudentApplicationOut])
+def get_pending_student_applications(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Dohvata sve student aplikacije sa statusom PENDING"""
+    applications = (
+        db.query(Student)
+        .filter(Student.status == ApplicationStatus.PENDING)
+        .order_by(Student.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return applications
+
+
+@router.get("/student-applications/{id}", response_model=StudentApplicationOut)
+def get_student_application_detail(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Dohvata sve detalje jedne specifične student prijave"""
+    student = db.query(Student).filter(Student.id == id).first()
+    
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student aplikacija sa ID-em {id} nije pronađena."
+        )
+    
+    return student
+
+
+@router.patch("/student-applications/{id}/approve", response_model=StudentApplicationOut)
+def approve_student_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Admin odobrava student aplikaciju"""
+    student = db.query(Student).filter(Student.id == id).first()
+    
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student aplikacija sa ID-em {id} nije pronađena."
+        )
+    
+    student.status = ApplicationStatus.APPROVED
+    db.commit()
+    db.refresh(student)
+    return student
+
+
+@router.patch("/student-applications/{id}/reject", response_model=StudentApplicationOut)
+def reject_student_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Admin odbija student aplikaciju"""
+    student = db.query(Student).filter(Student.id == id).first()
+    
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student aplikacija sa ID-em {id} nije pronađena."
+        )
+    
+    student.status = ApplicationStatus.REJECTED
+    db.commit()
+    db.refresh(student)
+    return student
+
+
+@router.delete("/student-applications/{id}")
+def delete_student_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Briše student aplikaciju"""
+    student = db.query(Student).filter(Student.id == id).first()
+    
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student aplikacija sa ID-em {id} nije pronađena."
+        )
+    
+    db.delete(student)
+    db.commit()
+    return {"message": f"Student aplikacija sa ID-em {id} je obrisana."}
+
+
+@router.get("/student-applications-approved", response_model=List[StudentApplicationOut])
+def get_approved_student_applications(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Dohvata sve APPROVED student aplikacije"""
+    applications = (
+        db.query(Student)
+        .filter(Student.status == ApplicationStatus.APPROVED)
+        .order_by(Student.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return applications
+
+
+@router.get("/student-applications-rejected", response_model=List[StudentApplicationOut])
+def get_rejected_student_applications(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    """Dohvata sve REJECTED student aplikacije"""
+    applications = (
+        db.query(Student)
+        .filter(Student.status == ApplicationStatus.REJECTED)
+        .order_by(Student.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return applications

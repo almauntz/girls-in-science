@@ -18,6 +18,9 @@ export const getMentorById = (id) => {
   return axios.get(`${API_URL}/mentors/${id}`)
 }
 
+export const registerStudent = (formData) => {
+  const token = localStorage.getItem('token')
+  return axios.post(`${API_URL}/students/register`, formData, {
 export const getMentorApplications = async () => {
   const token = localStorage.getItem('token')
   const response = await axios.get(`${API_URL}/my-applications`, {
@@ -25,7 +28,7 @@ export const getMentorApplications = async () => {
       'Authorization': `Bearer ${token}`
     }
   })
-  return response.data
+
 }
 
 export const updateApplicationStatus = async (applicationId, status) => {
