@@ -97,6 +97,8 @@ export async function createNewsPost(data, token) {
     },
     body: JSON.stringify(data)
   })
+  return response.json()
+}
 
 export async function getNewsPosts() {
   const response = await fetch(`${BASE_URL}/news/`)
