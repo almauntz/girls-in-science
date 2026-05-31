@@ -387,18 +387,29 @@ const checkMyPromotion = async () => {
     })
 
     const data = await res.json()
-
     const promotion = data?.promotion
 
-    if (promotion?.is_promoted) {
-      await Swal.fire(
-        '🎉 Automatska prijava!',
-        `Prebačen si na radionicu (ID: ${promotion.workshop_id}).`,
-        'success'
-      )
+    if (!promotion?.is_promoted) return
 
-      localStorage.setItem('promotion_notified', 'true')
-    }
+    // 🔥 ključni dio: već prikazano?
+    const alreadyNotified = localStorage.getItem(
+      `promotion_notified_${promotion.workshop_id}`
+    )
+
+    if (alreadyNotified) return
+
+    await Swal.fire(
+      '🎉 Automatska prijava!',
+      `Prebačen si na radionicu (ID: ${promotion.workshop_id}).`,
+      'success'
+    )
+
+    // zapamti po workshop_id (ne globalno)
+    localStorage.setItem(
+      `promotion_notified_${promotion.workshop_id}`,
+      'true'
+    )
+
   } catch (err) {
     Swal.fire('Greška', err.message || 'Server greška.', 'error')
   }

@@ -223,7 +223,7 @@ export default {
 
       Object.keys(touched.value).forEach(k => touched.value[k] = true)
 
-      // 🔴 REQUIRED FIELDS
+      
       if (
         !formData.value.first_name ||
         !formData.value.last_name ||
@@ -234,7 +234,6 @@ export default {
         return
       }
 
-      // 🔴 PHONE VALIDATION (min 9 cifara)
       const phone = formData.value.phone?.toString().trim()
 
       if (!/^\d{9,}$/.test(phone)) {
@@ -263,7 +262,7 @@ export default {
         emit('success')
 
       } catch (err) {
-        // 🔥 OVO JE KLJUČNO (FastAPI + fetch/axios safe handling)
+        //
         const message =
           err?.response?.data?.detail ||
           err?.data?.detail ||
