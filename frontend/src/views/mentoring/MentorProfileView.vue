@@ -92,15 +92,17 @@
         </div>
       </div>
 
-      <!-- Glavno dugme -->
       <button
-        :disabled="!mentor.is_available"
-        :class="mentor.is_available
-          ? 'w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition'
-          : 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'"
-      >
-        {{ mentor.is_available ? 'Zatraži mentorstvo' : 'Nedostupno' }}
-      </button>
+  :disabled="!mentor.is_available || requestSent"
+  @click="router.push(`/mentoring/${mentor.id}/zahtjev`)"
+  :class="requestSent
+    ? 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'
+    : mentor.is_available
+      ? 'w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition'
+      : 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'"
+>
+  {{ requestSent ? 'Status: Na čekanju' : mentor.is_available ? 'Zatraži mentorstvo' : 'Nedostupno' }}
+</button>
 
     </div>
   </div>
@@ -116,6 +118,7 @@ const router = useRouter()
 const mentor = ref(null)
 const loading = ref(true)
 const error = ref(null)
+const requestSent = ref(false) 
 
 // Dijeli field_of_expertise po zarezu u više tagova
 const expertiseTags = computed(() => {
