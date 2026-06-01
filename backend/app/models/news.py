@@ -5,6 +5,7 @@ from sqlalchemy import Column, DateTime, Text
 from sqlalchemy.sql import func
 
 
+
 class NewsPostRoleModelLink(SQLModel, table=True):
     __tablename__ = "news_post_role_model_links"
     news_post_id: Optional[int] = Field(default=None, foreign_key="news_posts.id", primary_key=True)

@@ -6,7 +6,7 @@
     <div class="flex justify-end mb-6" v-if="isAdmin">
      <router-link
     to="/news/create"
-    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+    class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition">
     Kreiraj objavu
     </router-link>
     </div>
