@@ -1,5 +1,7 @@
 <template>
   <div class="min-h-screen bg-purple-100">
+    <Notifications />
+
     <div class="text-center py-16 px-4">
       <h1 class="text-4xl font-bold text-gray-800 mb-4">
         Pronađi edukativne radionice
@@ -154,6 +156,8 @@ import Swal from 'sweetalert2'
 import CalendarView from './Calendar.vue'
 
 const BASE_URL = 'http://127.0.0.1:8000'
+import CalendarView from './Calendar.vue' // DODATO: Import komponente
+import Notifications from './Notifications.vue' // DODATO: Import tvoje komponente za notifikacije
 
 const workshops = ref([])
 const error = ref(null)
