@@ -132,7 +132,7 @@
 <script>
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { registerForWorkshop, getMe } from '../../services/api.js' // PROMIJENJENO: sada je getMe
+import { registerForWorkshop, getMe } from '../../services/api.js'
 import Swal from 'sweetalert2'
 import confetti from 'canvas-confetti'
 
@@ -159,27 +159,21 @@ export default {
       github_profile: ''
     })
 
-    // Funkcija za automatsko popunjavanje
     const fillUserData = async () => {
       const token = localStorage.getItem('token')
       if (token) {
         try {
-          // Pozivamo getMe(token) jer tvoj api.js prima token kao parametar
           const user = await getMe(token)
-          
-          if (user) {
-            // Ako tvoj API vraća 'full_name' umjesto odvojenih imena, 
-            // moramo ga razdvojiti na razmaku
-            if (user.full_name) {
-               const parts = user.full_name.split(' ')
-               formData.value.first_name = parts[0] || ''
-               formData.value.last_name = parts.slice(1).join(' ') || ''
-            }
-            
-            formData.value.email = user.email || ''
-            // Popuni telefon ako postoji u odgovoru
-            if (user.phone) formData.value.phone = user.phone
+
+          if (user?.full_name) {
+            const parts = user.full_name.split(' ')
+            formData.value.first_name = parts[0] || ''
+            formData.value.last_name = parts.slice(1).join(' ') || ''
           }
+
+          formData.value.email = user.email || ''
+          if (user.phone) formData.value.phone = user.phone
+
         } catch (error) {
           console.error("Greška prilikom dohvata korisnika:", error)
         }
@@ -200,24 +194,23 @@ export default {
           angle: 60,
           spread: 55,
           origin: { x: 0 },
-          colors: colors
+          colors
         });
         confetti({
           particleCount: 3,
           angle: 120,
           spread: 55,
           origin: { x: 1 },
-          colors: colors
+          colors
         });
 
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      }());
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
     }
 
     const submitForm = async () => {
       const token = localStorage.getItem('token')
+
       if (!token) {
         Swal.fire({
           title: 'Pažnja!',
@@ -230,13 +223,31 @@ export default {
 
       Object.keys(touched.value).forEach(k => touched.value[k] = true)
 
-      if (!formData.value.first_name || !formData.value.last_name || !formData.value.email || !formData.value.phone) {
+      
+      if (
+        !formData.value.first_name ||
+        !formData.value.last_name ||
+        !formData.value.email ||
+        !formData.value.phone
+      ) {
         Swal.fire('Greška', 'Popunite obavezna polja.', 'error')
+        return
+      }
+
+      const phone = formData.value.phone?.toString().trim()
+
+      if (!/^\d{9,}$/.test(phone)) {
+        Swal.fire(
+          'Greška',
+          'Broj telefona mora imati najmanje 9 cifara.',
+          'error'
+        )
         return
       }
 
       try {
         loading.value = true
+
         await registerForWorkshop(formData.value)
 
         triggerConfetti()
@@ -249,8 +260,17 @@ export default {
         })
 
         emit('success')
+
       } catch (err) {
-        Swal.fire('Greška', err.detail || 'Došlo je do greške.', 'error')
+        //
+        const message =
+          err?.response?.data?.detail ||
+          err?.data?.detail ||
+          err?.detail ||
+          'Došlo je do greške.'
+
+        Swal.fire('Greška', message, 'error')
+
       } finally {
         loading.value = false
       }

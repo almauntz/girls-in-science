@@ -1,12 +1,79 @@
 const BASE_URL = 'http://127.0.0.1:8000'
 
-export async function registerUser(email, fullName, password) {
-  const response = await fetch(`${BASE_URL}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, full_name: fullName, password })
+/* =========================================================
+   AUTH HELPERS
+========================================================= */
+
+const getToken = () => {
+  const token = localStorage.getItem('token')
+
+  if (!token || token === 'null' || token === 'undefined') {
+    return null
+  }
+
+  return token
+}
+
+export const getAuthHeaders = () => {
+  const token = getToken()
+
+  if (!token) {
+    return {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`
+  }
+}
+
+/* =========================================================
+   SAFE FETCH WRAPPER
+========================================================= */
+
+const apiRequest = async (url, options = {}) => {
+  const res = await fetch(`${BASE_URL}${url}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {})
+    }
   })
-  return response.json()
+
+  let data
+  try {
+    data = await res.json()
+  } catch {
+    data = null
+  }
+
+  if (!res.ok) {
+    const error = new Error(data?.detail || 'Server error')
+    error.status = res.status
+    error.data = data
+    throw error
+  }
+
+  return data
+}
+
+/* =========================================================
+   AUTH
+========================================================= */
+
+export async function registerUser(email, fullName, password) {
+  return apiRequest('/auth/register', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      email,
+      full_name: fullName,
+      password
+    })
+  })
 }
 
 export async function loginUser(email, password) {
@@ -14,68 +81,77 @@ export async function loginUser(email, password) {
   formData.append('username', email)
   formData.append('password', password)
 
-  const response = await fetch(`${BASE_URL}/auth/login`, {
+  return apiRequest('/auth/login', {
     method: 'POST',
-    body: formData
+    body: formData,
+    headers: {} // form-data NE treba content-type
   })
-  return response.json()
 }
 
-export async function getMe(token) {
-  const response = await fetch(`${BASE_URL}/me`, {
-    headers: { 'Authorization': `Bearer ${token}` }
+/* =========================================================
+   USER
+========================================================= */
+
+export async function getMe() {
+  return apiRequest('/me', {
+    method: 'GET',
+    headers: getAuthHeaders()
   })
-  return response.json()
 }
+
+/* =========================================================
+   WORKSHOPS
+========================================================= */
 
 export async function getActiveWorkshops() {
-  const response = await fetch(`${BASE_URL}/workshops/active`)
-  return response.json()
+  return apiRequest('/workshops/active', {
+    method: 'GET'
+  })
 }
 
 export async function getWorkshopDetails(workshopId) {
-  const response = await fetch(`${BASE_URL}/workshops/${workshopId}`)
-  return response.json()
+  return apiRequest(`/workshops/${workshopId}`, {
+    method: 'GET'
+  })
 }
 
-
+/* =========================================================
+   REGISTRATION
+========================================================= */
 
 export const registerForWorkshop = async (registrationData) => {
-  const token = localStorage.getItem('token');
-
-  const response = await fetch('http://127.0.0.1:8000/workshops/registration', {
+  return apiRequest('/workshops/registration', {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
+    headers: getAuthHeaders(),
     body: JSON.stringify(registrationData)
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw data; 
-  }
-
-  return data;
-};
+  })
+}
 
 export const cancelWorkshopRegistration = async (workshopId) => {
-  const token = localStorage.getItem('token');
-
-  const response = await fetch(`${BASE_URL}/workshops/cancellation/${workshopId}`, {
+  return apiRequest(`/workshops/cancellation/${workshopId}`, {
     method: 'DELETE',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    }
-  });
+    headers: getAuthHeaders()
+  })
+}
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Greška pri otkazivanju prijave.');
-  }
+/* =========================================================
+   WAITING LIST
+========================================================= */
 
-  return response.json();
-};
+export const joinWaitingList = async (workshopId) => {
+  return apiRequest(`/workshops/waiting-list/join/${workshopId}`, {
+    method: 'POST',
+    headers: getAuthHeaders()
+  })
+}
+
+/* =========================================================
+   PROMOTION CHECK
+========================================================= */
+
+export const checkMyPromotion = async () => {
+  return apiRequest('/workshops/my-promotion', {
+    method: 'GET',
+    headers: getAuthHeaders()
+  })
+}

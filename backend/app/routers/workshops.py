@@ -6,38 +6,105 @@ from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.workshops_models import (RegistrationRead, Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
                                           WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WorkshopProposal,
-                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus)
+                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList)
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
 
-@router.delete("/cancellation/{workshop_id}")
-def cancel_registration(
-    workshop_id: int, 
-    db: Session = Depends(get_db), 
+@router.get("/my-promotion")
+def my_promotion(
+    db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    ##MAHIR : sada se provjera radi preko USER.ID!
+    registration = (
+        db.query(Registration)
+        .filter(
+            Registration.user_id == current_user.id,
+            Registration.status.in_(["registered", "waiting"])
+        )
+        .order_by(Registration.created_at.desc())
+        .first()
+    )
+
+    if not registration:
+        return {"promotion": None}
+
+    workshop = db.query(Workshop).filter(
+        Workshop.ID_workshop == registration.workshop_id
+    ).first()
+
+    return {
+        "promotion": {
+            "user_id": current_user.id,
+            "workshop_id": registration.workshop_id,
+            "workshop_title": workshop.title if workshop else "Radionica",
+            "status": registration.status,
+            "is_promoted": registration.was_promoted
+        }
+    }
+
+@router.delete("/cancellation/{workshop_id}")
+def cancel_registration(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # 1. pronađi registraciju korisnika
     statement = select(Registration).where(
         Registration.workshop_id == workshop_id,
         Registration.user_id == current_user.id
     )
-    
-    result = db.execute(statement).scalars().first()
-    
-    if not result:
+
+    registration = db.execute(statement).scalars().first()
+
+    if not registration:
         raise HTTPException(
-            status_code=404, 
+            status_code=404,
             detail="Nije pronađena vaša prijava za ovu radionicu."
         )
-    
-    db.delete(result)
-    db.commit()
-    
-    return {"message": "Uspješno ste odustali od radionice."}
 
+    # 2. obriši registraciju
+    db.delete(registration)
+    db.commit()
+
+    # 3. NAĐI PRVOG NA WAITLISTI (FIFO)
+    waiting_statement = select(WaitingList).where(
+        WaitingList.workshop_id == workshop_id
+    ).order_by(WaitingList.created_at.asc())
+
+    waiting_user = db.execute(waiting_statement).scalars().first()
+
+    promoted_user_id = None
+
+    # 4. PROMOTE
+    if waiting_user:
+        user = db.get(User, waiting_user.user_id)
+
+        if user:
+            new_registration = Registration(
+                user_id=user.id,
+                workshop_id=workshop_id,
+                status="registered",
+                first_name=user.full_name,
+                last_name="",
+                email=user.email,
+                phone="",
+                was_promoted=True
+            )
+
+            db.add(new_registration)
+            db.delete(waiting_user)
+            db.commit()
+
+            promoted_user_id = user.id
+
+    # 5. RESPONSE
+    return {
+        "message": "Uspješno ste odustali od radionice.",
+        "promoted_user_id": promoted_user_id
+    }
 
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
@@ -369,6 +436,101 @@ def check_registration(
     return {
         "registered": exists is not None
     }
+
+
+##LISTA ČEKANJA - WAITING LIST ------------------------------------------------------- MAHIR
+
+@router.post("/waiting-list/join/{workshop_id}")
+def join_waiting_list(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # 1. Provjera da li je korisnik već PRIJAVLJEN
+    existing_registration = db.execute(
+        select(Registration).where(
+            Registration.workshop_id == workshop_id,
+            Registration.user_id == current_user.id,
+            Registration.status == "registered"
+        )
+    ).scalars().first()
+
+    if existing_registration:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Već ste prijavljeni na ovu radionicu."
+        )
+
+    # 2. Provjera da li je već na WAITING LISTI
+    existing_waiting = db.execute(
+        select(WaitingList).where(
+            WaitingList.workshop_id == workshop_id,
+            WaitingList.user_id == current_user.id
+        )
+    ).first()
+
+    if existing_waiting:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Već ste na listi čekanja."
+        )
+
+    # 3. Dodavanje na kraj reda (FIFO)
+    waiting_entry = WaitingList(
+        workshop_id=workshop_id,
+        user_id=current_user.id
+    )
+
+    db.add(waiting_entry)
+    db.commit()
+    db.refresh(waiting_entry)
+
+    # 4. Izračun pozicije u redu
+    position = db.execute(
+        select(WaitingList)
+        .where(WaitingList.workshop_id == workshop_id)
+        .order_by(WaitingList.created_at)
+    ).scalars().all()
+
+    position_index = [w.id for w in position].index(waiting_entry.id) + 1
+
+    return {
+        "message": "Uspješno ste dodani na listu čekanja.",
+        "position": position_index,
+        "total_in_queue": len(position)
+    }
+
+
+@router.get("/waiting-list/status/{workshop_id}")
+def waiting_list_status(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    entry = db.execute(
+        select(WaitingList).where(
+            WaitingList.workshop_id == workshop_id,
+            WaitingList.user_id == current_user.id
+        )
+    ).scalars().first()
+
+    if not entry:
+        return {"on_waiting_list": False}
+
+    queue = db.execute(
+        select(WaitingList)
+        .where(WaitingList.workshop_id == workshop_id)
+        .order_by(WaitingList.created_at)
+    ).scalars().all()
+
+    position = [w.id for w in queue].index(entry.id) + 1
+
+    return {
+        "on_waiting_list": True,
+        "position": position
+    }
+
+
 
 @router.get("/{workshop_id}", response_model=WorkshopDetailRead)
 def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
