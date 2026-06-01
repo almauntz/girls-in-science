@@ -80,6 +80,27 @@
       />
 
     </div>
+  <div class="mb-6">
+      <label class="block mb-2 font-medium">
+        Povezani profili
+      </label>
+
+    <div
+        v-for="model in roleModels"
+      :key="model.id"
+      class="mb-2"
+      >
+      <label class="flex items-center gap-2">
+       <input
+        type="checkbox"
+        :value="model.id"
+        v-model="form.role_model_ids"
+      >
+
+       {{ model.first_name }} {{ model.last_name }}
+      </label>
+    </div>
+   </div>
 
     <!-- Dugme -->
     <button
@@ -95,16 +116,19 @@
 
 <script setup>
 
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import { createNewsPost } from '../../services/api'
 
 import {userRouter} from 'vue-router'
 
+import { getRoleModel } from '../../services/api'
+
 const form = ref({
   title: '',
   content: '',
-  image_url: ''
+  image_url: '',
+  role_model_ids: []
 })
 
 const errors = ref({})
@@ -115,6 +139,11 @@ const serverError = ref('')
 
 const router = userRouter()
 
+const roleModels=ref([])
+
+onMounted(async() => {
+  roleModels.value=await getRoleModel()
+})
 
 function validate() {
 
