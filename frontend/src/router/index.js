@@ -41,6 +41,13 @@ const routes = [
   component: () => import('../views/workshops/ProposalAdminView.vue'),
   meta: { requiresAuth: true }
   },
+  // Ruta za pregled prijava na radionice
+  {
+  path: '/workshops/admin/registrations',
+  name: 'registrations-admin',
+  component: () => import('../views/workshops/UsersListOnWorkshop.vue'),
+  meta: { requiresAuth: true }
+  },
   //Ruta za prikaz prijedloga radionica koje je korisnik poslao
   {
   path: '/workshops/my-proposals',
