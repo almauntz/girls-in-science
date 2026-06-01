@@ -183,6 +183,17 @@ Index(
     Registration.created_at
 )
     
+class UserNotification(SQLModel, table=True):
+    __tablename__ = "user_notifications"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field()  # Poveznica za kojeg je korisnika notifikacija
+    title: str = Field()    # Naslov (npr. "Nova radionica je dostupna! 🎉")
+    body: str = Field()     # Tekst poruke
+    is_read: bool = Field(default=False)  # Da li je korisnik vidio poruku
+    created_at: Optional[datetime] = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )    
 class RegistrationCreate(SQLModel):
     first_name: str = Field(min_length=2) 
     last_name: str = Field(min_length=2)

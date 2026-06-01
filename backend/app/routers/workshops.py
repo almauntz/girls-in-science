@@ -6,7 +6,7 @@ from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.workshops_models import (RegistrationRead, Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
                                           WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WorkshopProposal,
-                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList)
+                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList, UserNotification)
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -175,8 +175,50 @@ def create_workshop(
     db.add(workshop)
     db.commit()
     db.refresh(workshop)
+    try:
+        svi_korisnici = db.execute(select(User)).scalars().all()
+        for korisnik in svi_korisnici:
+            nova_notifikacija = UserNotification(
+                user_id=korisnik.id,
+                title="Nova radionica je dostupna! 🎉",
+                body=f"Objavljena je radionica: '{workshop.title}'. Prijavite se na vrijeme!"
+            )
+            db.add(nova_notifikacija)
+        db.commit()
+        print("✅ Notifikacije uspješno spremljene u bazu!")
+    except Exception as e:
+        print(f"🚨 Greška pri kreiranju notifikacija: {e}")
     return workshop
 
+@router.get("/unread-notifications")
+def get_unread_notifications(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    try:
+        statement = select(UserNotification).where(
+            UserNotification.user_id == current_user.id,
+            UserNotification.is_read == False
+        )
+        notifications = db.execute(statement).scalars().all()
+        
+        result = [
+            {"id": n.id, "title": n.title, "body": n.body} 
+            for n in notifications
+        ]
+        
+        for n in notifications:
+            n.is_read = True
+            db.add(n)
+            
+        if notifications:
+            db.commit()
+            
+        return result
+    except Exception as e:
+        print(f"🚨 GREŠKA U NOTIFIKACIJAMA: {e}")
+        return []
+# =============================================================
 
 @router.patch("/{workshop_id}", response_model=WorkshopRead)
 def update_workshop(
