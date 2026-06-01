@@ -40,3 +40,19 @@ class NewsPostUpdate(SQLModel):
     author: Optional[str] = None
     image_url: Optional[str] = None
     role_model_ids: Optional[List[int]] = None
+
+
+class RoleModelSimple(SQLModel):
+    id: int
+    first_name: str
+    last_name: str
+    stem_field: str
+
+class NewsPostRead(SQLModel):
+    id: int
+    title: str
+    content: str
+    author: Optional[str] = None
+    image_url: Optional[str] = None
+    created_at: Optional[datetime] = None
+    role_models: List[RoleModelSimple] = []

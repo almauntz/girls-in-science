@@ -4,11 +4,12 @@ from app.database import get_db
 from app.models.role_model import RoleModel
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.news import NewsPost, NewsPostCreate, NewsPostUpdate
+from app.models.news import NewsPost, NewsPostCreate, NewsPostUpdate, NewsPostRead
+
 
 router = APIRouter(prefix="/news", tags=["news"])
 
-@router.get("/{id}")
+@router.get("/{id}", response_model=NewsPostRead)
 def get_news_post(id: int, db: Session = Depends(get_db)):
     news_post = db.get(NewsPost, id)
     if not news_post:
@@ -16,45 +17,36 @@ def get_news_post(id: int, db: Session = Depends(get_db)):
     _ = news_post.role_models
     return news_post
 
-@router.post("/")
+@router.post("/", response_model=NewsPostRead)
 def create_news_post(
     news_data: NewsPostCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Samo administratorica može kreirati objave")
     if not news_data.title or not news_data.content:
-
-        raise HTTPException(
-            status_code=400,
-            detail="Title i content su obavezni"
-        )
-
+        raise HTTPException(status_code=400, detail="Title i content su obavezni")
     news_post = NewsPost(
         title=news_data.title,
         content=news_data.content,
         author=news_data.author,
         image_url=news_data.image_url
     )
-
     if news_data.role_model_ids:
-
         role_models = []
-
         for role_model_id in news_data.role_model_ids:
-
             role_model = db.get(RoleModel, role_model_id)
-
             if role_model:
                 role_models.append(role_model)
-
         news_post.role_models = role_models
-
     db.add(news_post)
-
     db.commit()
-
     db.refresh(news_post)
-
+    _ = news_post.role_models
     return news_post
+
+
 @router.get("/")
 def get_news_posts(db: Session = Depends(get_db)):
     statement = select(NewsPost).order_by(NewsPost.created_at.desc())
@@ -76,7 +68,7 @@ def delete_news_post(
     db.commit()
     return {"message": "Objava je uspješno obrisana"}
 
-@router.patch("/{id}")
+@router.patch("/{id}", response_model=NewsPostRead)
 def update_news_post(
     id: int,
     data: NewsPostUpdate,
@@ -102,4 +94,5 @@ def update_news_post(
     db.commit()
     db.refresh(news_post)
     _ = news_post.role_models
+    db.refresh(news_post)
     return news_post

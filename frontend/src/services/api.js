@@ -89,7 +89,7 @@ export async function deleteNewsPost(id, token) {
 }
 
 export async function createNewsPost(data, token) {
-  const response = await fetch(`${BASE_URL}/news`, {
+  const response = await fetch(`${BASE_URL}/news/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
