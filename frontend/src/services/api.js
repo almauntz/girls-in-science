@@ -104,3 +104,16 @@ export async function getNewsPosts() {
   const response = await fetch(`${BASE_URL}/news/`)
   return response.json()
 }
+
+export async function updateNewsPost(id, data) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/news/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
