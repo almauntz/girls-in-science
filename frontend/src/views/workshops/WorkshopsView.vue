@@ -1,5 +1,7 @@
 <template>
   <div class="min-h-screen bg-purple-100">
+    <Notifications />
+
     <div class="text-center py-16 px-4">
       <h1 class="text-4xl font-bold text-gray-800 mb-4">
         Pronađi edukativne radionice
@@ -103,8 +105,7 @@
         </div>
       </div>
     </div>
-  <!-- Floating pill button -->
-    <router-link
+  <router-link
       to="/workshops/my-proposals"
       class="fixed bottom-8 right-8 flex items-center gap-3 text-white text-sm font-bold px-6 py-4 rounded-full shadow-2xl transition-all hover:-translate-y-1 hover:shadow-purple-400/50 hover:shadow-2xl"
       style="background: linear-gradient(135deg, #7c3aed, #a855f7); box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45);"
@@ -126,6 +127,7 @@
 import { ref, onMounted } from 'vue'
 import Swal from 'sweetalert2'
 import CalendarView from './Calendar.vue' // DODATO: Import komponente
+import Notifications from './Notifications.vue' // DODATO: Import tvoje komponente za notifikacije
 
 const workshops = ref([])
 const error = ref(null)
