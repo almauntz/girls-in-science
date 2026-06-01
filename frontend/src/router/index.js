@@ -67,15 +67,15 @@ const routes = [
   component: () => import('../views/news/NewsView.vue'),
 },
 {
-  path: '/news/:id',
-  name: 'news-detail',
-  component: () => import('../views/news/NewsDetail.vue'),
-},
-{
   path: '/news/create',
   name: 'create-news',
   component: () => import('../views/news/CreateNewsView.vue'),
   meta: { requiresAuth: true }
+},
+{
+  path: '/news/:id',
+  name: 'news-detail',
+  component: () => import('../views/news/NewsDetail.vue'),
 }
 ]
 const router = createRouter({

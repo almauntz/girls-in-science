@@ -99,6 +99,8 @@ import { ref } from 'vue'
 
 import { createNewsPost } from '../../services/api'
 
+import {userRouter} from 'vue-router'
+
 const form = ref({
   title: '',
   content: '',
@@ -110,6 +112,8 @@ const errors = ref({})
 const successMessage = ref('')
 
 const serverError = ref('')
+
+const router = userRouter()
 
 
 function validate() {
@@ -146,6 +150,8 @@ async function handleSubmit() {
       form.value,
       token
     )
+    successMessage.value='Objava uspjesno kreirana'
+    router.push('/news')
 
     if (result.id) {
 

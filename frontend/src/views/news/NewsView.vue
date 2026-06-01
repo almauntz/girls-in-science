@@ -3,6 +3,14 @@
     <h1 class="text-3xl font-bold text-gray-900 mb-1">Blog i vijesti</h1>
     <p class="text-gray-500 mb-6">Pratite aktivnosti centra i žene u STEM oblastima</p>
 
+    <div class="flex justify-end mb-6" v-if="isAdmin">
+     <router-link
+    to="/news/create"
+    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+    Kreiraj objavu
+    </router-link>
+    </div>
+
     <div v-if="loading" class="text-center text-gray-500">
       Učitavanje...
     </div>
@@ -23,13 +31,20 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { getNewsPosts } from '../../services/api.js'
+import { getMe, getNewsPosts } from '../../services/api.js'
 import NewsCard from '../../components/NewsCard.vue'
 
 const newsPosts = ref([])
 const loading = ref(true)
+const isAdmin=ref(false)
 
 onMounted(async () => {
+  const token=localStorage.getItem('token')
+
+  if (token) {
+    const user=await getMe(token)
+    isAdmin.value=user.role==='admin'
+  }
   newsPosts.value = await getNewsPosts()
   loading.value = false
 })
