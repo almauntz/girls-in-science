@@ -4,11 +4,15 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.models.mentor import Mentor, MentorshipRequest, RequestStatus
-from pydantic import BaseModel
-from datetime import datetime
+from app.models.student import Student
 import os
 import shutil
+
+from app.models.mentor import Mentor
+from app.models.mentorship_request import MentorshipRequest, RequestStatus
+from pydantic import BaseModel
+from datetime import datetime
+from typing import Optional
 import uuid
 
 router = APIRouter(prefix="/mentoring", tags=["mentoring"])
@@ -19,18 +23,18 @@ os.makedirs(CV_UPLOAD_DIR, exist_ok=True)
 class MentorOut(BaseModel):
     id: int
     full_name: str
-    bio: str | None = None
+    bio: Optional[str] = None
     field_of_expertise: str
-    linkedin_url: str | None = None
-    preferred_session_format: str | None = None
+    linkedin_url: Optional[str] = None
+    preferred_session_format: Optional[str] = None
     max_mentees: int
     current_applications_count: int
     is_available: bool
-    email: str | None = None
-    years_of_experience: int | None = None
-    cv_url: str | None = None
-    position: str | None = None
-    institution: str | None = None
+    email: Optional[str] = None
+    years_of_experience: Optional[int] = None
+    cv_url: Optional[str] = None
+    position: Optional[str] = None
+    institution: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -38,13 +42,13 @@ class MentorOut(BaseModel):
 
 class MentorshipRequestOut(BaseModel):
     id: int
-    student_user_id: int
+    student_user_id: Optional[int] = None
     student_name: str
     student_email: str
-    message: str
+    message: str = ""
     status: str
     created_at: datetime
-    
+
     class Config:
         from_attributes = True
 
@@ -176,6 +180,56 @@ def get_mentor_profile(id: int, db: Session = Depends(get_db)):
     )
 
 
+@router.post("/students/register", status_code=status.HTTP_201_CREATED)
+async def register_student(
+    full_name: str = Form(...),
+    email: str = Form(...),
+    university: str = Form(None),
+    faculty: str = Form(None),
+    year_of_study: str = Form(None),
+    city_country: str = Form(None),
+    areas_of_interest: str = Form(None),
+    has_business_idea: str = Form(None),
+    expectations: str = Form(None),
+    skills_to_improve: str = Form(None),
+    preferred_session_format: str = Form(None),
+    session_commitment: bool = Form(False),
+    consent_data: bool = Form(False),
+    consent_evaluation: bool = Form(False),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    existing = db.query(Student).filter(Student.email == email).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Prijava sa ovim emailom već postoji."
+        )
+
+    student = Student(
+        full_name=full_name,
+        email=email,
+        university=university,
+        faculty=faculty,
+        year_of_study=year_of_study,
+        city_country=city_country,
+        areas_of_interest=areas_of_interest,
+        has_business_idea=has_business_idea,
+        expectations=expectations,
+        skills_to_improve=skills_to_improve,
+        preferred_session_format=preferred_session_format,
+        session_commitment=session_commitment,
+        consent_data=consent_data,
+        consent_evaluation=consent_evaluation
+    )
+
+    db.add(student)
+    db.commit()
+    db.refresh(student)
+
+    return {"message": "Prijava uspješno poslana!", "id": student.id}
+
+
 @router.get("/my-applications", response_model=list[MentorshipRequestOut])
 def get_mentor_applications(
     current_user: User = Depends(get_current_user),
@@ -190,17 +244,20 @@ def get_mentor_applications(
     applications = db.query(MentorshipRequest).filter(
         MentorshipRequest.mentor_id == mentor.id
     ).order_by(MentorshipRequest.created_at.desc()).all()
+
     result = []
     for app in applications:
         student_name = app.student.full_name if app.student else "Unknown"
         student_email = app.student.email if app.student else "unknown@example.com"
         status_value = app.status.value if isinstance(app.status, RequestStatus) else str(app.status)
+        student_user_id = app.student_id
+
         result.append(MentorshipRequestOut(
             id=app.id,
-            student_user_id=app.student_user_id,
+            student_user_id=student_user_id,
             student_name=student_name,
             student_email=student_email,
-            message=app.message,
+            message=app.message or "",
             status=status_value,
             created_at=app.created_at
         ))
@@ -232,7 +289,7 @@ def update_application_status(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Nemate dozvolu da ažurirate ovaj zahtjev."
         )
-    valid_statuses = ["PENDING", "APPROVED", "REJECTED"]
+    valid_statuses = ["PENDING", "ACCEPTED", "REJECTED"]
     if request.status not in valid_statuses:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
