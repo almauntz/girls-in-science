@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, DateTime, Text
 from sqlalchemy.sql import func
-from app.models.role_model import RoleModel
+
 
 
 class NewsPostRoleModelLink(SQLModel, table=True):

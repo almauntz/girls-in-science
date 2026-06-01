@@ -26,13 +26,15 @@
     <div class="mb-4">
 
       <label class="block mb-2 font-medium">
-        Naslov
+        Naslov<span class="text-red-500">*</span>
       </label>
 
       <input
-        v-model="form.title"
-        type="text"
-        class="w-full border rounded p-2"
+         v-model="form.title"
+         type="text"
+         class="w-full border rounded p-2"
+        :class="{ 'border-red-500': errors.title }"
+   
       />
 
       <p
@@ -48,13 +50,14 @@
     <div class="mb-4">
 
       <label class="block mb-2 font-medium">
-        Sadržaj
+        Sadržaj<span class="text-red-500">*</span>
       </label>
 
       <textarea
         v-model="form.content"
         rows="6"
         class="w-full border rounded p-2"
+        :class="{ 'border-red-500': errors.content }"
       ></textarea>
 
       <p
@@ -120,9 +123,9 @@ import { onMounted, ref } from 'vue'
 
 import { createNewsPost } from '../../services/api'
 
-import {userRouter} from 'vue-router'
+import { useRouter } from 'vue-router'
 
-import { getRoleModel } from '../../services/api'
+import { getRoleModels } from '../../services/api'
 
 const form = ref({
   title: '',
@@ -137,12 +140,12 @@ const successMessage = ref('')
 
 const serverError = ref('')
 
-const router = userRouter()
+const router = useRouter()
 
 const roleModels=ref([])
 
 onMounted(async() => {
-  roleModels.value=await getRoleModel()
+  roleModels.value=await getRoleModels()
 })
 
 function validate() {
