@@ -32,7 +32,7 @@
       <input
          v-model="form.title"
          type="text"
-         class="w-full border rounded p-2"
+         class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
         :class="{ 'border-red-500': errors.title }"
    
       />
@@ -56,7 +56,7 @@
       <textarea
         v-model="form.content"
         rows="6"
-        class="w-full border rounded p-2"
+        class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
         :class="{ 'border-red-500': errors.content }"
       ></textarea>
 
@@ -79,36 +79,31 @@
       <input
         v-model="form.image_url"
         type="text"
-        class="w-full border rounded p-2"
+        class="w-full border rounded p-2 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-violet-500"
       />
 
     </div>
-  <div class="mb-6">
-      <label class="block mb-2 font-medium">
-        Povezani profili
-      </label>
+<div class="mb-6">
+  <label class="block mb-2 font-medium">
+    Povezani profili
+  </label>
 
-    <div
-        v-for="model in roleModels"
-      :key="model.id"
-      class="mb-2"
-      >
-      <label class="flex items-center gap-2">
-       <input
-        type="checkbox"
-        :value="model.id"
-        v-model="form.role_model_ids"
-      >
-
-       {{ model.first_name }} {{ model.last_name }}
-      </label>
-    </div>
-   </div>
+  <Multiselect
+    v-model="form.role_model_ids"
+    mode="tags"
+    :options="profileOptions"
+    valueProp="id"
+    label="full_name"
+    trackBy="full_name"
+    :searchable="true"
+    placeholder="Pretraži i odaberi profile"
+  />
+</div>
 
     <!-- Dugme -->
     <button
       @click="handleSubmit"
-      class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded"
+      class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition"
     >
       Kreiraj objavu
     </button>
@@ -126,6 +121,9 @@ import { createNewsPost } from '../../services/api'
 import { useRouter } from 'vue-router'
 
 import { getRoleModels } from '../../services/api'
+import Multiselect from '@vueform/multiselect'
+
+import '@vueform/multiselect/themes/default.css'
 
 const form = ref({
   title: '',
@@ -143,7 +141,14 @@ const serverError = ref('')
 const router = useRouter()
 
 const roleModels=ref([])
+import { computed } from 'vue'
 
+const profileOptions = computed(() =>
+  roleModels.value.map(model => ({
+    id: model.id,
+    full_name: `${model.first_name} ${model.last_name}`
+  }))
+)
 onMounted(async() => {
   roleModels.value=await getRoleModels()
 })
@@ -182,20 +187,21 @@ async function handleSubmit() {
       form.value,
       token
     )
-    successMessage.value='Objava uspjesno kreirana'
+  if (result.id) {
+
+   successMessage.value =
+    'Objava uspješno kreirana'
+
+   setTimeout(() => {
     router.push('/news')
+  }, 2000)
 
-    if (result.id) {
+} else {
 
-      successMessage.value =
-        'Objava uspješno kreirana'
+  serverError.value =
+    result.detail || 'Greška pri kreiranju objave'
 
-    } else {
-
-      serverError.value =
-        result.detail || 'Greška pri kreiranju objave'
-
-    }
+}
 
   } catch {
 
