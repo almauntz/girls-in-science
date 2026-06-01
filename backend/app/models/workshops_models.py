@@ -180,3 +180,17 @@ class RegistrationCreate(SQLModel):
     workshop_id: int
     previous_experience: Optional[str] = None
     github_profile: Optional[str] = None
+
+
+class RegistrationRead(BaseModel):
+    id: int
+    user_id: Optional[int]
+    first_name: str
+    last_name: str
+    email: str
+    phone: str
+    previous_experience: Optional[str]
+    github_profile: Optional[str]
+ 
+    class Config:
+        from_attributes = True
