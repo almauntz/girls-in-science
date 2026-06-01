@@ -153,13 +153,14 @@ async function submitRequest() {
   buttonState.value = 'loading' // Postavljanje loading stanja
   try {
     const token = localStorage.getItem('token')
+    console.log('Token:', token)
     const formData = new FormData()
     formData.append('mentor_id', route.params.id)
     formData.append('expectations', expectations.value)
     formData.append('skills_to_improve', skills.value)
     formData.append('cv', cvFile.value)
 
-    const response = await fetch('http://127.0.0.1:8000/mentoring/requests', {
+    const response = await fetch('http://127.0.0.1:8000/mentoring/requests/', {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${token}` },
       body: formData
