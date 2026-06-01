@@ -1,7 +1,7 @@
 """add registration read schema
 
 Revision ID: 6562f9b20ac7
-Revises: c63bf4016a93
+Revises: 27e8127ef2c0
 Create Date: 2026-06-01 14:59:24.005917
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '6562f9b20ac7'
-down_revision: Union[str, Sequence[str], None] = 'c63bf4016a93'
+down_revision: Union[str, Sequence[str], None] = '27e8127ef2c0'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
