@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.workshops_models import (Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
+from app.models.workshops_models import (RegistrationRead, Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
                                           WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WorkshopProposal,
                                             ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus)
 from sqlalchemy import func
@@ -391,3 +391,20 @@ def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
         status=workshop.status,
         free_spots=free_spots
     )
+
+@router.get("/{workshop_id}/registrations", response_model=list[RegistrationRead])
+def get_workshop_registrations(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+ 
+    registrations = db.execute(
+        select(Registration).where(Registration.workshop_id == workshop_id)
+    ).scalars().all()
+ 
+    return registrations
+ 
