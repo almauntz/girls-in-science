@@ -73,7 +73,7 @@ class WorkshopCreate(BaseModel):
     capacity: int
     organizer_name: str
     organizer_email: str
-    organizer_phone: str
+    organizer_phone: Optional[str] = None
 
 
 class WorkshopUpdate(BaseModel):
@@ -102,7 +102,7 @@ class WorkshopRead(BaseModel):
     created_at: Optional[datetime]
     organizer_name: str
     organizer_email: str
-    organizer_phone: str
+    organizer_phone: Optional[str]
 
     class Config:
         from_attributes = True
@@ -169,7 +169,7 @@ class WorkshopDetailRead(BaseModel):
     free_spots: int
     organizer_name: str
     organizer_email: str
-    organizer_phone: str
+    organizer_phone: Optional[str]
 
     class Config:
         from_attributes = True
