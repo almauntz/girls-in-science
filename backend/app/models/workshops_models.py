@@ -35,6 +35,10 @@ class Workshop(WorkshopBase, table=True):
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+    organizer_name: Optional[str] = Field(default=None)
+    organizer_email: Optional[str] = Field(default=None)
+    organizer_phone: Optional[str] = Field(default=None)
+    
 
 
 # Klasa za prijedlog radionice od strane korisnice
@@ -66,6 +70,9 @@ class WorkshopCreate(BaseModel):
     date: datetime
     end_time: datetime
     capacity: int
+    organizer_name: str
+    organizer_email: str
+    organizer_phone: Optional[str] = None
 
 
 class WorkshopUpdate(BaseModel):
@@ -75,6 +82,9 @@ class WorkshopUpdate(BaseModel):
     date: Optional[datetime] = None
     end_time: Optional[datetime] = None
     capacity: Optional[int] = None
+    organizer_name: Optional[str] = None
+    organizer_email: Optional[str] = None
+    organizer_phone: Optional[str] = None
 
 
 
@@ -89,6 +99,10 @@ class WorkshopRead(BaseModel):
     status: WorkshopStatus
     created_by_id: Optional[int]
     created_at: Optional[datetime]
+    organizer_name: str
+    organizer_email: str
+    organizer_phone: Optional[str]
+
     class Config:
         from_attributes = True
 
@@ -151,7 +165,11 @@ class WorkshopDetailRead(BaseModel):
     end_time: datetime
     capacity: int
     status: WorkshopStatus
-    free_spots:int
+    free_spots: int
+    organizer_name: str
+    organizer_email: str
+    organizer_phone: Optional[str]
+
     class Config:
         from_attributes = True
 
