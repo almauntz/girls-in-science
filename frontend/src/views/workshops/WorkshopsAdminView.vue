@@ -116,6 +116,29 @@
                      :class="{ 'input-error': errors.capacity }"/>
               <span v-if="errors.capacity" class="err-msg">{{ errors.capacity }}</span>
             </div>
+
+            <!-- Organizer fields -->
+            <div class="field">
+              <label>Organizator - Ime i prezime <span class="req">*</span></label>
+              <input v-model="form.organizer_name" type="text" placeholder="npr. Ime Prezime"
+                     :class="{ 'input-error': errors.organizer_name }"/>
+              <span v-if="errors.organizer_name" class="err-msg">{{ errors.organizer_name }}</span>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label>Organizator - Email <span class="req">*</span></label>
+                <input v-model="form.organizer_email" type="email" placeholder="organizator@primjer.com"
+                       :class="{ 'input-error': errors.organizer_email }"/>
+                <span v-if="errors.organizer_email" class="err-msg">{{ errors.organizer_email }}</span>
+              </div>
+              <div class="field">
+                <label>Organizator - Telefon</label>
+                <input v-model="form.organizer_phone" type="text" placeholder="+387 61 123 456"
+                       :class="{ 'input-error': errors.organizer_phone }"/>
+                <span v-if="errors.organizer_phone" class="err-msg">{{ errors.organizer_phone }}</span>
+              </div>
+            </div>
           </div>
  
           <div class="modal-foot">
@@ -194,6 +217,21 @@
             <div class="field field-narrow">
               <label>Kapacitet</label>
               <input v-model.number="form.capacity" type="number" min="1" placeholder="—"/>
+            </div>
+            <!-- Organizer fields in edit modal -->
+            <div class="field">
+              <label>Organizator - Ime i prezime</label>
+              <input v-model="form.organizer_name" type="text" placeholder="Ostavi prazno za ne mijenjanje"/>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label>Organizator - Email</label>
+                <input v-model="form.organizer_email" type="email" placeholder="Ostavi prazno za ne mijenjanje"/>
+              </div>
+              <div class="field">
+                <label>Organizator - Telefon</label>
+                <input v-model="form.organizer_phone" type="text" placeholder="Ostavi prazno za ne mijenjanje"/>
+              </div>
             </div>
           </div>
  
@@ -330,13 +368,17 @@ const form = reactive({
   location: '',
   date: '',       // format: "YYYY-MM-DD" (iz type="date" inputa)
   end_time: '',   // format: "YYYY-MM-DD" (iz type="date" inputa)
-  capacity: null
+  capacity: null,
+  organizer_name: '',
+  organizer_email: '',
+  organizer_phone: ''
 })
  
 // Poruke grešaka validacije — prikazuju se ispod polja
 const errors = reactive({
   title: '', description: '', location: '',
   date: '', end_time: '', capacity: '',
+  organizer_name: '', organizer_email: '', organizer_phone: '',
   editId: '',   // greška za polje ID-a u edit modalu
   deleteId: ''  // greška za polje ID-a u delete modalu
 })
@@ -380,11 +422,13 @@ function closeModal() {
 function resetAll() {
   Object.assign(form, {
     title: '', description: '', location: '',
-    date: '', end_time: '', capacity: null
+    date: '', end_time: '', capacity: null,
+    organizer_name: '', organizer_email: '', organizer_phone: ''
   })
   Object.assign(errors, {
     title: '', description: '', location: '',
     date: '', end_time: '', capacity: '',
+    organizer_name: '', organizer_email: '', organizer_phone: '',
     editId: '', deleteId: ''
   })
   editId.value   = null
@@ -399,7 +443,8 @@ function resetAll() {
 function validateCreate() {
   Object.assign(errors, {
     title: '', description: '', location: '',
-    date: '', end_time: '', capacity: ''
+    date: '', end_time: '', capacity: '',
+    organizer_name: '', organizer_email: '', organizer_phone: ''
   })
   let ok = true
  
@@ -417,6 +462,11 @@ function validateCreate() {
     { errors.capacity = 'Kapacitet mora biti ≥ 1.'; ok = false }
   if (form.date && form.end_time && form.date > form.end_time)
     { errors.end_time = 'Datum kraja mora biti nakon početka.'; ok = false }
+
+  if (!form.organizer_name.trim())
+    { errors.organizer_name = 'Ime organizatora je obavezno.'; ok = false }
+  if (!form.organizer_email.trim())
+    { errors.organizer_email = 'Email organizatora je obavezan.'; ok = false }
  
   return ok
 }
@@ -483,7 +533,10 @@ async function doCreate() {
       location:    form.location.trim(),
       date:        dateToISO(form.date),
       end_time:    dateToISO(form.end_time),
-      capacity:    form.capacity
+        capacity:    form.capacity,
+        organizer_name: form.organizer_name.trim(),
+        organizer_email: form.organizer_email.trim(),
+        organizer_phone: form.organizer_phone.trim()
     }
     const res = await fetch(`${BASE_URL}/workshops/`, {
       method:  'POST',
@@ -530,7 +583,10 @@ async function loadWorkshop() {
       location:    '',  // WorkshopDetailRead ne vraća location, admin unese ručno
       date:        w.date     ? w.date.slice(0, 10)     : '',
       end_time:    w.end_time ? w.end_time.slice(0, 10) : '',
-      capacity:    w.capacity ?? null
+      capacity:    w.capacity ?? null,
+      organizer_name: w.organizer_name ?? '',
+      organizer_email: w.organizer_email ?? '',
+      organizer_phone: w.organizer_phone ?? ''
     })
     editStep.value = 2 // prijeđi na drugi korak
   } catch {
@@ -553,6 +609,9 @@ async function doEdit() {
     if (form.date)               body.date        = dateToISO(form.date)
     if (form.end_time)           body.end_time    = dateToISO(form.end_time)
     if (form.capacity)           body.capacity    = form.capacity
+      if (form.organizer_name && form.organizer_name.trim()) body.organizer_name = form.organizer_name.trim()
+      if (form.organizer_email && form.organizer_email.trim()) body.organizer_email = form.organizer_email.trim()
+      if (form.organizer_phone && form.organizer_phone.trim()) body.organizer_phone = form.organizer_phone.trim()
  
     const res = await fetch(`${BASE_URL}/workshops/${editId.value}`, {
       method:  'PATCH',

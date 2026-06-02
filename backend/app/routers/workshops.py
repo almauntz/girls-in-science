@@ -170,7 +170,10 @@ def create_workshop(
         date=data.date,
         end_time=data.end_time,
         capacity=data.capacity,
-        created_by_id=admin.id
+        created_by_id=admin.id,
+        organizer_name=data.organizer_name,
+        organizer_email=data.organizer_email,
+        organizer_phone=data.organizer_phone
     )
     db.add(workshop)
     db.commit()
@@ -593,6 +596,9 @@ def get_workshop_details(workshop_id: int, db: Session = Depends(get_db)):
         end_time=workshop.end_time,
         capacity=workshop.capacity,
         status=workshop.status,
+        organizer_name=workshop.organizer_name,
+        organizer_email=workshop.organizer_email,
+        organizer_phone=workshop.organizer_phone,
         free_spots=free_spots
     )
 

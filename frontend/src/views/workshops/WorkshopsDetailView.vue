@@ -14,6 +14,13 @@
         <div>
           <h2 class="text-2xl font-bold text-gray-800 mb-4">Opis radionice</h2>
           <p class="text-gray-600 leading-relaxed">{{ workshop.description }}</p>
+          <!-- Organizator: prikaz ispod opisa -->
+          <div class="pt-6">
+            <p class="font-semibold text-gray-800">Organizator</p>
+            <p class="text-sm text-gray-700">{{ workshop.organizer_name }}</p>
+            <p class="text-sm text-gray-600">Email: <a :href="`mailto:${workshop.organizer_email}`" class="text-purple-600">{{ workshop.organizer_email }}</a></p>
+            <p class="text-sm text-gray-600">Telefon: {{ workshop.organizer_phone }}</p>
+          </div>
         </div>
 
         <div class="flex flex-col gap-6">
@@ -44,6 +51,7 @@
                 Prijavi se
               </button>
             </div>
+            
           </div>
         </div>
       </div>
