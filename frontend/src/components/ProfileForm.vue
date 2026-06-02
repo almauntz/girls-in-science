@@ -265,8 +265,8 @@
       </form>
     </div>
 
-    <div v-if="activeTab === 'security'">
-      <div class="bg-white rounded-xl shadow-sm p-6 max-w-full min-h-96">
+    <div v-if="activeTab === 'security'" class="flex justify-center">
+      <div class="bg-white rounded-xl shadow-sm p-6 w-full max-w-lg min-h-96">
         <div v-if="passwordSuccess" class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 mb-4 text-sm">
           {{ passwordSuccess }}
         </div>
