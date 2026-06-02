@@ -45,6 +45,15 @@ def create_news_post(
             if role_model:
                 role_models.append(role_model)
         news_post.role_models = role_models
+
+    if news_data.category_ids:
+        categories = []
+        for category_id in news_data.category_ids:
+            category = db.get(NewsCategory, category_id)
+            if category:
+                categories.append(category)
+        news_post.categories = categories
+
     db.add(news_post)
     db.commit()
     db.refresh(news_post)
