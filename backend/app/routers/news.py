@@ -20,6 +20,7 @@ def get_news_post(id: int, db: Session = Depends(get_db)):
     if not news_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Objava nije pronađena")
     _ = news_post.role_models
+    _ = news_post.categories
     return news_post
 
 @router.post("/", response_model=NewsPostRead)
