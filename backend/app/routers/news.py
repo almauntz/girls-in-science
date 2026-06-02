@@ -9,6 +9,20 @@ from app.models.news import NewsPost, NewsPostCreate, NewsPostUpdate, NewsPostRe
 
 router = APIRouter(prefix="/news", tags=["news"])
 
+@router.post("/categories")
+def create_category(
+    data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Samo administratorica može kreirati kategorije")
+    category = NewsCategory(name=data["name"])
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+    return category
+
 @router.get("/categories")
 def get_categories(db: Session = Depends(get_db)):
     categories = db.exec(select(NewsCategory)).all()

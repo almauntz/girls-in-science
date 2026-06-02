@@ -117,3 +117,20 @@ export async function updateNewsPost(id, data) {
   })
   return response.json()
 }
+
+export async function getCategories() {
+  const response = await fetch(`${BASE_URL}/news/categories`)
+  return response.json()
+}
+
+export async function createCategory(name, token) {
+  const response = await fetch(`${BASE_URL}/news/categories`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ name })
+  })
+  return response.json()
+}
