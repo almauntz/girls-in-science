@@ -37,11 +37,15 @@ export const getMentorApplications = async () => {
   return response.data
 }
 
-export const updateApplicationStatus = async (applicationId, status) => {
+export const updateApplicationStatus = async (applicationId, status, rejectionReason = null) => {
   const token = localStorage.getItem('token')
+  const payload = { status }
+  if (rejectionReason) {
+    payload.rejection_reason = rejectionReason
+  }
   const response = await axios.put(
     `${API_URL}/applications/${applicationId}/status`,
-    { status },
+    payload,
     {
       headers: {
         'Authorization': `Bearer ${token}`,

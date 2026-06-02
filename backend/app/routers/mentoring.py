@@ -48,6 +48,10 @@ class MentorshipRequestOut(BaseModel):
     message: str = ""
     status: str
     created_at: datetime
+    expectations: Optional[str] = None
+    skills_to_improve: Optional[str] = None
+    cv_file_path: Optional[str] = None
+    rejection_reason: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -259,13 +263,18 @@ def get_mentor_applications(
             student_email=student_email,
             message=app.message or "",
             status=status_value,
-            created_at=app.created_at
+            created_at=app.created_at,
+            expectations=app.expectations or "",
+            skills_to_improve=app.skills_to_improve or "",
+            cv_file_path=app.cv_file_path or "",
+            rejection_reason=app.rejection_reason or ""
         ))
     return result
 
 
 class UpdateApplicationStatusRequest(BaseModel):
     status: str
+    rejection_reason: Optional[str] = None
 
 
 @router.put("/applications/{application_id}/status")
@@ -296,6 +305,11 @@ def update_application_status(
             detail=f"Status mora biti jedan od: {', '.join(valid_statuses)}"
         )
     application.status = RequestStatus[request.status]
+    
+    # Ako se zahtjev odbija, spremi razlog odbijanja
+    if request.status == "REJECTED" and request.rejection_reason:
+        application.rejection_reason = request.rejection_reason
+    
     db.commit()
     db.refresh(application)
     return {
