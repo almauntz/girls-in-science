@@ -4,10 +4,15 @@ from app.database import get_db
 from app.models.role_model import RoleModel
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.news import NewsPost, NewsPostCreate, NewsPostUpdate, NewsPostRead
+from app.models.news import NewsPost, NewsPostCreate, NewsPostUpdate, NewsPostRead, NewsCategory
 
 
 router = APIRouter(prefix="/news", tags=["news"])
+
+@router.get("/categories")
+def get_categories(db: Session = Depends(get_db)):
+    categories = db.exec(select(NewsCategory)).all()
+    return categories
 
 @router.get("/{id}", response_model=NewsPostRead)
 def get_news_post(id: int, db: Session = Depends(get_db)):
