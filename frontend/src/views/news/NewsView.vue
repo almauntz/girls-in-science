@@ -11,6 +11,20 @@
       </router-link>
     </div>
 
+    <div v-if="isAdmin" class="flex gap-2 mb-4">
+  <input
+    v-model="newCategory"
+    placeholder="Nova kategorija..."
+    class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+  />
+  <button
+    @click="addCategory"
+    class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm transition"
+  >
+    Dodaj kategoriju
+  </button>
+</div>
+
     <div class="flex flex-wrap gap-2 mb-6">
       <button
         @click="selectedCategory = null"
@@ -50,7 +64,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { getMe, getNewsPosts, getCategories } from '../../services/api.js'
+import { getMe, getNewsPosts, getCategories, createCategory} from '../../services/api.js'
 import NewsCard from '../../components/NewsCard.vue'
 
 const newsPosts = ref([])
@@ -58,6 +72,7 @@ const categories = ref([])
 const loading = ref(true)
 const isAdmin = ref(false)
 const selectedCategory = ref(null)
+const newCategory = ref('')
 
 const filteredPosts = computed(() => {
   if (!selectedCategory.value) return newsPosts.value
@@ -76,4 +91,19 @@ onMounted(async () => {
   categories.value = await getCategories()
   loading.value = false
 })
+
+async function addCategory() {
+  if (!newCategory.value.trim()) return
+
+  const token = localStorage.getItem('token')
+  if (!token) return
+
+  try {
+    const category = await createCategory({ name: newCategory.value.trim() }, token)
+    categories.value.push(category)
+    newCategory.value = ''
+  } catch (error) {
+    console.error('Error creating category:', error)
+  }
+}
 </script>
