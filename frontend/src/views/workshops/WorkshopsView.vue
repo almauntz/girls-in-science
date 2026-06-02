@@ -153,8 +153,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import Swal from 'sweetalert2'
-import CalendarView from './Calendar.vue'
-
 const BASE_URL = 'http://127.0.0.1:8000'
 import CalendarView from './Calendar.vue' // DODATO: Import komponente
 import Notifications from './Notifications.vue' // DODATO: Import tvoje komponente za notifikacije
