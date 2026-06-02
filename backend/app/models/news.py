@@ -5,6 +5,16 @@ from sqlalchemy import Column, DateTime, Text
 from sqlalchemy.sql import func
 
 
+class NewsCategoryLink(SQLModel, table=True):
+    __tablename__ = "news_category_links"
+    news_post_id: Optional[int] = Field(default=None, foreign_key="news_posts.id", primary_key=True)
+    category_id: Optional[int] = Field(default=None, foreign_key="news_categories.id", primary_key=True)
+class NewsCategory(SQLModel, table=True):
+    __tablename__ = "news_categories"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(nullable=False, unique=True)
+    posts: List["NewsPost"] = Relationship(back_populates="categories", link_model=NewsCategoryLink)
+
 
 class NewsPostRoleModelLink(SQLModel, table=True):
     __tablename__ = "news_post_role_model_links"
@@ -24,6 +34,7 @@ class NewsPost(SQLModel, table=True):
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
     )
     role_models: List["RoleModel"] = Relationship(back_populates="news_posts", link_model=NewsPostRoleModelLink)
+    categories: List["NewsCategory"] = Relationship(back_populates="posts", link_model=NewsCategoryLink)
 
 
 class NewsPostCreate(SQLModel):
@@ -32,6 +43,7 @@ class NewsPostCreate(SQLModel):
     author: Optional[str] = None
     image_url: Optional[str] = None
     role_model_ids: Optional[List[int]] = []
+    category_ids: Optional[List[int]] = [] 
 
 
 class NewsPostUpdate(SQLModel):
@@ -56,3 +68,4 @@ class NewsPostRead(SQLModel):
     image_url: Optional[str] = None
     created_at: Optional[datetime] = None
     role_models: List[RoleModelSimple] = []
+    categories: List[str] = []
