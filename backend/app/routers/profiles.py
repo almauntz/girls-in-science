@@ -92,9 +92,6 @@ def update_my_profile(
     if profile_data.show_location is not None:
         profile.show_location = profile_data.show_location
 
-    print("show_field primljeno:", profile_data.show_field)
-    print("show_biography primljeno:", profile_data.show_biography)
-    print("show_location primljeno:", profile_data.show_location)
 
     db.commit()
     db.refresh(current_user)
@@ -113,8 +110,8 @@ def update_my_profile(
         show_biography=profile.show_biography,
         show_field=profile.show_field,
         show_location=profile.show_location
-
     )
+
 @router.get("/dashboard", response_model=Dict[str, Any])
 def get_personal_dashboard(
     db: Session = Depends(get_db),
