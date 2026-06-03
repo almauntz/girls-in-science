@@ -155,3 +155,39 @@ export const checkMyPromotion = async () => {
     headers: getAuthHeaders()
   })
 }
+/* =========================================================
+   RATINGS
+========================================================= */
+
+export const checkRegistration = async (workshopId) => {
+  return apiRequest(`/workshops/registration/check/${workshopId}`, {
+    method: 'GET',
+    headers: getAuthHeaders()
+  })
+}
+
+export const submitWorkshopRating = async (workshopId, ratingPayload) => {
+  return apiRequest(`/workshops/${workshopId}/ratings`, {
+    method: 'POST',
+    headers: getAuthHeaders(),
+    body: JSON.stringify(ratingPayload)
+  })
+}
+
+export const getWorkshopRatings = async (workshopId) => {
+  return apiRequest(`/workshops/${workshopId}/ratings`, {
+    method: 'GET'
+  })
+}
+
+export const getWorkshopRatingsAverage = async (workshopId) => {
+  return apiRequest(`/workshops/${workshopId}/ratings/average`, {
+    method: 'GET'
+  })
+}
+
+export const autoCompleteWorkshops = async () => {
+  return apiRequest('/workshops/auto-complete', {
+    method: 'POST'
+  })
+}

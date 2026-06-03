@@ -6,7 +6,7 @@ from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.workshops_models import (RegistrationRead, Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
                                           WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WorkshopProposal,
-                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList, UserNotification)
+                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList, UserNotification,WorkshopRating, RatingCreate, RatingRead)
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -108,7 +108,10 @@ def cancel_registration(
 
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
-    statement = select(Workshop)
+    #izmjena na prikazu radionica - dodan upit za radionice koje su upcoming  i completed
+    statement = select(Workshop).where(    
+        Workshop.status.in_([WorkshopStatus.upcoming, WorkshopStatus.completed])
+    )
     workshops = db.execute(statement).scalars().all()
     result = []
     for w in workshops:
@@ -119,6 +122,28 @@ def get_active_workshops(db: Session = Depends(get_db)):
         workshop_dict["free_spots"] = w.capacity - broj_prijava
         result.append(workshop_dict)
     return result
+# Za  automatsko ažuriranje statusa radionica nakon isteka vremena
+@router.post("/auto-complete", status_code=200)
+def auto_complete_workshops(db: Session = Depends(get_db)):
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    
+    workshops = db.execute(
+        select(Workshop).where(
+            Workshop.status == WorkshopStatus.upcoming,
+            Workshop.end_time < now
+        )
+    ).scalars().all()
+
+    updated = 0
+    for w in workshops:
+        w.status = WorkshopStatus.completed
+        db.add(w)
+        updated += 1
+
+    db.commit()
+    return {"message": f"{updated} radionica označeno kao završeno."}
+
 
 
 def require_admin(current_user: User = Depends(get_current_user)) -> User:
@@ -617,4 +642,83 @@ def get_workshop_registrations(
     ).scalars().all()
  
     return registrations
- 
+
+#Rating endpoints -------------------------------------------------------
+
+@router.post("/{workshop_id}/ratings", response_model=RatingRead, status_code=status.HTTP_201_CREATED)
+def create_rating(
+    workshop_id: int,
+    data: RatingCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # 1. Postoji li radionica?
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+
+    # 2. Je li radionica završena?
+    if workshop.status != WorkshopStatus.completed:
+        raise HTTPException(status_code=400, detail="Radionica još nije završena.")
+
+    # 3. Je li korisnica bila registrovana?
+    registration = db.execute(
+        select(Registration).where(
+            Registration.workshop_id == workshop_id,
+            Registration.user_id == current_user.id
+        )
+    ).scalars().first()
+
+    if not registration:
+        raise HTTPException(status_code=403, detail="Niste bili prijavljeni na ovu radionicu.")
+
+    # 4. Je li već ostavila ocjenu?
+    existing = db.execute(
+        select(WorkshopRating).where(
+            WorkshopRating.registration_id == registration.id
+        )
+    ).scalars().first()
+
+    if existing:
+        if existing:
+          raise HTTPException(status_code=409, detail="Već ste ocjenili ovu radionicu.")
+    new_rating = WorkshopRating(
+        registration_id=registration.id,
+        user_id=current_user.id,
+        workshop_id=workshop_id,
+        score=data.score,
+        comment=data.comment
+    )
+    db.add(new_rating)
+    db.commit()
+    db.refresh(new_rating)
+    return new_rating
+
+
+@router.get("/{workshop_id}/ratings", response_model=list[RatingRead])
+def get_ratings(workshop_id: int, db: Session = Depends(get_db)):
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+
+    return db.execute(
+        select(WorkshopRating).where(WorkshopRating.workshop_id == workshop_id)
+        .order_by(WorkshopRating.created_at.desc())
+    ).scalars().all()
+
+
+@router.get("/{workshop_id}/ratings/average")
+def get_ratings_average(workshop_id: int, db: Session = Depends(get_db)):
+    workshop = db.get(Workshop, workshop_id)
+    if not workshop:
+        raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
+
+    row = db.execute(
+        select(func.avg(WorkshopRating.score), func.count(WorkshopRating.id))
+        .where(WorkshopRating.workshop_id == workshop_id)
+    ).first()
+
+    avg = float(row[0]) if row and row[0] is not None else 0.0
+    count = int(row[1]) if row and row[1] is not None else 0
+
+    return {"average": round(avg, 2), "count": count}
