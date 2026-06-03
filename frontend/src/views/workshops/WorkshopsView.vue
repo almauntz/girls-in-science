@@ -11,7 +11,7 @@
       </p>
     </div>
 
-    <div class="py-12 px-4 max-w-4xl mx-auto">
+    <div class="py-12 px-4 max-w-7xl mx-auto">
 
       <div class="flex justify-end mb-6">
         <div class="inline-flex rounded-lg border border-purple-200 bg-white p-1 shadow-sm">
@@ -33,85 +33,120 @@
         </div>
       </div>
 
-      <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">
-        Aktivne radionice
-      </h2>
-
-      <p class="text-center text-gray-500 mb-10">
-        Klikom na Saznaj više pogledajte detaljne informacije o radionici
-      </p>
-
       <p v-if="error" class="text-center text-gray-500">
         {{ error }}
       </p>
 
       <div v-else>
-        <div v-if="viewType === 'list'" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div v-if="viewType === 'list'" class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-          <div
-            v-for="workshop in workshops"
-            :key="workshop.ID_workshop"
-            class="bg-white rounded-xl p-5 border border-gray-100 flex flex-col gap-2"
-          >
-            <h3 class="font-medium text-base text-gray-800">
-              {{ workshop.title }}
-            </h3>
-
-            <p class="text-sm text-gray-400">
-              Datum: {{ formatDate(workshop.date) }}
+          <!-- LIJEVO: Aktivne radionice -->
+          <div>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">
+              Aktivne radionice
+            </h2>
+            <p class="text-center text-gray-500 mb-10">
+              Klikom na Saznaj više pogledajte detaljne informacije o radionici
             </p>
-
-            <p class="text-sm text-gray-400">
-              Lokacija: {{ workshop.location }}
-            </p>
-
-            <p class="text-sm font-medium" :class="getCapacityClass(workshop)">
-              <span v-if="getFreeSpots(workshop) > 0">
-                Slobodnih mjesta: {{ getFreeSpots(workshop) }}
-              </span>
-              <span v-else>
-                Kapacitet popunjen
-              </span>
-            </p>
-
-            <p
-              v-if="registrations[workshop.ID_workshop] === true"
-              class="text-green-600 text-xs font-semibold"
-            >
-              Već si prijavljen na ovu radionicu
-            </p>
-
-            <hr class="border-gray-100 mt-2" />
-
-            <div class="flex justify-between items-center">
-
-              <router-link
-                :to="`/workshops/${workshop.ID_workshop}`"
-                class="text-sm font-medium text-purple-600"
+            <div v-if="activeWorkshops.length === 0" class="text-gray-400 text-sm text-center py-10 bg-white rounded-xl">
+              Nema aktivnih radionica.
+            </div>
+            <div class="flex flex-col gap-4">
+              <div
+                v-for="workshop in activeWorkshops"
+                :key="workshop.ID_workshop"
+                class="bg-white rounded-xl p-5 border border-gray-100 flex flex-col gap-2"
               >
-                Saznaj više →
-              </router-link>
+                <h3 class="font-medium text-base text-gray-800">
+                  {{ workshop.title }}
+                </h3>
+                <p class="text-sm text-gray-400">
+                  Datum: {{ formatDate(workshop.date) }}
+                </p>
+                <p class="text-sm text-gray-400">
+                  Lokacija: {{ workshop.location }}
+                </p>
+                <p class="text-sm font-medium" :class="getCapacityClass(workshop)">
+                  <span v-if="getFreeSpots(workshop) > 0">
+                    Slobodnih mjesta: {{ getFreeSpots(workshop) }}
+                  </span>
+                  <span v-else>
+                    Kapacitet popunjen
+                  </span>
+                </p>
+                <p
+                  v-if="registrations[workshop.ID_workshop] === true"
+                  class="text-green-600 text-xs font-semibold"
+                >
+                  Već si prijavljen na ovu radionicu
+                </p>
+                <hr class="border-gray-100 mt-2" />
+                <div class="flex justify-between items-center">
+                  <router-link
+                    :to="`/workshops/${workshop.ID_workshop}`"
+                    class="text-sm font-medium text-purple-600"
+                  >
+                    Saznaj više →
+                  </router-link>
+                  <!-- Odustani ako je prijavljen -->
+                  <button
+                    v-if="registrations[workshop.ID_workshop]"
+                    @click="handleCancel(workshop.ID_workshop, workshop.title)"
+                    class="text-xs font-medium text-gray-400 hover:text-red-500 uppercase tracking-wide"
+                  >
+                    Odustani
+                  </button>
+                  <!-- Prijava ako ima mjesta -->
+                  <span v-else-if="getFreeSpots(workshop) > 0"></span>
+                  <!-- Waiting list -->
+                  <button
+                    v-else
+                    @click="handleJoinWaitingList(workshop.ID_workshop)"
+                    class="text-xs font-medium text-orange-500 hover:text-orange-700 uppercase tracking-wide"
+                  >
+                    Dodaj se na listu čekanja
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
 
-              <!-- Odustani ako je prijavljen -->
-              <button
-                v-if="registrations[workshop.ID_workshop]"
-                @click="handleCancel(workshop.ID_workshop, workshop.title)"
-                class="text-xs font-medium text-gray-400 hover:text-red-500 uppercase tracking-wide"
+          <!-- DESNO: Završene radionice -->
+          <div>
+            <h2 class="text-3xl font-bold text-center text-gray-800 mb-2">
+              Završene radionice
+            </h2>
+            <p class="text-center text-gray-500 mb-10">
+              Pogledajte ocjene završenih radionica
+            </p>
+            <div v-if="completedWorkshops.length === 0" class="text-gray-400 text-sm text-center py-10 bg-white rounded-xl">
+              Nema završenih radionica.
+            </div>
+            <div class="flex flex-col gap-4">
+              <div
+                v-for="workshop in completedWorkshops"
+                :key="workshop.ID_workshop"
+                class="bg-white rounded-xl p-5 border border-gray-100 flex flex-col gap-2 opacity-80"
               >
-                Odustani
-              </button>
-
-              <!-- Prijava ako ima mjesta -->
-              <span v-else-if="getFreeSpots(workshop) > 0"></span>
-              <!-- Waiting list -->
-              <button
-                v-else
-                @click="handleJoinWaitingList(workshop.ID_workshop)"
-                class="text-xs font-medium text-orange-500 hover:text-orange-700 uppercase tracking-wide"
-              >
-                Dodaj se na listu čekanja
-              </button>
-
+                <div class="flex items-center justify-between">
+                  <h3 class="font-medium text-base text-gray-700">{{ workshop.title }}</h3>
+                  <span class="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded-full">Završena</span>
+                </div>
+                <p class="text-sm text-gray-400">Datum: {{ formatDate(workshop.date) }}</p>
+                <p class="text-sm text-gray-400">Lokacija: {{ workshop.location }}</p>
+                <hr class="border-gray-100 mt-2" />
+                <div class="flex justify-between items-center">
+                  <router-link :to="`/workshops/${workshop.ID_workshop}`" class="text-sm font-medium text-purple-500">
+                    Pogledaj ocjene →
+                  </router-link>
+                  <button
+                    @click="openRatingModal(workshop.ID_workshop, workshop.title)"
+                    class="text-xs font-medium text-purple-600 hover:text-purple-800 uppercase tracking-wide"
+                  >
+                    Ostavi ocjenu
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -130,7 +165,6 @@
       style="background: linear-gradient(135deg, #7c3aed, #a855f7); box-shadow: 0 8px 30px rgba(124, 58, 237, 0.45);"
     >
       <span class="text-xl">💡</span>
-
       <span class="flex flex-col leading-tight">
         <span class="text-xs font-medium opacity-80">
           Imaš ideju za radionicu?
@@ -139,7 +173,6 @@
           Dodaj svoj prijedlog!
         </span>
       </span>
-
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2.5" class="opacity-80">
         <line x1="5" y1="12" x2="19" y2="12"/>
@@ -147,12 +180,46 @@
       </svg>
     </router-link>
 
+    <!-- Modal za ocjenu -->
+    <div v-if="showRatingModal" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div class="absolute inset-0 bg-gray-900/70 backdrop-blur-sm" @click="showRatingModal = false"></div>
+      <div class="relative z-10 bg-white rounded-2xl p-8 w-[480px] shadow-2xl">
+        <button @click="showRatingModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">×</button>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">Ocjenite radionicu</h3>
+        <p class="text-sm text-gray-500 mb-6">{{ selectedWorkshopTitle }}</p>
+        <div class="flex gap-3 mb-6 justify-center">
+          <button
+            v-for="n in 5"
+            :key="n"
+            @click="ratingForm.score = n"
+            class="text-4xl transition-transform hover:scale-110"
+            :class="n <= ratingForm.score ? 'text-yellow-400' : 'text-gray-300'"
+          >★</button>
+        </div>
+        <textarea
+          v-model="ratingForm.comment"
+          placeholder="Komentar (opciono)..."
+          maxlength="500"
+          rows="3"
+          class="w-full border border-gray-300 rounded-lg p-3 text-sm focus:outline-none focus:border-purple-400 resize-none mb-4"
+        ></textarea>
+        <button
+          @click="submitRating"
+          :disabled="!ratingForm.score || ratingSubmitting"
+          class="w-full py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 disabled:opacity-50 transition-colors"
+        >
+          {{ ratingSubmitting ? 'Šaljem...' : 'Pošalji ocjenu' }}
+        </button>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import Swal from 'sweetalert2'
+
 const BASE_URL = 'http://127.0.0.1:8000'
 import CalendarView from './Calendar.vue' // DODATO: Import komponente
 import Notifications from './Notifications.vue' // DODATO: Import tvoje komponente za notifikacije
@@ -161,6 +228,50 @@ const workshops = ref([])
 const error = ref(null)
 const viewType = ref('list')
 const registrations = ref({})
+
+const activeWorkshops = computed(() => workshops.value.filter(w => w.status === 'upcoming'))
+const completedWorkshops = computed(() => workshops.value.filter(w => w.status === 'completed'))
+
+/* ---------------- RATING ---------------- */
+const showRatingModal = ref(false)
+const selectedWorkshopId = ref(null)
+const selectedWorkshopTitle = ref('')
+const ratingForm = ref({ score: 0, comment: '' })
+const ratingSubmitting = ref(false)
+
+const openRatingModal = (workshopId, title) => {
+  selectedWorkshopId.value = workshopId
+  selectedWorkshopTitle.value = title
+  ratingForm.value = { score: 0, comment: '' }
+  showRatingModal.value = true
+}
+
+const submitRating = async () => {
+  if (!ratingForm.value.score) return
+  ratingSubmitting.value = true
+  try {
+    const token = localStorage.getItem('token')
+    const res = await fetch(`${BASE_URL}/workshops/${selectedWorkshopId.value}/ratings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        score: ratingForm.value.score,
+        comment: ratingForm.value.comment || null
+      })
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.detail || 'Greška.')
+    showRatingModal.value = false
+    await Swal.fire('Hvala!', 'Vaša ocjena je uspješno poslana.', 'success')
+  } catch (err) {
+    Swal.fire('Greška', err.message || 'Neuspješno slanje ocjene.', 'error')
+  } finally {
+    ratingSubmitting.value = false
+  }
+}
 
 /* ---------------- AUTH HELPER ---------------- */
 function getAuthHeaders() {
@@ -200,6 +311,13 @@ const getCapacityClass = (w) =>
 const fetchWorkshops = async () => {
   try {
     error.value = null
+
+    // auto-complete prije fetcha
+    try {
+      await fetch(`${BASE_URL}/workshops/auto-complete`, { method: 'POST' })
+    } catch {
+      console.warn('auto-complete nije uspio')
+    }
 
     const res = await fetch(`${BASE_URL}/workshops/active`)
     const data = await res.json()

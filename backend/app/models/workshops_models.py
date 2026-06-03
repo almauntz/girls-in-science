@@ -154,6 +154,7 @@ class WorkshopList(BaseModel):
     date: datetime
     location: str
     free_spots: int
+    status: WorkshopStatus
     class Config:
         from_attributes = True
 
@@ -200,6 +201,22 @@ Index(
     Registration.status,
     Registration.created_at
 )
+    
+# Rating model
+class WorkshopRating(Base):
+    __tablename__ = "workshop_ratings"
+
+    id = Column(Integer, primary_key=True, index=True)
+
+    registration_id = Column(Integer, ForeignKey("registration.id"), unique=True, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    workshop_id = Column(Integer, nullable=False)
+
+    score = Column(Integer, nullable=False)
+    comment = Column(String, nullable=True)
+
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
     
 class UserNotification(SQLModel, table=True):
     __tablename__ = "user_notifications"
@@ -249,4 +266,22 @@ class WaitingList(SQLModel, table=True):
     workshop_id: int = Field(foreign_key="workshops.ID_workshop")
 
     created_at: datetime = Field(default_factory=datetime.utcnow)
+  
+
+class RatingCreate(BaseModel):
+    score: int = Field(ge=1, le=5)  # Ocjena između 1 i 5
+    comment: Optional[str] = None
+
+
+class RatingRead(BaseModel):
+    id: int
+    registration_id: int
+    user_id: int
+    workshop_id: int
+    score: int
+    comment: Optional[str]
+    created_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
   
