@@ -68,8 +68,11 @@
 
     <div class="relative overflow-hidden bg-purple-100">
       <div class="grid grid-cols-7 gap-px border-b border-purple-100 relative z-10">
-        <div v-for="day in ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned']" :key="day" 
-             class="py-2 text-center text-[10px] font-bold uppercase text-purple-700 bg-purple-50">
+        <div
+          v-for="day in ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned']"
+          :key="day"
+          class="py-2 text-center text-[10px] font-bold uppercase text-purple-700 bg-purple-50"
+        >
           {{ day }}
         </div>
       </div>
@@ -86,29 +89,40 @@
           <div v-for="empty in firstDayOffset" :key="'empty-' + empty" class="bg-gray-50/30 min-h-[120px]"></div>
 
           <div v-for="n in daysInMonth" :key="n" class="bg-white min-h-[120px] p-2 border-t border-l border-purple-50">
-            <span class="text-sm font-semibold mb-1 block transition-all" 
-                  :class="{ 'today-badge': isToday(n) }"
-                  :style="!isToday(n) ? 'color: #9ca3af;' : ''">
+            <span
+              class="text-sm font-semibold mb-1 block transition-all"
+              :class="{ 'today-badge': isToday(n) }"
+              :style="!isToday(n) ? 'color: #9ca3af;' : ''"
+            >
               {{ n }}
             </span>
-            
+
             <div class="mt-1 space-y-1">
-              <Motion 
-                v-for="workshop in filteredWorkshopsForDay(n)" 
+              <Motion
+                v-for="workshop in filteredWorkshopsForDay(n)"
                 :key="workshop.ID_workshop"
-                @click="$router.push(`/workshops/${workshop.ID_workshop}`)"
                 :style="getFinalStyle(workshop, n)"
-                class="p-2 text-[10px] leading-tight rounded shadow-sm cursor-pointer border-l-[5px] border-solid transition-all relative overflow-hidden"
                 :hover="{ scale: 1.04, x: 2 }"
+                class="p-2 text-[10px] leading-tight rounded shadow-sm cursor-pointer border-l-[5px] border-solid transition-all relative"
+                @click="$router.push(`/workshops/${workshop.ID_workshop}`)"
               >
+                <span v-if="isFree(workshop)" class="ping-green"></span>
+                <span v-else-if="checkIsRegistered(workshop.ID_workshop)" class="ping-purple"></span>
+
                 <div class="flex justify-between items-start">
                   <div class="flex items-center gap-1 min-w-0">
-                    <p class="font-bold truncate" :style="{ color: checkIsRegistered(workshop.ID_workshop) ? 'white' : '#1f2937' }">
+                    <p
+                      class="font-bold truncate"
+                      :style="{ color: checkIsRegistered(workshop.ID_workshop) ? 'white' : '#1f2937' }"
+                    >
                       {{ workshop.title }}
                     </p>
                   </div>
                 </div>
-                <p class="truncate opacity-80 mt-0.5" :style="{ color: checkIsRegistered(workshop.ID_workshop) ? '#e9d5ff' : '#6b7280' }">
+                <p
+                  class="truncate opacity-80 mt-0.5"
+                  :style="{ color: checkIsRegistered(workshop.ID_workshop) ? '#e9d5ff' : '#6b7280' }"
+                >
                   📍 {{ workshop.location }}
                 </p>
               </Motion>
@@ -132,7 +146,6 @@ const props = defineProps({
 const searchQuery = ref('')
 const direction = ref(1)
 
-// Reaktivne varijable za datum
 const currentMonth = ref(new Date().getMonth())
 const currentYear = ref(new Date().getFullYear())
 
@@ -152,10 +165,8 @@ const stats = computed(() => {
     const d = new Date(w.date)
     return d.getMonth() === currentMonth.value && d.getFullYear() === currentYear.value
   })
-
   const registered = Object.values(props.registrations).filter(r => r === true).length
   const freeSpots = inMonth.reduce((acc, curr) => acc + (curr.free_spots || 0), 0)
-
   return {
     totalInMonth: inMonth.length,
     registeredCount: registered,
@@ -167,11 +178,15 @@ const filteredWorkshopsForDay = (n) => {
   return props.workshops.filter(w => {
     const d = new Date(w.date)
     const matchesDay = d.getDate() === n && d.getMonth() === currentMonth.value && d.getFullYear() === currentYear.value
-    const matchesSearch = w.title.toLowerCase().includes(searchQuery.value.toLowerCase()) || 
+    const matchesSearch = w.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                           w.location.toLowerCase().includes(searchQuery.value.toLowerCase())
-    
     return matchesDay && matchesSearch
   })
+}
+
+const isFree = (workshop) => {
+  const free = workshop.free_spots ?? (workshop.capacity - (workshop.registered_count || 0))
+  return free > 0 && !checkIsRegistered(workshop.ID_workshop)
 }
 
 const updateMonth = (v) => {
@@ -208,22 +223,28 @@ const getFinalStyle = (workshop, n) => {
   let style = { borderLeftWidth: '5px' }
 
   if (isPrijavljena) {
-    style.backgroundColor = '#7c3aed'; style.borderColor = '#5b21b6'; style.color = 'white'
+    style.backgroundColor = '#7c3aed'
+    style.borderColor = '#5b21b6'
+    style.color = 'white'
   } else if (free <= 0) {
-    style.backgroundColor = '#fee2e2'; style.borderColor = '#ef4444'; style.color = '#b91c1c'
+    style.backgroundColor = '#fee2e2'
+    style.borderColor = '#ef4444'
+    style.color = '#b91c1c'
   } else {
-    style.backgroundColor = '#dcfce7'; style.borderColor = '#22c55e'; style.color = '#15803d'
+    style.backgroundColor = '#dcfce7'
+    style.borderColor = '#22c55e'
+    style.color = '#15803d'
   }
 
   if (isToday(n)) {
     style.boxShadow = '0 0 10px rgba(124, 58, 237, 0.3)'
   }
+
   return style
 }
 </script>
 
 <style scoped>
-/* Tranzicija za promjenu mjeseca */
 .month-fade-enter-active,
 .month-fade-leave-active {
   transition: all 0.25s ease-out;
@@ -248,6 +269,32 @@ const getFinalStyle = (workshop, n) => {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ping-green,
+.ping-purple {
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.ping-green {
+  animation: pingGreen 1.5s ease-in-out infinite;
+}
+
+.ping-purple {
+  animation: pingPurple 1.5s ease-in-out infinite;
+}
+
+@keyframes pingGreen {
+  0%, 100% { box-shadow: inset 0 0 0 0 rgba(34, 197, 94, 0.6); }
+  50%       { box-shadow: inset 0 0 0 3px rgba(34, 197, 94, 0); }
+}
+
+@keyframes pingPurple {
+  0%, 100% { box-shadow: inset 0 0 0 0 rgba(124, 58, 237, 0.6); }
+  50%       { box-shadow: inset 0 0 0 3px rgba(124, 58, 237, 0); }
 }
 </style>
