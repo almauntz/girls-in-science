@@ -6,8 +6,11 @@ from app.database import Base, engine
 from app.routers import auth, mentoring, forum, workshops, profiles   
 from app.core.security import get_current_user
 from app.models.user import User
-
+from sqlmodel import SQLModel
+from app.models.workshops_models import Workshop, Registration
+from app.models.user import User 
 Base.metadata.create_all(bind=engine)
+SQLModel.metadata.create_all(engine) 
 
 security = HTTPBearer()
 
