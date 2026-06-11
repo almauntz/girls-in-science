@@ -139,6 +139,13 @@ export default {
       this.profileData.show_biography = data.show_biography
       this.profileData.show_field = data.show_field
       this.profileData.show_location = data.show_location
+      this.profileData.languages    = data.languages   || []
+      this.profileData.experience   = data.experience  || []
+      this.profileData.education    = data.education   || []
+      this.profileData.skills       = data.skills      || []
+      this.profileData.linkedin_url = data.linkedin_url || ''
+      this.profileData.github_url   = data.github_url   || ''
+      this.profileData.twitter_url  = data.twitter_url  || ''
     },
     getAuthHeaders() {
       const token = localStorage.getItem('token')
