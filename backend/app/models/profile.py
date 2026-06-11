@@ -11,21 +11,21 @@ class ChangePasswordRequest(BaseModel):
     confirm_new_password: str
 
 class LanguageEntry(BaseModel):
-    name: str         
-    level: str        
+    name: str
+    level: Optional[str] = ""  
 
 class ExperienceEntry(BaseModel):
-    title: str                   
-    organization: str             
+    title: str
+    organization: Optional[str] = ""
     location: Optional[str] = None
-    start_date: str              
-    end_date: Optional[str] = None  
+    start_date: Optional[str] = ""
+    end_date: Optional[str] = None
     description: Optional[str] = None
 
 class EducationEntry(BaseModel):
-    degree: str                  
-    institution: str              
-    start_date: str
+    degree: str
+    institution: Optional[str] = ""
+    start_date: Optional[str] = ""
     end_date: Optional[str] = None
     description: Optional[str] = None
 
@@ -70,8 +70,8 @@ class ProfileUpdate(SQLModel):
     show_location: Optional[bool] = None
 
     languages: Optional[List[LanguageEntry]] = None
-    experience: Optional[List[LanguageEntry]] = None
-    education: Optional[List[LanguageEntry]] = None    
+    experience: Optional[List[ExperienceEntry]] = None
+    education: Optional[List[EducationEntry]] = None 
     skills: Optional[List[str]] = None    
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None
@@ -109,8 +109,8 @@ class ProfileResponse(SQLModel):
     show_location: bool = True
 
     languages: Optional[List[LanguageEntry]] = None
-    experience: Optional[List[LanguageEntry]] = None
-    education: Optional[List[LanguageEntry]] = None    
+    experience: Optional[List[ExperienceEntry]] = None
+    education: Optional[List[EducationEntry]] = None  
     skills: Optional[List[str]] = None    
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None
@@ -154,8 +154,8 @@ class PublicProfileResponse(SQLModel):
     email: Optional[str] = None
     location: Optional[str] = Field(default=None, nullable=True)
     languages: Optional[List[LanguageEntry]] = None
-    experience: Optional[List[LanguageEntry]] = None
-    education: Optional[List[LanguageEntry]] = None    
+    experience: Optional[List[ExperienceEntry]] = None
+    education: Optional[List[EducationEntry]] = None    
     skills: Optional[List[str]] = None    
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None
