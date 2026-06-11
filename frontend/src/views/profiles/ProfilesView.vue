@@ -109,6 +109,13 @@ export default {
         show_biography: data.show_biography ?? true,
         show_field: data.show_field ?? true,
         show_location: data.show_location ?? true,
+        languages:    data.languages   || [],
+        experience:   data.experience  || [],
+        education:    data.education   || [],
+        skills:       data.skills      || [],
+        linkedin_url: data.linkedin_url || '',
+        github_url:   data.github_url   || '',
+        twitter_url:  data.twitter_url  || '',
       }
 
       if (data.role) {
