@@ -521,6 +521,13 @@ watch: {
       show_biography: this.form.show_biography,
       show_field: this.form.show_field,
       show_location: this.form.show_location,
+      languages:    this.form.languages,
+      experience:   this.form.experience,
+      education:    this.form.education,
+      skills:       this.form.skills,
+      linkedin_url: this.form.linkedin_url,
+      github_url:   this.form.github_url,
+      twitter_url:  this.form.twitter_url,
     }
     console.log('Payload koji se šalje:', JSON.stringify(payload))
     await updateProfile(token, payload)
