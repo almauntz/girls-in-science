@@ -463,68 +463,26 @@ export default {
   },
 
 watch: {
-  fullName: {
-    immediate: true,
-    handler(val) {
-      this.form.full_name = val || ''
-    }
-  },
-  field: {
-    immediate: true,
-    handler(val) {
-      this.form.field = val || ''
-    }
-  },
-  biography: {
-    immediate: true,
-    handler(val) {
-      this.form.biography = val || ''
-    }
-  },
-  location: {
-    immediate: true,
-    handler(val) {
-      this.form.location = val || ''
-    }
-  },
-  email: {
-    immediate: true,
-    handler(val) {
-      this.form.email = val || ''
-    }
-  },
-  showBiography: {
-    immediate: true,
-    handler(val) {
-      if (!this.isEditMode) {
-        this.form.show_biography = val ?? true
-      }
-    }
-  },
-  showField: {
-    immediate: true,
-    handler(val) {
-      if (!this.isEditMode) {
-        this.form.show_field = val ?? true
-      }
-    }
-  },
-  showLocation: {
-    immediate: true,
-    handler(val) {
-      if (!this.isEditMode) {
-        this.form.show_location = val ?? true
-      }
-    }
-  },
+  // String fields
+  fullName:    { immediate: true, handler(val) { this.form.full_name   = val || '' } },
+  field:       { immediate: true, handler(val) { this.form.field       = val || '' } },
+  biography:   { immediate: true, handler(val) { this.form.biography   = val || '' } },
+  location:    { immediate: true, handler(val) { this.form.location    = val || '' } },
+  email:       { immediate: true, handler(val) { this.form.email       = val || '' } },
+  linkedinUrl: { immediate: true, handler(val) { this.form.linkedin_url = val || '' } },
+  githubUrl:   { immediate: true, handler(val) { this.form.github_url   = val || '' } },
+  twitterUrl:  { immediate: true, handler(val) { this.form.twitter_url  = val || '' } },
 
-languages:  { immediate: true, handler(val) { this.form.languages  = val || [] } },
-experience: { immediate: true, handler(val) { this.form.experience = val || [] } },
-education:  { immediate: true, handler(val) { this.form.education  = val || [] } },
-skills:     { immediate: true, handler(val) { this.form.skills     = val || [] } },
-linkedinUrl:{ immediate: true, handler(val) { this.form.linkedin_url = val || '' } },
-githubUrl:  { immediate: true, handler(val) { this.form.github_url   = val || '' } },
-twitterUrl: { immediate: true, handler(val) { this.form.twitter_url  = val || '' } },
+  // Array fields
+  languages:  { immediate: true, handler(val) { this.form.languages  = val || [] } },
+  experience: { immediate: true, handler(val) { this.form.experience = val || [] } },
+  education:  { immediate: true, handler(val) { this.form.education  = val || [] } },
+  skills:     { immediate: true, handler(val) { this.form.skills     = val || [] } },
+
+  // Visibility toggles (only in create mode)
+  showBiography: { immediate: true, handler(val) { if (!this.isEditMode) this.form.show_biography = val ?? true } },
+  showField:     { immediate: true, handler(val) { if (!this.isEditMode) this.form.show_field     = val ?? true } },
+  showLocation:  { immediate: true, handler(val) { if (!this.isEditMode) this.form.show_location  = val ?? true } },
 },
 
   methods: {
