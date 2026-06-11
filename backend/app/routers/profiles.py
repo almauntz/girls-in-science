@@ -66,6 +66,7 @@ def get_my_profile(
 ):
     profile = get_or_create_profile(current_user, db)
     
+    parsed = parse_profile_json_fields(profile)
     return ProfileResponse(
         id=profile.id,
         user_id=current_user.id,
@@ -78,7 +79,14 @@ def get_my_profile(
         location=profile.location,
         show_biography=profile.show_biography,
         show_field=profile.show_field,
-        show_location=profile.show_location
+        show_location=profile.show_location,
+        languages=parsed["languages"],
+        experience=parsed["experience"],
+        education=parsed["education"],
+        skills=parsed["skills"],
+        linkedin_url=profile.linkedin_url,
+        github_url=profile.github_url,
+        twitter_url=profile.twitter_url,
     )
 
 @router.put("/me", response_model=ProfileResponse)
@@ -111,11 +119,26 @@ def update_my_profile(
     if profile_data.show_location is not None:
         profile.show_location = profile_data.show_location
 
+    if profile_data.languages is not None:
+        profile.languages = json.dumps([l.dict() for l in profile_data.languages])
+    if profile_data.experience is not None:
+        profile.experience = json.dumps([e.dict() for e in profile_data.experience])
+    if profile_data.education is not None:
+        profile.education = json.dumps([e.dict() for e in profile_data.education])
+    if profile_data.skills is not None:
+        profile.skills = json.dumps(profile_data.skills)
+    if profile_data.linkedin_url is not None:
+        profile.linkedin_url = profile_data.linkedin_url
+    if profile_data.github_url is not None:
+        profile.github_url = profile_data.github_url
+    if profile_data.twitter_url is not None:
+        profile.twitter_url = profile_data.twitter_url
 
     db.commit()
     db.refresh(current_user)
     db.refresh(profile)
 
+    parsed=parse_profile_json_fields(profile)
     return ProfileResponse(
         id=profile.id,
         user_id=current_user.id,
@@ -128,7 +151,14 @@ def update_my_profile(
         location=profile.location,
         show_biography=profile.show_biography,
         show_field=profile.show_field,
-        show_location=profile.show_location
+        show_location=profile.show_location,
+        languages=parsed["languages"],
+        experience=parsed["experience"],
+        education=parsed["education"],
+        skills=parsed["skills"],
+        linkedin_url=profile.linkedin_url,
+        github_url=profile.github_url,
+        twitter_url=profile.twitter_url,
     )
 
 @router.get("/dashboard", response_model=Dict[str, Any])
@@ -478,11 +508,19 @@ def get_public_profile(
         if payload is not None:
             email = user.email
 
+    parsed=parse_profile_json_fields(profile) if profile else {}
     return PublicProfileResponse(
         full_name=user.full_name,
         field=profile.field if (profile and profile.show_field) else None,
         biography=profile.biography if (profile and profile.show_biography) else None,
         avatar=profile.avatar if profile else None,
         email=email,
-        location=profile.location if (profile and profile.show_location) else None
+        location=profile.location if (profile and profile.show_location) else None,
+        languages=parsed.get("languages", []),
+        experience=parsed.get("experience", []),
+        education=parsed.get("education", []),
+        skills=parsed.get("skills", []),
+        linkedin_url=profile.linkedin_url if profile else None,
+        github_url=profile.github_url if profile else None,
+        twitter_url=profile.twitter_url if profile else None
     )
