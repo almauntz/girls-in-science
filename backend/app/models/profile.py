@@ -69,13 +69,13 @@ class ProfileUpdate(SQLModel):
     show_field: Optional[bool] = None
     show_location: Optional[bool] = None
 
-    languages: Optional[str] = Field(default=None)    
-    experience: Optional[str] = Field(default=None)   
-    education: Optional[str] = Field(default=None)    
-    skills: Optional[str] = Field(default=None)      
-    linkedin_url: Optional[str] = Field(default=None)
-    github_url: Optional[str] = Field(default=None)
-    twitter_url: Optional[str] = Field(default=None)
+    languages: Optional[List[LanguageEntry]] = None
+    experience: Optional[List[LanguageEntry]] = None
+    education: Optional[List[LanguageEntry]] = None    
+    skills: Optional[List[str]] = None    
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    twitter_url: Optional[str] = None
 
     @field_validator('full_name')
     @classmethod
@@ -108,13 +108,13 @@ class ProfileResponse(SQLModel):
     show_field: bool = True
     show_location: bool = True
 
-    languages: Optional[str] = Field(default=None)    
-    experience: Optional[str] = Field(default=None)   
-    education: Optional[str] = Field(default=None)    
-    skills: Optional[str] = Field(default=None)      
-    linkedin_url: Optional[str] = Field(default=None)
-    github_url: Optional[str] = Field(default=None)
-    twitter_url: Optional[str] = Field(default=None)
+    languages: Optional[List[LanguageEntry]] = None
+    experience: Optional[List[LanguageEntry]] = None
+    education: Optional[List[LanguageEntry]] = None    
+    skills: Optional[List[str]] = None    
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    twitter_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -153,13 +153,13 @@ class PublicProfileResponse(SQLModel):
     avatar: Optional[str] = None
     email: Optional[str] = None
     location: Optional[str] = Field(default=None, nullable=True)
-    languages: Optional[str] = Field(default=None)    
-    experience: Optional[str] = Field(default=None)   
-    education: Optional[str] = Field(default=None)    
-    skills: Optional[str] = Field(default=None)      
-    linkedin_url: Optional[str] = Field(default=None)
-    github_url: Optional[str] = Field(default=None)
-    twitter_url: Optional[str] = Field(default=None)
+    languages: Optional[List[LanguageEntry]] = None
+    experience: Optional[List[LanguageEntry]] = None
+    education: Optional[List[LanguageEntry]] = None    
+    skills: Optional[List[str]] = None    
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    twitter_url: Optional[str] = None
 
     class Config:
         from_attributes = True
