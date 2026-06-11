@@ -9,6 +9,7 @@ from typing import Dict, Any
 import uuid
 import os
 from typing import Optional
+import json
 
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
@@ -39,6 +40,24 @@ def get_or_create_profile(user: User, db: Session) -> Profile:
         db.refresh(profile)
     
     return profile
+
+
+def parse_profile_json_fields(profile: Profile) -> dict:
+    """Parsira JSON stringove iz baze u Python liste."""
+    def safe_parse(val):
+        if not val:
+            return []
+        try:
+            return json.loads(val)
+        except Exception:
+            return []
+
+    return {
+        "languages": safe_parse(profile.languages),
+        "experience": safe_parse(profile.experience),
+        "education": safe_parse(profile.education),
+        "skills": safe_parse(profile.skills),
+    }
 
 @router.get("/me", response_model=ProfileResponse)
 def get_my_profile(
