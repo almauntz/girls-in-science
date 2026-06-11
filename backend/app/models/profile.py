@@ -10,6 +10,26 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
     confirm_new_password: str
 
+class LanguageEntry(BaseModel):
+    name: str         
+    level: str        
+
+class ExperienceEntry(BaseModel):
+    title: str                   
+    organization: str             
+    location: Optional[str] = None
+    start_date: str              
+    end_date: Optional[str] = None  
+    description: Optional[str] = None
+
+class EducationEntry(BaseModel):
+    degree: str                  
+    institution: str              
+    start_date: str
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+
+
 # Tabela u bazi
 class Profile(SQLModel, table=True):
     __tablename__ = "profiles"
@@ -28,6 +48,14 @@ class Profile(SQLModel, table=True):
     show_field: bool = Field(default=True)
     show_location: bool = Field(default=True)
 
+    languages: Optional[str] = Field(default=None)    
+    experience: Optional[str] = Field(default=None)   
+    education: Optional[str] = Field(default=None)    
+    skills: Optional[str] = Field(default=None)      
+    linkedin_url: Optional[str] = Field(default=None)
+    github_url: Optional[str] = Field(default=None)
+    twitter_url: Optional[str] = Field(default=None)
+
 # Shema za ažuriranje profila
 class ProfileUpdate(SQLModel):
     full_name: Optional[str] = None
@@ -40,6 +68,14 @@ class ProfileUpdate(SQLModel):
     show_biography: Optional[bool] = None
     show_field: Optional[bool] = None
     show_location: Optional[bool] = None
+
+    languages: Optional[str] = Field(default=None)    
+    experience: Optional[str] = Field(default=None)   
+    education: Optional[str] = Field(default=None)    
+    skills: Optional[str] = Field(default=None)      
+    linkedin_url: Optional[str] = Field(default=None)
+    github_url: Optional[str] = Field(default=None)
+    twitter_url: Optional[str] = Field(default=None)
 
     @field_validator('full_name')
     @classmethod
@@ -71,6 +107,14 @@ class ProfileResponse(SQLModel):
     show_biography: bool = True
     show_field: bool = True
     show_location: bool = True
+
+    languages: Optional[str] = Field(default=None)    
+    experience: Optional[str] = Field(default=None)   
+    education: Optional[str] = Field(default=None)    
+    skills: Optional[str] = Field(default=None)      
+    linkedin_url: Optional[str] = Field(default=None)
+    github_url: Optional[str] = Field(default=None)
+    twitter_url: Optional[str] = Field(default=None)
 
     class Config:
         from_attributes = True
@@ -109,6 +153,13 @@ class PublicProfileResponse(SQLModel):
     avatar: Optional[str] = None
     email: Optional[str] = None
     location: Optional[str] = Field(default=None, nullable=True)
+    languages: Optional[str] = Field(default=None)    
+    experience: Optional[str] = Field(default=None)   
+    education: Optional[str] = Field(default=None)    
+    skills: Optional[str] = Field(default=None)      
+    linkedin_url: Optional[str] = Field(default=None)
+    github_url: Optional[str] = Field(default=None)
+    twitter_url: Optional[str] = Field(default=None)
 
     class Config:
         from_attributes = True
