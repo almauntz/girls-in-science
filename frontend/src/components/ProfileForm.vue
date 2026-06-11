@@ -192,8 +192,8 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
               <!-- Jezici -->
-              <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <div class="flex items-center justify-between mb-5">
+            <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+              <div class="flex items-center justify-between mb-5">
                   <div class="flex items-center gap-2">
                     <span class="text-violet-500">🌐</span>
                     <h3 class="text-sm font-semibold text-gray-800">Jezici</h3>
@@ -206,8 +206,16 @@
                   <template v-if="isEditMode">
                     <input v-model="lang.name" type="text" placeholder="Npr. Engleski"
                       class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"/>
-                    <input v-model="lang.level" type="text" placeholder="C1"
-                      class="w-16 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"/>
+                    <select v-model="lang.level"
+                      class="w-28 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 bg-white text-gray-700">
+                      <option value="" disabled>Nivo</option>
+                      <option>A1</option>
+                      <option>A2</option>
+                      <option>B1</option>
+                      <option>B2</option>
+                      <option>C1</option>
+                      <option>C2</option>
+                    </select>
                     <button type="button" @click="form.languages.splice(i, 1)" class="text-red-400 hover:text-red-600 text-xs">✕</button>
                   </template>
                   <p v-else class="text-sm text-gray-700">{{ lang.name }} · <span class="text-gray-400">{{ lang.level }}</span></p>
