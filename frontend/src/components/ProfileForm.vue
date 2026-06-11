@@ -380,6 +380,13 @@ export default {
     showBiography: { type: Boolean, default: true },
     showField: { type: Boolean, default: true },
     showLocation: { type: Boolean, default: true },
+    languages: { type: Array, default: () => [] },
+    experience: { type: Array, default: () => [] },
+    education: { type: Array, default: () => [] },
+    skills: { type: Array, default: () => [] },
+    linkedinUrl: { type: String, default: '' },
+    githubUrl: { type: String, default: '' },
+    twitterUrl: { type: String, default: '' },
 
   },
 
