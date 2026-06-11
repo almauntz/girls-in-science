@@ -17,6 +17,7 @@
 
     <nav class="flex-1 p-4 space-y-1">
       <button
+        v-if="userRole !== 'admin'"
         @click="$emit('tab-change', 'profil')"
         :class="[
           'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3',
@@ -27,6 +28,20 @@
       >
         <span class="text-lg">👤</span>
         Moj profil
+      </button>
+
+      <button
+        v-if="userRole === 'admin'"
+        @click="$emit('tab-change', 'admin_panel')"
+        :class="[
+          'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3',
+          activeTab === 'admin_panel'
+            ? 'bg-violet-50 text-violet-700 border border-violet-200'
+            : 'text-violet-600 hover:bg-violet-100 hover:text-violet-800'
+        ]"
+      >
+        <span class="text-lg">👥</span>
+        Upravljanje korisnicama
       </button>
 
       <button
@@ -43,6 +58,7 @@
       </button>
 
       <button
+        v-if="userRole !== 'admin'"
         @click="$emit('tab-change', 'aktivnosti')"
         :class="[
           'w-full text-left px-4 py-3 rounded-lg text-sm font-medium transition-all flex items-center gap-3',

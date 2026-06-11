@@ -20,7 +20,7 @@
 
       <div v-else>
         <ProfileForm
-          v-if="activeTab === 'profil' && profileLoaded"
+          v-if="activeTab === 'profil' && userRole !== 'admin' && profileLoaded"
           :fullName="profileData.full_name"
           :field="profileData.field"
           :biography="profileData.biography"
@@ -47,7 +47,9 @@
           @register="handleRegister"
         />
         
-      <ActivityHistory v-if="activeTab === 'aktivnosti'" />
+      <AdminView v-if="activeTab === 'admin_panel' && userRole === 'admin'" />
+
+      <ActivityHistory v-if="activeTab === 'aktivnosti' && userRole !== 'admin'" />
       </div>
 
     </main>
@@ -60,6 +62,7 @@ import ProfileSidebar from '../../components/ProfileSidebar.vue'
 import ProfileForm from '../../components/ProfileForm.vue'
 import DashboardTab from '../../components/DashboardTab.vue'
 import ActivityHistory from '../../components/ActivityHistory.vue'
+import AdminView from './AdminView.vue'
 import { getMyProfile } from '../../services/api.js'
 
 export default {
@@ -69,7 +72,8 @@ export default {
     ProfileSidebar,
     ProfileForm,
     DashboardTab,
-  ActivityHistory
+    ActivityHistory,
+    AdminView
   },
 
   data() {
@@ -90,8 +94,9 @@ export default {
   async mounted() {
   this.isLoading = true
   await this.loadProfile()
-  await this.fetchDashboardData()
-  this.isLoading = false
+  if (this.userRole !== 'admin') {
+    await this.fetchDashboardData()
+  }  this.isLoading = false
 },
 
   methods: {
