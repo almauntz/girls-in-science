@@ -420,7 +420,7 @@ export default {
       linkedin_url: '',
       github_url: '',
       twitter_url: '',
-          },
+    },
     errors: {
       full_name: '',
       biography: '',
@@ -517,6 +517,14 @@ watch: {
       }
     }
   },
+
+languages:  { immediate: true, handler(val) { this.form.languages  = val || [] } },
+experience: { immediate: true, handler(val) { this.form.experience = val || [] } },
+education:  { immediate: true, handler(val) { this.form.education  = val || [] } },
+skills:     { immediate: true, handler(val) { this.form.skills     = val || [] } },
+linkedinUrl:{ immediate: true, handler(val) { this.form.linkedin_url = val || '' } },
+githubUrl:  { immediate: true, handler(val) { this.form.github_url   = val || '' } },
+twitterUrl: { immediate: true, handler(val) { this.form.twitter_url  = val || '' } },
 },
 
   methods: {
