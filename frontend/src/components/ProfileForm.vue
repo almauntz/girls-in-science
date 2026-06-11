@@ -551,6 +551,13 @@ watch: {
       this.form.show_biography = this.showBiography
       this.form.show_field = this.showField
       this.form.show_location = this.showLocation
+      this.form.languages    = this.languages   || []
+      this.form.experience   = this.experience  || []
+      this.form.education    = this.education   || []
+      this.form.skills       = this.skills      || []
+      this.form.linkedin_url = this.linkedinUrl || ''
+      this.form.github_url   = this.githubUrl   || ''
+      this.form.twitter_url  = this.twitterUrl  || ''
     },
 
     async handleAvatarChange(event) {
