@@ -188,11 +188,11 @@ data() {
         if (type === 'role') {
           console.log(`Šaljem izmjenu uloge: korisnica ${userId} -> ${newValue}`);
           await updateUserRole(token, userId, newValue);
-          alert("Uloga je uspješno promijenjena!");
+          //alert("Uloga je uspješno promijenjena!");
         } else if (type === 'status') {
           console.log(`Šaljem izmjenu statusa: korisnica ${userId} -> ${newValue}`);
           await updateUserStatus(token, userId, newValue);
-          alert("Status računa je uspješno promijenjen!");
+          //alert("Status računa je uspješno promijenjen!");
         }
       } catch (error) {
         console.error(`Greška pri promjeni ${type}:`, error);
