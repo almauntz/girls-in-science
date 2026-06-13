@@ -4,7 +4,7 @@ from app.database import get_db
 from app.models.role_model import RoleModel
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
-from app.models.news import NewsPost, NewsPostCreate, NewsPostUpdate, NewsPostRead
+from app.models.news import NewsPost, NewsPostCreate, NewsPostUpdate, NewsPostRead, NewsCategory
 
 
 router = APIRouter(prefix="/news", tags=["news"])
@@ -15,7 +15,27 @@ def get_news_post(id: int, db: Session = Depends(get_db)):
     if not news_post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Objava nije pronađena")
     _ = news_post.role_models
+    _ = news_post.categories
     return news_post
+
+@router.post("/categories")
+def create_category(
+    data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Samo administratorica može kreirati kategorije")
+    category = NewsCategory(name=data["name"])
+    db.add(category)
+    db.commit()
+    db.refresh(category)
+    return category
+
+@router.get("/categories")
+def get_categories(db: Session = Depends(get_db)):
+    categories = db.exec(select(NewsCategory)).all()
+    return categories
 
 @router.post("/", response_model=NewsPostRead)
 def create_news_post(
@@ -40,6 +60,14 @@ def create_news_post(
             if role_model:
                 role_models.append(role_model)
         news_post.role_models = role_models
+    if news_data.category_ids:
+        categories = []
+        for category_id in news_data.category_ids:
+            category = db.get(NewsCategory, category_id)
+            if category:
+                categories.append(category)
+        news_post.categories = categories
+
     db.add(news_post)
     db.commit()
     db.refresh(news_post)
