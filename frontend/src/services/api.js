@@ -2,7 +2,6 @@ const BASE_URL = 'http://127.0.0.1:8000'
 
 /* =========================================================
    AUTH HELPERS
-========================================================= */
 
 const getToken = () => {
   const token = localStorage.getItem('token')
@@ -31,7 +30,6 @@ export const getAuthHeaders = () => {
 
 /* =========================================================
    SAFE FETCH WRAPPER
-========================================================= */
 
 const apiRequest = async (url, options = {}) => {
   const res = await fetch(`${BASE_URL}${url}`, {
@@ -60,7 +58,6 @@ const apiRequest = async (url, options = {}) => {
 
 /* =========================================================
    AUTH
-========================================================= */
 
 export async function registerUser(email, fullName, password) {
   return apiRequest('/auth/register', {
@@ -190,4 +187,86 @@ export const autoCompleteWorkshops = async () => {
   return apiRequest('/workshops/auto-complete', {
     method: 'POST'
   })
+  return response.json()
+}
+
+// dohvat profila
+export async function getMyProfile(token) {
+  const response = await fetch(`${BASE_URL}/profiles/me`, {
+    headers: { 
+      'Authorization': `Bearer ${token}` 
+    }
+  })
+  return response.json()
+}
+
+// ažuriranje profila
+export async function updateProfile(token, data) {
+  const response = await fetch(`${BASE_URL}/profiles/me`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
+
+
+// Dohvatanje svih korisnika za admin panel
+export async function getAllUsers(token) {
+  const response = await fetch(`${BASE_URL}/admin/users`, {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (response.status === 403) {
+    throw new Error('DEAKTIVIRAN_NALOG');
+  }
+
+  if (!response.ok) {
+    throw new Error('Greška prilikom dohvaćanja liste korisnika')
+  }
+
+  return response.json()
+}
+
+
+// Ažuriranje statusa korisnice (aktivna/deaktivirana)
+export async function updateUserStatus(token, userId, isActive) {
+   const response = await fetch(`http://127.0.0.1:8000/admin/${userId}/status?is_active=${isActive}`, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+
+  if (!response.ok) {
+    throw new Error('Greška prilikom izmjene statusa na serveru')
+  }
+
+  return response.json()
+}
+
+
+// GIS4-74/75: Ažuriranje uloge korisnice (Studentica, Mentorica, Admin)
+export async function updateUserRole(token, userId, newRole) {
+  const response = await fetch(`${BASE_URL}/admin/${userId}/role`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    // Šaljemo ulogu unutar body-ja kao JSON
+    body: JSON.stringify({ role: newRole })
+  })
+
+  if (!response.ok) {
+    throw new Error('Greška prilikom izmjene uloge na serveru')
+  }
+
+  return response.json()
 }

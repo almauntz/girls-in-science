@@ -1,6 +1,6 @@
 # Girls in Science — Backend
 
-Izgrađeno sa FastAPI, SQLAlchemy i SQLite (za razvoj).
+Izgrađeno sa FastAPI, SQLModel i SQLite (za razvoj).
 
 ## Postavljanje projekta
 
@@ -37,7 +37,8 @@ app/
     auth.py         — registracija i prijava (ne mijenjati)
     workshops.py    — Projektni tim 1
     mentoring.py    — Projektni tim 2
-    forum.py        — Projektni tim 3
+    role_models.py  — Projektni tim 3
+    news.py         — Projektni tim 3
     profiles.py     — Projektni tim 4
   main.py           — ulazna tačka aplikacije
   database.py       — konekcija na bazu podataka
@@ -50,11 +51,34 @@ Authorization: Bearer YOUR_TOKEN_HERE
 ```
 Token se dobija pozivom `POST /auth/login`
 
+## Migracije baze podataka (Alembic)
+
+**Ako ste već klonirali projekat i radili na svojoj grani**, povucite nove promjene i primijenite migracije:
+
+```bash
+git pull origin main
+alembic upgrade head
+```
+
+Nakon što dodate novi model ili izmijenite postojeći, pokrenite:
+
+```bash
+# Iz backend/ foldera, s aktiviranim virtualnim okruženjem
+alembic revision --autogenerate -m "kratak opis promjene"
+alembic upgrade head
+```
+
+Primjer:
+```bash
+alembic revision --autogenerate -m "dodaj tabelu workshops"
+alembic upgrade head
+```
+
 ## Za projektne timove
 
 1. Vaš router fajl je već kreiran i registrovan u aplikaciji
 2. Dodajte svoje modele u `app/models/`
-3. Dizajnirajte svoje tabele u bazi podataka
+3. Pokrenite migracije da kreirate tabele u bazi (pogledaj sekciju iznad)
 4. Dodajte svoje endpointe u vaš router fajl
 5. Koristite `Depends(get_current_user)` da dobijete prijavljenog korisnika
 6. Kreirajte vlastite `.env` varijable ako je potrebno

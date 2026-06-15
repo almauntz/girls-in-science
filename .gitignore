@@ -19,3 +19,8 @@ frontend/.vite/
 # IDE
 .vscode/
 .idea/
+
+# Internal docs
+docs/superpowers/
+
+backend/static/avatars/

@@ -68,15 +68,27 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/forum',
-    name: 'forum',
-    component: () => import('../views/forum/ForumView.vue'),
+    path: '/rolemodels',
+    name: 'rolemodels',
+    component: () => import('../views/rolemodels/RoleModelsView.vue'),
     meta: { requiresAuth: true }
   },
   {
     path: '/profiles',
     name: 'profiles',
     component: () => import('../views/profiles/ProfilesView.vue'),
+    meta: { requiresAuth: true }
+  },
+
+  {
+  path: '/profiles/:user_id',
+  name: 'public-profile',
+  component: () => import('../views/profiles/PublicProfileView.vue')
+  },
+  {
+    path: '/admin/users',
+    name: 'admin-users',
+    component: () => import('../views/profiles/AdminView.vue'),
     meta: { requiresAuth: true }
   },
 ]

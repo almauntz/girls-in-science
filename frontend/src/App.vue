@@ -39,4 +39,10 @@ body {
   margin: 0 auto;
   padding: 2rem;
 }
+
+.main-content:has(.profile-page) {
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+}
 </style>
