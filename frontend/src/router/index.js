@@ -21,11 +21,45 @@ const routes = [
     component: RegisterView,
     meta: { guestOnly: true }
   },
+  
+  //dodana ruta za listu radionnica
   {
     path: '/workshops',
     name: 'workshops',
     component: () => import('../views/workshops/WorkshopsView.vue'),
-    meta: { requiresAuth: true }
+  },
+  // Ruta za admin panel radionica  
+  {
+  path: '/workshops/admin',
+  component: () => import('../views/workshops/WorkshopsAdminView.vue'),
+  meta: { requiresAuth: true }
+  },
+  // Ruta za upravljanje prijedlozima radionica u admin panelu
+  {
+  path: '/workshops/admin/proposals',
+  name: 'proposals-admin',
+  component: () => import('../views/workshops/ProposalAdminView.vue'),
+  meta: { requiresAuth: true }
+  },
+  // Ruta za pregled prijava na radionice
+  {
+  path: '/workshops/admin/registrations',
+  name: 'registrations-admin',
+  component: () => import('../views/workshops/UsersListOnWorkshop.vue'),
+  meta: { requiresAuth: true }
+  },
+  //Ruta za prikaz prijedloga radionica koje je korisnik poslao
+  {
+  path: '/workshops/my-proposals',
+  name: 'my-proposals',
+  component: () => import('../views/workshops/MyProposalsView.vue'),
+  meta: { requiresAuth: true }
+  },
+  //dodana ruta za detalje radionice
+  {
+   path: '/workshops/:id',
+   name: 'workshops-detail',
+  component: () => import('../views/workshops/WorkshopsDetailView.vue'),
   },
   {
     path: '/mentoring',
