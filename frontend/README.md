@@ -31,10 +31,11 @@ src/
     HomeView.vue        — početna stranica
     LoginView.vue       — forma za prijavu
     RegisterView.vue    — forma za registraciju
-    workshops/          — Ekipa 1
-    mentoring/          — Ekipa 2
-    forum/              — Ekipa 3
-    profiles/           — Ekipa 4
+    workshops/          — Tim 1
+    mentoring/          — Tim 2
+    rolemodels/         — Tim 3
+    news/               - Tim 3
+    profiles/           — Tim 4
   router/
     index.js            — rute aplikacije
   services/

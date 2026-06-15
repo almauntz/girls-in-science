@@ -1,6 +1,6 @@
 # Girls in Science — Platform
 
-Platforma za Girls in Science centar koja omogućava članicama da se prijave na workshops, pronađu mentora, učestvuju u forumu i upravljaju svojim profilom.
+Platforma za Girls in Science centar koja omogućava članicama da se prijave na workshops, pronađu mentora, istražuju direktorij inspirativnih žena u STEM-u, prate vijesti i upravljaju svojim profilom.
 
 ## Struktura projekta
 
@@ -14,6 +14,7 @@ girls-in-science/
 
 ### Backend
 ```bash
+python3 -m venv venv
 cd backend
 source ../venv/bin/activate
 pip install -r requirements.txt
@@ -36,12 +37,13 @@ Aplikacija dostupna na: `http://localhost:5173`
 |-----|---------------|--------|
 | Tim 1 | Workshops | `backend/app/routers/workshops.py`, `frontend/src/views/workshops/` |
 | Tim 2 | Mentoring | `backend/app/routers/mentoring.py`, `frontend/src/views/mentoring/` |
-| Tim 3 | Forum | `backend/app/routers/forum.py`, `frontend/src/views/forum/` |
+| Tim 3 | Role Models | `backend/app/routers/role_models.py`, `frontend/src/views/role_models/` |
+| Tim 3 | Vijesti & Blog | `backend/app/routers/news.py`, `frontend/src/views/news/` |
 | Tim 4 | Profili & Dashboard | `backend/app/routers/profiles.py`, `frontend/src/views/profiles/` |
 
 ## Tehnologije
 
-- **Backend:** Python, FastAPI, SQLAlchemy, Alembic, JWT
+- **Backend:** Python, FastAPI, SQLModel, JWT
 - **Frontend:** Vue 3, Vite, Tailwind CSS, Vue Router
 - **Baza:** SQLite (development), PostgreSQL (produkcija)
 
@@ -51,6 +53,15 @@ Platforma koristi JWT tokene. Nakon prijave token se čuva u `localStorage` i š
 ```
 Authorization: Bearer YOUR_TOKEN_HERE
 ```
+
+## Git Workflow
+
+- Radite na grani `dev` — ne raditi commit direktno na `main`
+- Konvencija za imenovanje grana: `timX/naziv-funkcionalnosti/naziv-featurea`
+  - Primjeri: `tim1/workshops/prijava`, `tim3/rolemodels/lista`, `tim2/mentoring/pretraga`
+- Commit poruke trebaju biti smislene i opisivati šta je promijenjeno
+- Radite commit često — ne čekajte da sve bude gotovo pa onda jedan veliki commit
+- Pull request prema `main` grani se radi tek na kraju sprinta, nakon pregleda asistentice
 
 ## Za projektne timove
 

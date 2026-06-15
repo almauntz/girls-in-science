@@ -3,7 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from app.core.config import settings
 from app.database import Base, engine
-from app.routers import auth, mentoring, forum, workshops, profiles, students
+from app.routers import auth, mentoring, forum, workshops, profiles, students, workshops, profiles, role_models, news
+from app.database import create_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.mentor import Mentor
@@ -12,7 +13,7 @@ from app.models.student import Student
 from app.routers import requests
 from app.models.mentorship_request import MentorshipRequest
 
-Base.metadata.create_all(bind=engine)
+create_db()
 
 security = HTTPBearer()
 
@@ -35,7 +36,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(workshops.router)
 app.include_router(mentoring.router)
-app.include_router(forum.router)
+app.include_router(role_models.router)
+app.include_router(news.router)
 app.include_router(profiles.router)
 app.include_router(students.router)
 app.include_router(admin.router)  # ispod ostalih routera

@@ -60,9 +60,9 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/forum',
-    name: 'forum',
-    component: () => import('../views/forum/ForumView.vue'),
+    path: '/rolemodels',
+    name: 'rolemodels',
+    component: () => import('../views/rolemodels/RoleModelsView.vue'),
     meta: { requiresAuth: true }
   },
   {

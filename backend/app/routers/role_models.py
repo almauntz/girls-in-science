@@ -4,16 +4,22 @@ from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 
-router = APIRouter(prefix="/workshops", tags=["workshops"])
+router = APIRouter(prefix="/role-models", tags=["role_models"])
 
 # -------------------------------------------------------
-# Team 1 — Workshops
+# Team 3 — Role Models
 # This is your router. All your endpoints go here.
-# 
+#
+# Role models are inspiring women in STEM. Build a directory
+# that lets users browse and search them.
+#
+# Your team will define the RoleModel model in app/models/role_model.py
+# Coordinate with the News team — a NewsPost can reference a RoleModel.
+#
 # Example protected endpoint:
 #
 # @router.get("/")
-# def get_workshops(
+# def get_role_models(
 #     db: Session = Depends(get_db),
 #     current_user: User = Depends(get_current_user)
 # ):
@@ -22,5 +28,5 @@ router = APIRouter(prefix="/workshops", tags=["workshops"])
 # -------------------------------------------------------
 
 @router.get("/")
-def workshops_placeholder():
-    return {"message": "Workshops router is working — Team 1 builds here"}
+def role_models_placeholder():
+    return {"message": "Role Models router is working — Team 3 builds here"}
