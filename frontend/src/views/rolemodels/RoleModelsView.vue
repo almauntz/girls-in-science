@@ -31,6 +31,10 @@ function getInitials(first, last) {
   return `${first?.[0] || ''}${last?.[0] || ''}`.toUpperCase()
 }
 
+function resetFilter() {
+  search.value = ""
+}
+
 </script>
 
 <template>
@@ -45,6 +49,15 @@ function getInitials(first, last) {
         placeholder="Pretraži po imenu, oblasti ili instituciji"
         class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
       />
+
+      <button
+        v-if="search"
+        @click="resetFilter"
+        class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-5 py-2 rounded-lg text-sm transition"
+      >
+        Reset
+      </button>
+
       <button
         v-if="isAdmin"
         @click="router.push('/role-models/add')"
@@ -54,8 +67,12 @@ function getInitials(first, last) {
       </button>
     </div>
 
-    <div v-if="filteredRoleModels.length === 0" class="text-center text-gray-500 py-12">
-      Nema dostupnih profila.
+    <div v-if="filteredRoleModels.length === 0 && search" class="text-center text-gray-500 py-12">
+      Nema rezultata.
+    </div>
+
+    <div v-else-if="filteredRoleModels.length === 0" class="text-center text-gray-500 py-12">
+      Trenutno nema dostupnih profila.
     </div>
 
     <div class="flex flex-col gap-4">
