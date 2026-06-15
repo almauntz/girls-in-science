@@ -38,14 +38,15 @@ const routes = [
     component: () => import('../views/mentoring/MentorRegistration.vue'),
   },
   {
-    path: '/student/apply',
-    name: 'student-registration',
-    component: () => import('../views/StudentRegistration.vue'),
-  },
-  {
     path: '/mentoring/my-applications',
     name: 'mentor-applications',
     component: () => import('../views/mentoring/MentorApplicationsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/mentoring/:id/zahtjev',
+    name: 'mentorship-request',
+    component: () => import('../views/mentoring/MentorshipRequestView.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -54,10 +55,9 @@ const routes = [
     component: () => import('../views/mentoring/MentorProfileView.vue')
   },
   {
-    path: '/mentoring/:id/zahtjev',
-    name: 'mentorship-request',
-    component: () => import('../views/mentoring/MentorshipRequestView.vue'),
-    meta: { requiresAuth: true }
+    path: '/student/apply',
+    name: 'student-registration',
+    component: () => import('../views/StudentRegistration.vue'),
   },
   {
     path: '/rolemodels',
@@ -88,19 +88,6 @@ const routes = [
     name: 'unauthorized',
     component: () => import('../views/UnauthorizedView.vue')
   },
-  {
-    path: '/mentoring/apply',
-    name: 'student-apply',
-    component: () => import('../views/mentoring/StudentRegistration.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/mentoring/:id/zahtjev',
-    name: 'mentorship-request',
-    component: () => import('../views/mentoring/MentorshipRequestView.vue'),
-    meta: { requiresAuth: true }
-  }
-
 ]
 
 const router = createRouter({
@@ -122,7 +109,5 @@ router.beforeEach((to, from, next) => {
     next()
   }
 })
-
-
 
 export default router

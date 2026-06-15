@@ -25,6 +25,6 @@ class MentorshipRequest(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
-    # Relationships
-    student = relationship("User", foreign_keys=[student_id])
-    mentor = relationship("Mentor", foreign_keys=[mentor_id])
+    # String references work because all models now share the same Base registry
+    student = relationship("User", foreign_keys=[student_id], lazy="select")
+    mentor = relationship("Mentor", foreign_keys=[mentor_id], lazy="select")
