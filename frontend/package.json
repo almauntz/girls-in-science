@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@vueform/multiselect": "^2.6.11",
     "axios": "^1.16.1",
     "@motionone/vue": "^10.16.4",
     "canvas-confetti": "^1.9.4",

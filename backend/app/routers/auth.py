@@ -26,7 +26,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.email == data.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
-    
+
     user = User(
         email=data.email,
         full_name=data.full_name,
@@ -36,7 +36,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    token = create_access_token({"sub": str(user.id)})
+    token = create_access_token({"sub": str(user.id), "role": user.role.value})
     return {"access_token": token, "token_type": "bearer"}
 
 
@@ -45,7 +45,6 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     user = db.query(User).filter(User.email == data.username).first()
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    user.role = UserRole.admin  # Ovo te pravi adminom u bazi
-    db.commit()
-    token = create_access_token({"sub": str(user.id)})
+
+    token = create_access_token({"sub": str(user.id), "role": user.role.value})
     return {"access_token": token, "token_type": "bearer"}

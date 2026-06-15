@@ -154,8 +154,7 @@ export default {
         this.newWorkshops = response.data.new_workshops
         this.availableWorkshops = response.data.available_workshops
       } catch (error) {
-        console.log("Cijela greska:", error);
-        alert("Status greske: " + error.response?.status + " Poruka: " + error.message);
+        console.error('Dashboard greška:', error)
         this.dashboardError = 'Nije moguće učitati podatke. Provjerite jeste li prijavljeni.'
       }
     },
@@ -163,14 +162,14 @@ export default {
     async handleRegister(workshopId) {
       try {
         const response = await axios.post(
-          `http://localhost:8000/dashboard/register?workshop_id=${workshopId}`,
+          `http://localhost:8000/profiles/dashboard/register?workshop_id=${workshopId}`,
           {},
           this.getAuthHeaders()
         )
-        alert(response.data.message || 'Uspješno ste se prijavili!')
+        console.log(response.data.message || 'Uspješno ste se prijavili!')
         this.fetchDashboardData()
       } catch (err) {
-        alert(err.response?.data?.detail || 'Greška pri prijavi.')
+        this.dashboardError = err.response?.data?.detail || 'Greška pri prijavi na radionicu.'
       }
     },
     
