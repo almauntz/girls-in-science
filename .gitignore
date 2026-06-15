@@ -22,3 +22,5 @@ frontend/.vite/
 
 # Internal docs
 docs/superpowers/
+
+backend/static/avatars/

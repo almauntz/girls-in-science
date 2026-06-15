@@ -1,21 +1,18 @@
 from fastapi import APIRouter, Depends, Form, UploadFile, File, status, HTTPException, Query
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
-from sqlmodel import Session
 
 from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.models.student import Student
-import os
-import shutil
-
 from app.models.mentor import Mentor
 from app.models.mentorship_request import MentorshipRequest, RequestStatus
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 import uuid
+import os
+import shutil
 
 router = APIRouter(prefix="/mentoring", tags=["mentoring"])
 
@@ -185,55 +182,6 @@ def get_mentor_profile(id: int, db: Session = Depends(get_db)):
         institution=mentor.institution
     )
 
-
-@router.post("/students/register", status_code=status.HTTP_201_CREATED)
-async def register_student(
-    full_name: str = Form(...),
-    email: str = Form(...),
-    university: str = Form(None),
-    faculty: str = Form(None),
-    year_of_study: str = Form(None),
-    city_country: str = Form(None),
-    areas_of_interest: str = Form(None),
-    has_business_idea: str = Form(None),
-    expectations: str = Form(None),
-    skills_to_improve: str = Form(None),
-    preferred_session_format: str = Form(None),
-    session_commitment: bool = Form(False),
-    consent_data: bool = Form(False),
-    consent_evaluation: bool = Form(False),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    existing = db.query(Student).filter(Student.email == email).first()
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Prijava sa ovim emailom već postoji."
-        )
-
-    student = Student(
-        full_name=full_name,
-        email=email,
-        university=university,
-        faculty=faculty,
-        year_of_study=year_of_study,
-        city_country=city_country,
-        areas_of_interest=areas_of_interest,
-        has_business_idea=has_business_idea,
-        expectations=expectations,
-        skills_to_improve=skills_to_improve,
-        preferred_session_format=preferred_session_format,
-        session_commitment=session_commitment,
-        consent_data=consent_data,
-        consent_evaluation=consent_evaluation
-    )
-
-    db.add(student)
-    db.commit()
-    db.refresh(student)
-
-    return {"message": "Prijava uspješno poslana!", "id": student.id}
 
 
 @router.get("/my-applications", response_model=list[MentorshipRequestOut])

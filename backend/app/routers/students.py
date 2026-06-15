@@ -62,13 +62,15 @@ async def register_student(
         
         # Sačuvaj CV datoteku ako je poslana
         cv_url = None
-        if cv_file:
+        if cv_file and cv_file.filename:
             # Kreiraj folder ako ne postoji
-            upload_dir = Path("uploads/student_cvs")
+            upload_dir = Path("storage/cv")
             upload_dir.mkdir(parents=True, exist_ok=True)
             
-            # Spremi datoteku
-            file_path = upload_dir / cv_file.filename
+            # Spremi datoteku sa jedinstvenim imenom (sprječava path traversal)
+            import uuid
+            safe_filename = f"{uuid.uuid4()}_{Path(cv_file.filename).name}"
+            file_path = upload_dir / safe_filename
             with open(file_path, "wb") as buffer:
                 content = await cv_file.read()
                 buffer.write(content)

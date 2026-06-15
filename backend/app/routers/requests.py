@@ -56,6 +56,18 @@ async def create_request(
         buffer.write(contents)
 
     #kreiranje objekta i upisivanje u bazu podataka
+    # Provjeri da li već postoji zahtjev od ovog studenta prema ovom mentoru
+    existing_request = db.query(MentorshipRequest).filter(
+        MentorshipRequest.mentor_id == mentor_id,
+        MentorshipRequest.student_id == current_user.id,
+        MentorshipRequest.status == RequestStatus.PENDING
+    ).first()
+    if existing_request:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Već postoji aktivan zahtjev prema ovom mentoru."
+        )
+
     new_request = MentorshipRequest(
         mentor_id=mentor_id,
         student_id=current_user.id,

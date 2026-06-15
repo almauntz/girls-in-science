@@ -77,18 +77,18 @@ export default {
       this.loading = true
       this.error = null
 
-      const response = await registerUser(this.email, this.fullName, this.password)
-
-      if (response.access_token) {
+      try {
+        const response = await registerUser(this.email, this.fullName, this.password)
         localStorage.setItem('token', response.access_token)
-        const user = await getMe(response.access_token)
+        const user = await getMe()
         localStorage.setItem('username', user.full_name)
-        window.location.href = '/'
-      } else {
-        this.error = response.detail || 'Greška pri registraciji.'
+        localStorage.setItem('user_role', user.role)
+        this.$router.push('/profiles')
+      } catch (err) {
+        this.error = err.data?.detail || err.message || 'Greška pri registraciji.'
+      } finally {
+        this.loading = false
       }
-
-      this.loading = false
     }
   }
 }
