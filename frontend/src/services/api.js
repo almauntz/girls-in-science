@@ -213,6 +213,59 @@ export async function updateProfile(token, data) {
   return response.json()
 }
 
+export async function getRoleModels() {
+  const response= await fetch(`${BASE_URL}/role-models/`)
+  return response.json()
+}
+
+export async function getRoleModel(id) {
+  const response = await fetch(`${BASE_URL}/role-models/${id}`)
+  return response.json()
+}
+
+export async function updateRoleModel(id, data) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/role-models/${id}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
+
+export async function addRoleModel(data, token) {
+  const response = await fetch(`${BASE_URL}/role-models/`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
+
+export async function deleteRoleModel(id, token) {
+  const response = await fetch(`${BASE_URL}/role-models/${id}`, {
+    method: 'DELETE',
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  return response.json()
+}
+
+export async function getNewsPost(id) {
+  const response = await fetch(`${BASE_URL}/news/${id}`)
+  return response.json()
+}
+
+export async function deleteNewsPost(id, token) {
+  const response = await fetch(`${BASE_URL}/news/${id}`, {
+    method: 'DELETE',
 
 // Dohvatanje svih korisnika za admin panel
 export async function getAllUsers(token) {
@@ -243,6 +296,30 @@ export async function updateUserStatus(token, userId, isActive) {
       'Authorization': `Bearer ${token}`
     }
   })
+  return response.json()
+}
+
+export async function createNewsPost(data, token) {
+  const response = await fetch(`${BASE_URL}/news/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
+
+export async function getNewsPosts() {
+  const response = await fetch(`${BASE_URL}/news/`)
+  return response.json()
+}
+
+export async function updateNewsPost(id, data) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/news/${id}`, {
+    method: 'PATCH',
 
   if (!response.ok) {
     throw new Error('Greška prilikom izmjene statusa na serveru')
@@ -260,6 +337,8 @@ export async function updateUserRole(token, userId, newRole) {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${token}`
     },
+    body: JSON.stringify(data)
+  })
     // Šaljemo ulogu unutar body-ja kao JSON
     body: JSON.stringify({ role: newRole })
   })

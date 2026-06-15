@@ -6,12 +6,13 @@ from app.database import create_db
 from app.routers import auth, mentoring, workshops, profiles, role_models, news, admin
 from app.core.security import get_current_user
 from app.models.user import User
+from app.models.role_model import RoleModel
 from sqlmodel import SQLModel
 from app.models.workshops_models import Workshop, Registration
 from app.models.user import User 
 Base.metadata.create_all(bind=engine)
 SQLModel.metadata.create_all(engine) 
-
+create_db()
 security = HTTPBearer()
 
 app = FastAPI(
