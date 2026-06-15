@@ -1317,3 +1317,483 @@ onMounted(() => {
   fetchProposals()
 })
 </script>
+
+<style scoped>
+/* ================================================================
+   Naslovi koji dijele tri sekcije
+   ================================================================ */
+.combined-admin-page {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+ 
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 2.5rem 2rem 0;
+  max-width: 860px;
+  margin: 0 auto;
+}
+ 
+.section-divider-line {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, #ede9fe, #ddd6fe);
+  border-radius: 2px;
+}
+ 
+.section-divider-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #ede9fe;
+  color: #7c3aed;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1.5px solid #ddd6fe;
+  white-space: nowrap;
+}
+ 
+/* ================================================================
+   LAYOUT STRANICE
+   ================================================================ */
+.admin-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 3rem 2rem 5rem;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+ 
+/* Naslov stranice */
+.page-header { text-align: center; margin-bottom: 3rem; }
+ 
+.admin-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: #ede9fe; color: #7c3aed;
+  font-size: 0.68rem; font-weight: 800;
+  letter-spacing: .09em; text-transform: uppercase;
+  padding: 4px 12px; border-radius: 20px; margin-bottom: 1rem;
+  border: 1.5px solid #ddd6fe;
+}
+ 
+.page-header h1 {
+  font-size: 1.75rem; font-weight: 800;
+  color: #1e1b4b; margin: 0 0 0.4rem;
+}
+ 
+.page-sub { color: #9ca3af; font-size: 0.88rem; margin: 0; }
+ 
+/* ================================================================
+   TRI KARTICE (glavni ekran)
+   ================================================================ */
+.actions-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+}
+ 
+.action-card {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.8rem; padding: 2.25rem 1.25rem;
+  border-radius: 18px; border: 2px solid transparent;
+  cursor: pointer; text-align: center; background: #fff;
+  transition: transform .18s, box-shadow .18s, border-color .18s;
+}
+.action-card:hover { transform: translateY(-5px); }
+ 
+.card-icon {
+  width: 66px; height: 66px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .18s;
+}
+.action-card:hover .card-icon { transform: scale(1.08); }
+ 
+.card-label { font-size: 1rem; font-weight: 800; color: #1e1b4b; }
+.card-hint  { font-size: 0.77rem; color: #9ca3af; line-height: 1.45; }
+ 
+/* Kartica Kreiraj — lila */
+.card-create { box-shadow: 0 2px 16px rgba(124,58,237,.1); }
+.card-create:hover { border-color: #7c3aed; box-shadow: 0 8px 28px rgba(124,58,237,.18); }
+.card-create .card-icon { background: #ede9fe; color: #7c3aed; }
+ 
+/* Kartica Uredi — žuta */
+.card-edit { box-shadow: 0 2px 16px rgba(217,119,6,.08); }
+.card-edit:hover { border-color: #d97706; box-shadow: 0 8px 28px rgba(217,119,6,.18); }
+.card-edit .card-icon { background: #fef3c7; color: #d97706; }
+ 
+/* Kartica Obriši — crvena */
+.card-delete { box-shadow: 0 2px 16px rgba(220,38,38,.07); }
+.card-delete:hover { border-color: #dc2626; box-shadow: 0 8px 28px rgba(220,38,38,.15); }
+.card-delete .card-icon { background: #fee2e2; color: #dc2626; }
+ 
+/* ================================================================
+   OVERLAY I MODALI
+   ================================================================ */
+.overlay {
+  position: fixed; inset: 0; z-index: 40;
+  background: rgba(15, 10, 40, .52);
+  backdrop-filter: blur(5px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  animation: fade-in .15s ease;
+}
+.overlay-top { z-index: 50; }
+ 
+@keyframes fade-in { from { opacity: 0 } to { opacity: 1 } }
+ 
+.modal {
+  background: #fff; border-radius: 20px;
+  width: 100%; max-width: 560px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, .22);
+  animation: slide-up .2s ease; overflow: hidden;
+}
+.modal-narrow  { max-width: 440px; }
+.modal-detail  { max-width: 600px; }
+ 
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(22px) }
+  to   { opacity: 1; transform: translateY(0) }
+}
+ 
+.modal-head {
+  display: flex; align-items: center; gap: 0.9rem;
+  padding: 1.4rem 1.5rem 1.2rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+.modal-head h2 { font-size: 1rem; font-weight: 800; color: #1e1b4b; margin: 0 0 2px; }
+.modal-head p  { font-size: 0.77rem; color: #9ca3af; margin: 0; }
+ 
+.mh-icon {
+  width: 40px; height: 40px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.head-create   .mh-icon { background: #ede9fe; color: #7c3aed; }
+.head-edit     .mh-icon { background: #fef3c7; color: #d97706; }
+.head-delete   .mh-icon { background: #fee2e2; color: #dc2626; }
+.head-pending  .mh-icon { background: #fef3c7; color: #d97706; }
+.head-accepted .mh-icon { background: #d1fae5; color: #059669; }
+.head-rejected .mh-icon { background: #fee2e2; color: #dc2626; }
+ 
+.close-btn {
+  margin-left: auto; background: #f9fafb; border: 1.5px solid #f3f4f6;
+  width: 30px; height: 30px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; color: #9ca3af; font-size: 0.9rem;
+  transition: background .15s;
+}
+.close-btn:hover { background: #f3f4f6; color: #374151; }
+ 
+.modal-body {
+  padding: 1.25rem 1.5rem;
+  display: flex; flex-direction: column; gap: 1rem;
+  max-height: 70vh; overflow-y: auto;
+}
+ 
+.modal-foot {
+  padding: 1rem 1.5rem 1.4rem;
+  display: flex; justify-content: flex-end; gap: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+}
+ 
+/* ================================================================
+   FORMA — polja za unos podataka
+   ================================================================ */
+.field-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.field       { display: flex; flex-direction: column; gap: 4px; }
+.field-narrow { max-width: 150px; }
+ 
+.field label { font-size: 0.77rem; font-weight: 700; color: #374151; }
+.req { color: #dc2626; }
+ 
+.field input,
+.field textarea {
+  background: #fafafa; border: 1.5px solid #e5e7eb;
+  border-radius: 10px; padding: 0.48rem 0.7rem;
+  font-size: 0.86rem; color: #111827; outline: none;
+  transition: border-color .15s, box-shadow .15s;
+  font-family: inherit;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
+}
+.field textarea { resize: vertical; min-height: 76px; }
+ 
+.input-error { border-color: #dc2626 !important; }
+.err-msg { font-size: 0.71rem; color: #dc2626; font-weight: 600; }
+ 
+.hint-text { font-size: 0.77rem; color: #9ca3af; margin: 0; }
+ 
+.loaded-label {
+  font-size: 0.77rem; color: #7c3aed; font-weight: 700;
+  background: #ede9fe; padding: 6px 10px; border-radius: 8px; margin: 0;
+}
+ 
+/* ================================================================
+   UPOZORENJE ZA BRISANJE
+   ================================================================ */
+.danger-notice {
+  display: flex; align-items: center; gap: 8px;
+  background: #fef2f2; border: 1.5px solid #fecaca;
+  border-radius: 10px; padding: 0.65rem 0.9rem;
+  font-size: 0.8rem; font-weight: 600; color: #991b1b;
+}
+ 
+/* ================================================================
+   POTVRDNI PROZOR
+   ================================================================ */
+.confirm-modal {
+  padding: 2rem; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 1rem;
+}
+ 
+.confirm-icon {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.icon-create { background: #ede9fe; color: #7c3aed; }
+.icon-edit   { background: #fef3c7; color: #d97706; }
+.icon-delete { background: #fee2e2; color: #dc2626; }
+ 
+.confirm-title { font-size: 1.05rem; font-weight: 800; color: #1e1b4b; margin: 0; }
+.confirm-msg   { font-size: 0.85rem; color: #6b7280; line-height: 1.6; margin: 0; }
+.confirm-actions { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+ 
+/* ================================================================
+   DUGMAD
+   ================================================================ */
+.btn-secondary,
+.btn-create,
+.btn-edit,
+.btn-delete {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0.5rem 1.2rem; border-radius: 10px;
+  font-size: 0.84rem; font-weight: 700; cursor: pointer;
+  border: none; transition: opacity .15s, transform .12s;
+}
+.btn-create:hover, .btn-edit:hover, .btn-delete:hover { transform: translateY(-1px); }
+.btn-create:disabled, .btn-edit:disabled,
+.btn-delete:disabled, .btn-secondary:disabled {
+  opacity: .55; cursor: not-allowed; transform: none;
+}
+ 
+.btn-secondary { background: #f3f4f6; color: #6b7280; border: 1.5px solid #e5e7eb; }
+.btn-secondary:hover { background: #e5e7eb; }
+ 
+.btn-create {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: #fff; box-shadow: 0 3px 10px rgba(124,58,237,.3);
+}
+.btn-edit {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: #fff; box-shadow: 0 3px 10px rgba(245,158,11,.3);
+}
+.btn-delete {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #fff; box-shadow: 0 3px 10px rgba(239,68,68,.3);
+}
+ 
+/* ================================================================
+   SPINNER
+   ================================================================ */
+.spin {
+  display: inline-block; width: 13px; height: 13px;
+  border: 2px solid rgba(255, 255, 255, .4);
+  border-top-color: #fff; border-radius: 50%;
+  animation: spin .65s linear infinite;
+}
+.spin-dark {
+  border: 2px solid rgba(124,58,237,.2);
+  border-top-color: #7c3aed;
+}
+@keyframes spin { to { transform: rotate(360deg) } }
+ 
+/* ================================================================
+   TOAST NOTIFIKACIJE
+   ================================================================ */
+.toast {
+  position: fixed; bottom: 1.75rem; right: 1.75rem; z-index: 9999;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0.7rem 1.2rem; border-radius: 12px;
+  font-size: 0.85rem; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .14);
+}
+.toast-success { background: #ecfdf5; color: #065f46; border: 1.5px solid #6ee7b7; }
+.toast-error   { background: #fef2f2; color: #991b1b; border: 1.5px solid #fca5a5; }
+ 
+.toast-enter-active, .toast-leave-active { transition: all .28s ease; }
+.toast-enter-from { opacity: 0; transform: translateY(8px); }
+.toast-leave-to   { opacity: 0; transform: translateY(-8px); }
+ 
+/* ================================================================
+   FILTER DUGMAD (Proposals sekcija)
+   ================================================================ */
+.filter-row {
+  display: flex; gap: 0.6rem; flex-wrap: wrap;
+  margin-bottom: 1.75rem;
+}
+.filter-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0.42rem 1rem; border-radius: 20px;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer;
+  background: #fff; border: 1.5px solid #e5e7eb; color: #6b7280;
+  transition: all .15s;
+}
+.filter-btn:hover { border-color: #d1d5db; color: #374151; }
+.filter-btn.active { background: #1e1b4b; border-color: #1e1b4b; color: #fff; }
+ 
+.filter-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+}
+.dot-all      { background: #9ca3af; }
+.dot-pending  { background: #f59e0b; }
+.dot-accepted { background: #10b981; }
+.dot-rejected { background: #ef4444; }
+ 
+.filter-count {
+  background: rgba(0,0,0,.07); border-radius: 20px;
+  padding: 1px 7px; font-size: 0.72rem; font-weight: 800;
+}
+.filter-btn.active .filter-count { background: rgba(255,255,255,.2); }
+ 
+/* ================================================================
+   LOADING / EMPTY STATE (Proposals sekcija)
+   ================================================================ */
+.loading-state, .empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 0.75rem; padding: 4rem 0;
+  color: #9ca3af; font-size: 0.88rem;
+}
+.empty-icon {
+  width: 60px; height: 60px; border-radius: 18px;
+  background: #f9fafb; border: 1.5px solid #e5e7eb;
+  display: flex; align-items: center; justify-content: center;
+  color: #d1d5db;
+}
+ 
+/* ================================================================
+   LISTA PRIJEDLOGA
+   ================================================================ */
+.proposals-list { display: flex; flex-direction: column; gap: 0.75rem; }
+ 
+.proposal-card {
+  background: #fff; border-radius: 16px;
+  border: 1.5px solid #e5e7eb;
+  padding: 1.25rem 1.4rem;
+  display: flex; align-items: center; gap: 1rem;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.proposal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.09);
+}
+.card-pending:hover  { border-color: #f59e0b; }
+.card-accepted:hover { border-color: #10b981; }
+.card-rejected:hover { border-color: #ef4444; }
+ 
+.card-left   { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.card-arrow  { color: #d1d5db; flex-shrink: 0; }
+ 
+.proposal-title {
+  font-size: 0.97rem; font-weight: 800; color: #1e1b4b;
+  margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.proposal-desc { font-size: 0.82rem; color: #6b7280; margin: 0; line-height: 1.5; }
+ 
+.card-meta {
+  display: flex; gap: 1.1rem; flex-wrap: wrap;
+  font-size: 0.75rem; color: #9ca3af; margin-top: 2px;
+}
+.card-meta span { display: flex; align-items: center; gap: 4px; }
+ 
+/* ================================================================
+   STATUS BADGE
+   ================================================================ */
+.status-badge {
+  display: inline-block;
+  padding: 2px 10px; border-radius: 20px;
+  font-size: 0.7rem; font-weight: 800; letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.badge-pending  { background: #fef3c7; color: #92400e; border: 1.5px solid #fde68a; }
+.badge-accepted { background: #d1fae5; color: #065f46; border: 1.5px solid #6ee7b7; }
+.badge-rejected { background: #fee2e2; color: #991b1b; border: 1.5px solid #fca5a5; }
+ 
+/* ================================================================
+   Polje detalja
+   ================================================================ */
+.detail-field { display: flex; flex-direction: column; gap: 3px; }
+.detail-label {
+  font-size: 0.71rem; font-weight: 700; color: #9ca3af;
+  text-transform: uppercase; letter-spacing: .06em;
+}
+.detail-value { font-size: 0.9rem; color: #1e1b4b; font-weight: 500; }
+.detail-desc  { line-height: 1.6; color: #374151; white-space: pre-wrap; }
+ 
+.admin-note-box {
+  background: #f0fdf4; border: 1.5px solid #bbf7d0;
+  border-radius: 10px; padding: 0.75rem 1rem;
+}
+.note-label {
+  display: block; font-size: 0.7rem; font-weight: 800;
+  color: #059669; text-transform: uppercase;
+  letter-spacing: .06em; margin-bottom: 4px;
+}
+.admin-note-box p { font-size: 0.85rem; color: #374151; margin: 0; }
+ 
+/* ================================================================
+   AKCIJE U DETALJNOM MODALU
+   ================================================================ */
+.action-divider {
+  display: flex; align-items: center; gap: 0.75rem;
+  font-size: 0.72rem; font-weight: 800; color: #9ca3af;
+  text-transform: uppercase; letter-spacing: .07em;
+  margin: 0.25rem 0;
+}
+.action-divider::before, .action-divider::after {
+  content: ''; flex: 1; height: 1px; background: #f3f4f6;
+}
+ 
+.pending-actions {
+  display: flex; gap: 0.75rem; justify-content: flex-end;
+}
+ 
+.action-form {
+  display: flex; flex-direction: column; gap: 0.85rem;
+  padding: 1rem; border-radius: 12px;
+}
+.action-form-approve { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+.action-form-reject  { background: #fef2f2; border: 1.5px solid #fecaca; }
+ 
+.form-actions { display: flex; gap: 0.6rem; justify-content: flex-end; }
+ 
+/* Toggle switch */
+.toggle-row { flex-direction: row; align-items: center; }
+.toggle-label {
+  display: flex; align-items: center; gap: 0.65rem;
+  font-size: 0.84rem; font-weight: 600; color: #374151;
+  cursor: pointer; user-select: none;
+}
+.toggle-input { display: none; }
+.toggle-track {
+  position: relative; width: 38px; height: 21px;
+  background: #e5e7eb; border-radius: 20px;
+  transition: background .2s; flex-shrink: 0;
+}
+.toggle-input:checked + .toggle-track { background: #7c3aed; }
+.toggle-thumb {
+  position: absolute; top: 3px; left: 3px;
+  width: 15px; height: 15px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+  transition: left .2s;
+}
+.toggle-input:checked ~ .toggle-track .toggle-thumb { left: 20px; }
+</style>
+ 
