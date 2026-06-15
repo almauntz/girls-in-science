@@ -3,13 +3,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 from app.core.config import settings
 from app.database import create_db
-from app.routers import auth, mentoring, workshops, profiles, role_models, news
+from app.routers import auth, mentoring, workshops, profiles, role_models, news, admin
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.role_model import RoleModel
-
+from sqlmodel import SQLModel
+from app.models.workshops_models import Workshop, Registration
+from app.models.user import User 
+Base.metadata.create_all(bind=engine)
+SQLModel.metadata.create_all(engine) 
 create_db()
-
 security = HTTPBearer()
 
 app = FastAPI(
@@ -31,7 +34,7 @@ app.include_router(mentoring.router)
 app.include_router(role_models.router)
 app.include_router(news.router)
 app.include_router(profiles.router)
-
+app.include_router(admin.router)
 @app.get("/")
 def root():
     return {"message": f"{settings.APP_NAME} API is running"}
@@ -44,3 +47,6 @@ def get_me(current_user: User = Depends(get_current_user)):
         "full_name": current_user.full_name,
         "role": current_user.role
     }
+
+from fastapi.staticfiles import StaticFiles
+app.mount("/static", StaticFiles(directory="static"), name="static")

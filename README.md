@@ -68,3 +68,101 @@ Authorization: Bearer YOUR_TOKEN_HERE
 Detaljne upute za backend i frontend nalaze se u:
 - `backend/README.md`
 - `frontend/README.md`
+
+## Git Workflow za projektne timove
+
+### Kloniranje projekta
+```bash
+git clone https://github.com/almauntz/girls-in-science.git
+cd girls-in-science
+git checkout dev
+```
+
+### Pravila rada
+
+- **Nikad ne raditi push direktno na `main` ili `dev`**
+- **Uvijek kreirati novi branch za svaku funkcionalnost (feature)**
+- **Kad završite rad na branch-u, otvoriti Pull Request prema `dev`**
+
+### Imenovanje brancheva
+
+```
+tim1/naziv-featurea
+tim2/naziv-featurea
+tim3/naziv-featurea
+tim4/naziv-featurea
+```
+
+Primjeri:
+```
+tim1/workshop-listing
+tim1/workshop-registration
+tim2/mentor-profile
+tim3/forum-posts
+tim4/user-dashboard
+```
+
+### Dnevni workflow
+
+**1 — Uvijek početi sa ažuriranjem lokalnog `dev` brancha:**
+```bash
+git checkout dev
+git pull origin dev
+```
+
+**2 — Kreirati novi branch za funckionalnost (feature):**
+```bash
+git checkout -b tim1/naziv-featurea
+```
+
+**3 — Raditi na svom kodu, pa raditi commit redovno:**
+```bash
+git add .
+git commit -m "Opis šta je uradjeno"
+```
+
+**4 — Uraditi push branch-a:**
+```bash
+git push origin tim1/naziv-featurea
+```
+
+**5 — Otvori Pull Request na GitHubu:**
+- Idi na GitHub repo
+- Klikni **"Compare & pull request"**
+- Base branch: `dev`
+- Opisati šta je implementirano
+- Dodati članove tima kao reviewere, te obavezno asistenticu
+
+### Commit poruke — kako pisati
+
+```
+✅ "Dodaj listu workshopa"
+✅ "Popravi bug u registraciji mentora"
+✅ "Dodaj validaciju forme za prijavu"
+
+❌ "fix"
+❌ "changes"
+❌ "asdfgh"
+```
+
+### Rješavanje konflikata
+
+Ako naiđete na konflikt pri merge-u:
+```bash
+git checkout dev
+git pull origin dev
+git checkout tim1/tvoj-branch
+git merge dev
+```
+Otvori konfliktne fajlove, riješiti konflikte, pa:
+```bash
+git add .
+git commit -m "Resolve merge conflicts"
+git push origin tim1/tvoj-branch
+```
+
+### Važno
+
+- Radite commit **često** — bolje više manjih commitova nego jedan veliki
+- Nikad ne raditi commit `.env` file-a
+- Svaki dan na početku rada pokreni `git pull origin dev`
