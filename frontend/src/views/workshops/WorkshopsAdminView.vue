@@ -763,3 +763,557 @@
  
   </div>
 </template>
+
+<script setup>
+import { ref, reactive, computed, onMounted } from 'vue'
+ 
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+ 
+// ================================================================
+// UPRAVLJANJE RADIONICAMA
+// ================================================================
+ 
+const activeModal  = ref(null)
+const confirmConfig = ref(null)
+const busy         = ref(false)
+const editStep     = ref(1)
+const editId       = ref(null)
+const deleteId     = ref(null)
+ 
+const form = reactive({
+  title: '',
+  description: '',
+  location: '',
+  date: '',
+  end_time: '',
+  capacity: null,
+  organizer_name: '',
+  organizer_email: '',
+  organizer_phone: ''
+})
+ 
+const errors = reactive({
+  title: '', description: '', location: '',
+  date: '', end_time: '', capacity: '',
+  organizer_name: '', organizer_email: '', organizer_phone: '',
+  editId: '',
+  deleteId: ''
+})
+ 
+const toast = reactive({ show: false, type: 'success', message: '' })
+ 
+function authHeaders() {
+  const token = localStorage.getItem('token')
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {})
+  }
+}
+ 
+function dateToISO(dateStr) {
+  if (!dateStr) return null
+  return new Date(dateStr + 'T00:00:00').toISOString()
+}
+ 
+function openModal(type) {
+  resetAll()
+  activeModal.value = type
+}
+ 
+function closeModal() {
+  activeModal.value = null
+  confirmConfig.value = null
+  busy.value = false
+  resetAll()
+}
+ 
+function resetAll() {
+  Object.assign(form, {
+    title: '', description: '', location: '',
+    date: '', end_time: '', capacity: null,
+    organizer_name: '', organizer_email: '', organizer_phone: ''
+  })
+  Object.assign(errors, {
+    title: '', description: '', location: '',
+    date: '', end_time: '', capacity: '',
+    organizer_name: '', organizer_email: '', organizer_phone: '',
+    editId: '', deleteId: ''
+  })
+  editId.value   = null
+  deleteId.value = null
+  editStep.value = 1
+}
+ 
+function validateCreate() {
+  Object.assign(errors, {
+    title: '', description: '', location: '',
+    date: '', end_time: '', capacity: '',
+    organizer_name: '', organizer_email: '', organizer_phone: ''
+  })
+  let ok = true
+ 
+  if (!form.title.trim())
+    { errors.title = 'Naziv je obavezan.'; ok = false }
+  if (!form.description.trim())
+    { errors.description = 'Opis je obavezan.'; ok = false }
+  if (!form.location.trim())
+    { errors.location = 'Lokacija je obavezna.'; ok = false }
+  if (!form.date)
+    { errors.date = 'Datum početka je obavezan.'; ok = false }
+  if (!form.end_time)
+    { errors.end_time = 'Datum kraja je obavezan.'; ok = false }
+  if (!form.capacity || form.capacity < 1)
+    { errors.capacity = 'Kapacitet mora biti ≥ 1.'; ok = false }
+  if (form.date && form.end_time && form.date > form.end_time)
+    { errors.end_time = 'Datum kraja mora biti nakon početka.'; ok = false }
+ 
+  if (!form.organizer_name.trim())
+    { errors.organizer_name = 'Ime organizatora je obavezno.'; ok = false }
+  if (!form.organizer_email.trim())
+    { errors.organizer_email = 'Email organizatora je obavezan.'; ok = false }
+ 
+  return ok
+}
+ 
+function askConfirm(action) {
+  if (action === 'create' && !validateCreate()) return
+  if (action === 'delete') {
+    errors.deleteId = ''
+    if (!deleteId.value || deleteId.value < 1) {
+      errors.deleteId = 'Upiši ispravan ID.'
+      return
+    }
+  }
+ 
+  const configs = {
+    create: {
+      title:     'Potvrdi kreiranje',
+      message:   `Kreiraš novu radionicu „${form.title}". Jesi li sigurna?`,
+      btnLabel:  'Da, kreiraj',
+      btnClass:  'btn-create',
+      iconClass: 'icon-create',
+      action:    doCreate
+    },
+    edit: {
+      title:     'Potvrdi izmjene',
+      message:   `Spremaš izmjene za radionicu #${editId.value}. Nastavi?`,
+      btnLabel:  'Da, sačuvaj',
+      btnClass:  'btn-edit',
+      iconClass: 'icon-edit',
+      action:    doEdit
+    },
+    delete: {
+      title:     'Potvrdi brisanje',
+      message:   `Trajno ćeš obrisati radionicu #${deleteId.value}. Ova akcija se ne može poništiti!`,
+      btnLabel:  'Da, obriši trajno',
+      btnClass:  'btn-delete',
+      iconClass: 'icon-delete',
+      action:    doDelete
+    }
+  }
+ 
+  confirmConfig.value = configs[action]
+}
+ 
+async function runAction() {
+  if (confirmConfig.value?.action) {
+    await confirmConfig.value.action()
+  }
+}
+ 
+async function doCreate() {
+  busy.value = true
+  try {
+    const body = {
+      title:       form.title.trim(),
+      description: form.description.trim(),
+      location:    form.location.trim(),
+      date:        dateToISO(form.date),
+      end_time:    dateToISO(form.end_time),
+        capacity:    form.capacity,
+        organizer_name: form.organizer_name.trim(),
+        organizer_email: form.organizer_email.trim(),
+        organizer_phone: form.organizer_phone.trim()
+    }
+    const res = await fetch(`${BASE_URL}/workshops/`, {
+      method:  'POST',
+      headers: authHeaders(),
+      body:    JSON.stringify(body)
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || `Greška ${res.status}`)
+    }
+    showToast('success', 'Radionica uspješno kreirana!')
+    closeModal()
+  } catch (e) {
+    showToast('error', e.message || 'Kreiranje nije uspjelo.')
+    confirmConfig.value = null
+  } finally {
+    busy.value = false
+  }
+}
+ 
+async function loadWorkshop() {
+  errors.editId = ''
+  if (!editId.value || editId.value < 1) {
+    errors.editId = 'Upiši ispravan ID.'
+    return
+  }
+  busy.value = true
+  try {
+    const res = await fetch(`${BASE_URL}/workshops/${editId.value}`, {
+      headers: authHeaders()
+    })
+    if (!res.ok) {
+      errors.editId = `Radionica #${editId.value} nije pronađena.`
+      return
+    }
+    const w = await res.json()
+ 
+    Object.assign(form, {
+      title:       w.title       ?? '',
+      description: w.description ?? '',
+      location:    '',
+      date:        w.date     ? w.date.slice(0, 10)     : '',
+      end_time:    w.end_time ? w.end_time.slice(0, 10) : '',
+      capacity:    w.capacity ?? null,
+      organizer_name: w.organizer_name ?? '',
+      organizer_email: w.organizer_email ?? '',
+      organizer_phone: w.organizer_phone ?? ''
+    })
+    editStep.value = 2
+  } catch {
+    errors.editId = 'Greška pri učitavanju. Provjeri server.'
+  } finally {
+    busy.value = false
+  }
+}
+ 
+async function doEdit() {
+  busy.value = true
+  try {
+    const body = {}
+    if (form.title.trim())       body.title       = form.title.trim()
+    if (form.description.trim()) body.description = form.description.trim()
+    if (form.location.trim())    body.location    = form.location.trim()
+    if (form.date)               body.date        = dateToISO(form.date)
+    if (form.end_time)           body.end_time    = dateToISO(form.end_time)
+    if (form.capacity)           body.capacity    = form.capacity
+      if (form.organizer_name && form.organizer_name.trim()) body.organizer_name = form.organizer_name.trim()
+      if (form.organizer_email && form.organizer_email.trim()) body.organizer_email = form.organizer_email.trim()
+      if (form.organizer_phone && form.organizer_phone.trim()) body.organizer_phone = form.organizer_phone.trim()
+ 
+    const res = await fetch(`${BASE_URL}/workshops/${editId.value}`, {
+      method:  'PATCH',
+      headers: authHeaders(),
+      body:    JSON.stringify(body)
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || `Greška ${res.status}`)
+    }
+    showToast('success', `Radionica #${editId.value} uspješno ažurirana!`)
+    closeModal()
+  } catch (e) {
+    showToast('error', e.message || 'Ažuriranje nije uspjelo.')
+    confirmConfig.value = null
+  } finally {
+    busy.value = false
+  }
+}
+ 
+async function doDelete() {
+  busy.value = true
+  try {
+    const res = await fetch(`${BASE_URL}/workshops/${deleteId.value}`, {
+      method:  'DELETE',
+      headers: authHeaders()
+    })
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || `Greška ${res.status}`)
+    }
+    showToast('success', `Radionica #${deleteId.value} uspješno obrisana.`)
+    closeModal()
+  } catch (e) {
+    showToast('error', e.message || 'Brisanje nije uspjelo.')
+    confirmConfig.value = null
+  } finally {
+    busy.value = false
+  }
+}
+ 
+function showToast(type, message) {
+  toast.show = false
+  setTimeout(() => {
+    Object.assign(toast, { show: true, type, message })
+    setTimeout(() => { toast.show = false }, 3800)
+  }, 40)
+}
+ 
+// ================================================================
+// PREGLED PRIJAVLJENIH
+// ================================================================
+ 
+const workshops          = ref([])
+const registrations      = ref([])
+const selectedWorkshopId = ref('')
+const registrationsLoading = ref(false)
+const registrationsError   = ref(null)
+ 
+function getAuthHeaders() {
+  const token = localStorage.getItem('token')
+  return {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+}
+ 
+async function loadWorkshops() {
+  try {
+    registrationsLoading.value = true
+    registrationsError.value = null
+    const response = await fetch(`${BASE_URL}/workshops/active`)
+    workshops.value = await response.json()
+  } catch (err) {
+    registrationsError.value = 'Greška pri učitavanju radionica: ' + err.message
+    console.error(err)
+  } finally {
+    registrationsLoading.value = false
+  }
+}
+ 
+async function loadRegistrations() {
+  if (!selectedWorkshopId.value) {
+    registrations.value = []
+    return
+  }
+ 
+  try {
+    registrationsLoading.value = true
+    registrationsError.value = null
+    const response = await fetch(
+      `${BASE_URL}/workshops/${selectedWorkshopId.value}/registrations`,
+      { headers: getAuthHeaders() }
+    )
+    if (!response.ok) {
+      const errorData = await response.json()
+      throw new Error(errorData.detail || 'Greška pri učitavanju prijava')
+    }
+    registrations.value = await response.json()
+  } catch (err) {
+    registrationsError.value = 'Greška pri učitavanju prijava: ' + err.message
+    console.error(err)
+    registrations.value = []
+  } finally {
+    registrationsLoading.value = false
+  }
+}
+ 
+// ================================================================
+// PRIJEDLOZI
+// ================================================================
+ 
+const proposals          = ref([])
+const proposalsLoading   = ref(false)
+const activeFilter       = ref('all')
+const detailProposal     = ref(null)
+const actionMode         = ref(null)
+const actionNote         = ref('')
+const createWorkshop     = ref(false)
+const proposalConfirmConfig = ref(null)
+const proposalBusy       = ref(false)
+ 
+const workshopForm   = reactive({ location: '', date: '', end_time: '', capacity: null })
+const workshopErrors = reactive({ location: '', date: '', end_time: '', capacity: '' })
+const proposalToast  = reactive({ show: false, type: 'success', message: '' })
+ 
+const filters = [
+  { value: 'all',      label: 'Svi' },
+  { value: 'pending',  label: 'Na čekanju' },
+  { value: 'accepted', label: 'Odobreni' },
+  { value: 'rejected', label: 'Odbijeni' },
+]
+ 
+const filteredProposals = computed(() => {
+  if (activeFilter.value === 'all') return proposals.value
+  return proposals.value.filter(p => p.status === activeFilter.value)
+})
+ 
+async function fetchProposals() {
+  proposalsLoading.value = true
+  try {
+    const res = await fetch(`${BASE_URL}/workshops/admin`, { headers: authHeaders() })
+    if (!res.ok) throw new Error(`Greška ${res.status}`)
+    proposals.value = await res.json()
+  } catch (e) {
+    showProposalToast('error', e.message || 'Greška pri učitavanju prijedloga.')
+  } finally {
+    proposalsLoading.value = false
+  }
+}
+ 
+async function doApprove() {
+  proposalBusy.value = true
+  busy.value = true
+  try {
+    const body = {
+      admin_note:      actionNote.value.trim() || null,
+      create_workshop: createWorkshop.value,
+    }
+    if (createWorkshop.value) {
+      body.location  = workshopForm.location.trim()
+      body.date      = dateToISO(workshopForm.date)
+      body.end_time  = dateToISO(workshopForm.end_time)
+      body.capacity  = workshopForm.capacity
+    }
+    const res = await fetch(
+      `${BASE_URL}/workshops/proposals/${detailProposal.value.id}/approve`,
+      { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body) }
+    )
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || `Greška ${res.status}`)
+    }
+    const updated = await res.json()
+    const idx = proposals.value.findIndex(p => p.id === updated.id)
+    if (idx !== -1) proposals.value[idx] = updated
+    showProposalToast('success', createWorkshop.value ? 'Prijedlog odobren i radionica kreirana!' : 'Prijedlog uspješno odobren!')
+    closeDetail()
+  } catch (e) {
+    showProposalToast('error', e.message || 'Odobravanje nije uspjelo.')
+    proposalConfirmConfig.value = null
+  } finally {
+    proposalBusy.value = false
+    busy.value = false
+  }
+}
+ 
+async function doReject() {
+  proposalBusy.value = true
+  busy.value = true
+  try {
+    const body = { admin_note: actionNote.value.trim() || null }
+    const res = await fetch(
+      `${BASE_URL}/workshops/proposals/${detailProposal.value.id}/reject`,
+      { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body) }
+    )
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || `Greška ${res.status}`)
+    }
+    const updated = await res.json()
+    const idx = proposals.value.findIndex(p => p.id === updated.id)
+    if (idx !== -1) proposals.value[idx] = updated
+    showProposalToast('success', 'Prijedlog odbijen.')
+    closeDetail()
+  } catch (e) {
+    showProposalToast('error', e.message || 'Odbijanje nije uspjelo.')
+    proposalConfirmConfig.value = null
+  } finally {
+    proposalBusy.value = false
+    busy.value = false
+  }
+}
+ 
+function setFilter(val) {
+  activeFilter.value = val
+}
+ 
+function countFor(filterVal) {
+  if (filterVal === 'all') return proposals.value.length
+  return proposals.value.filter(p => p.status === filterVal).length
+}
+ 
+function truncate(str, n) {
+  return str && str.length > n ? str.slice(0, n) + '…' : str
+}
+ 
+function formatDate(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric' })
+}
+ 
+function statusLabel(s) {
+  return { pending: 'Na čekanju', accepted: 'Odobreno', rejected: 'Odbijeno' }[s] ?? s
+}
+ 
+function openDetail(p) {
+  detailProposal.value = { ...p }
+  actionMode.value = null
+  actionNote.value = ''
+  createWorkshop.value = false
+  Object.assign(workshopForm, { location: '', date: '', end_time: '', capacity: null })
+  Object.assign(workshopErrors, { location: '', date: '', end_time: '', capacity: '' })
+}
+ 
+function closeDetail() {
+  detailProposal.value = null
+  proposalConfirmConfig.value  = null
+  actionMode.value     = null
+  actionNote.value     = ''
+  createWorkshop.value = false
+  proposalBusy.value = false
+  busy.value = false
+}
+ 
+function validateWorkshopForm() {
+  Object.assign(workshopErrors, { location: '', date: '', end_time: '', capacity: '' })
+  let ok = true
+  if (!workshopForm.location.trim())    { workshopErrors.location = 'Obavezno.'; ok = false }
+  if (!workshopForm.date)               { workshopErrors.date = 'Obavezno.'; ok = false }
+  if (!workshopForm.end_time)           { workshopErrors.end_time = 'Obavezno.'; ok = false }
+  if (!workshopForm.capacity || workshopForm.capacity < 1) { workshopErrors.capacity = 'Mora biti ≥ 1.'; ok = false }
+  if (workshopForm.date && workshopForm.end_time && workshopForm.date > workshopForm.end_time)
+    { workshopErrors.end_time = 'Kraj mora biti nakon početka.'; ok = false }
+  return ok
+}
+ 
+function askConfirmAction(type) {
+  if (type === 'approve' && createWorkshop.value && !validateWorkshopForm()) return
+  const cfgs = {
+    approve: {
+      title:     'Potvrdi odobravanje',
+      message:   createWorkshop.value
+        ? `Odobrit ćeš prijedlog „${detailProposal.value.title}" i kreirati radionicu.`
+        : `Odobrit ćeš prijedlog „${detailProposal.value.title}".`,
+      btnLabel:  'Da, odobri',
+      btnClass:  'btn-create',
+      iconClass: 'icon-create',
+      action:    doApprove,
+    },
+    reject: {
+      title:     'Potvrdi odbijanje',
+      message:   `Odbit ćeš prijedlog „${detailProposal.value.title}". Autorici će biti vidljiv status.`,
+      btnLabel:  'Da, odbij',
+      btnClass:  'btn-delete',
+      iconClass: 'icon-delete',
+      action:    doReject,
+    },
+  }
+  proposalConfirmConfig.value = cfgs[type]
+}
+ 
+async function runProposalAction() {
+  if (proposalConfirmConfig.value?.action) await proposalConfirmConfig.value.action()
+}
+ 
+function showProposalToast(type, message) {
+  proposalToast.show = false
+  setTimeout(() => {
+    Object.assign(proposalToast, { show: true, type, message })
+    setTimeout(() => { proposalToast.show = false }, 3800)
+  }, 40)
+}
+  
+onMounted(() => {
+  const token = localStorage.getItem('token')
+  if (!token) {
+    // redirect to login if needed — handled by router guard
+    return
+  }
+  loadWorkshops()
+  fetchProposals()
+})
+</script>
