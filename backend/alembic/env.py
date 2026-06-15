@@ -12,6 +12,10 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 from app.core.config import settings
 from sqlmodel import SQLModel
 import app.models.user  # noqa: F401
+import app.models.mentor  # noqa: F401
+# import app.models.mentor_application  # noqa: F401
+
+from app.database import Base
 
 config = context.config
 
@@ -20,7 +24,7 @@ if config.config_file_name is not None:
 
 config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
-target_metadata = SQLModel.metadata
+[SQLModel.metadata, Base.metadata]
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
@@ -53,12 +57,6 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    """Run migrations in 'online' mode.
-
-    In this scenario we need to create an Engine
-    and associate a connection with the context.
-
-    """
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",

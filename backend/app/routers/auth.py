@@ -36,7 +36,7 @@ def register(data: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    token = create_access_token({"sub": str(user.id)})
+    token = create_access_token({"sub": str(user.id), "role": user.role.value})
     return {"access_token": token, "token_type": "bearer"}
 
 
@@ -46,5 +46,5 @@ def login(data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get
     if not user or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
-    token = create_access_token({"sub": str(user.id)})
+    token = create_access_token({"sub": str(user.id), "role": user.role.value})
     return {"access_token": token, "token_type": "bearer"}
