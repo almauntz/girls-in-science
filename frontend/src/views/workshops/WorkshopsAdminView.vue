@@ -22,7 +22,6 @@
  
       <div class="page-header">
         <span class="admin-tag">Admin panel</span>
-        <h1>Upravljanje radionicama</h1>
         <p class="page-sub">Odaberi akciju koju želiš izvršiti</p>
       </div>
  
@@ -382,9 +381,7 @@
       <div class="section-divider-line"></div>
     </div>
  
-    <div class="container mx-auto px-4 py-8">
-      <h1 class="text-3xl font-bold mb-8">Admin - Pregled Prijava</h1>
- 
+    <div class="container mx-auto px-4 py-8"> 
       <!-- Odabir radionice -->
       <div class="bg-white rounded-lg shadow p-6 mb-8">
         <label class="block text-lg font-semibold mb-4">Odaberi radionicu:</label>
@@ -490,8 +487,6 @@
     <div class="admin-page">
  
       <div class="page-header">
-        <span class="admin-tag">Admin panel</span>
-        <h1>Prijedlozi radionica</h1>
         <p class="page-sub">Pregled i obrada prijedloga od studentica</p>
       </div>
  
