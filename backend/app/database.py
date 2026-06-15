@@ -15,13 +15,15 @@ class Base(DeclarativeBase):
     metadata = SQLModel.metadata  # type: ignore[assignment]
 
 def create_db():
-    # Import ALL models here so every table is registered in SQLModel.metadata
-    # before create_all runs. Order matters: User first, then models that
-    # reference it via FK/relationship.
-    from app.models.user import User          # noqa: F401
-    from app.models.mentor import Mentor      # noqa: F401
-    from app.models.student import Student    # noqa: F401
+    # Import ALL models so every table is registered before create_all runs
+    from app.models.user import User                          # noqa: F401
+    from app.models.mentor import Mentor                      # noqa: F401
+    from app.models.student import Student                    # noqa: F401
     from app.models.mentorship_request import MentorshipRequest  # noqa: F401
+    from app.models.role_model import RoleModel               # noqa: F401
+    from app.models.news import NewsPost, NewsCategory, NewsCategoryLink, NewsPostRoleModelLink  # noqa: F401
+    from app.models.profile import Profile, WorkshopRegistration, Workshop as ProfileWorkshop  # noqa: F401
+    from app.models.workshops_models import Workshop, WorkshopProposal, Registration, WorkshopRating, UserNotification, WaitingList  # noqa: F401
     SQLModel.metadata.create_all(engine)
 
 def get_db():

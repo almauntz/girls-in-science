@@ -9,7 +9,7 @@
       <div class="flex gap-6">
         <router-link to="/workshops" class="text-gray-600 hover:text-primary font-medium transition">Workshops</router-link>
         <router-link to="/mentoring" class="text-gray-600 hover:text-primary font-medium transition">Mentoring</router-link>
-        <router-link to="/rolemodels" class="text-gray-600 hover:text-primary font-medium transition">Role Models</router-link>
+        <router-link to="/role-models" class="text-gray-600 hover:text-primary font-medium transition">Role Models</router-link>
         <router-link to="/profiles" class="text-gray-600 hover:text-primary font-medium transition">Profili</router-link>
       </div>
 
