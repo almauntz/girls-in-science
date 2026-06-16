@@ -78,6 +78,24 @@
           </div>
         </div>
 
+        <div class="mb-8">
+          <label class="block text-sm font-medium text-gray-700 mb-2">
+            Kategorije
+          </label>
+          <div class="flex flex-wrap gap-2">
+           <button
+            v-for="category in allCategories"
+            :key="category.id"
+            @click="toggleCategory(category.id)"
+            :class="form.category_ids.includes(category.id) ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-700'"
+            class="px-3 py-1 rounded-full text-sm font-medium transition"
+          >
+
+            {{ category.name }}
+            </button>
+          </div>
+        </div>
+
         <!-- Dugmad -->
         <div class="flex gap-4">
           <button
@@ -102,7 +120,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { getNewsPost, updateNewsPost, getRoleModels } from '../../services/api.js'
+import { getNewsPost, updateNewsPost, getRoleModels, getCategories } from '../../services/api.js'
 
 const router = useRouter()
 const route = useRoute()
@@ -119,12 +137,14 @@ const serverError = ref('')
 const successMessage = ref('')
 const isLoading = ref(false)
 const allRoleModels = ref([])
+const allCategories = ref([])
 
 onMounted(async () => {
   try {
-    const [newsData, roleModels] = await Promise.all([
+    const [newsData, roleModels, categoriesData] = await Promise.all([
       getNewsPost(route.params.id),
-      getRoleModels()
+      getRoleModels(),
+      getCategories()
     ])
     if (newsData.detail) {
       serverError.value = 'Objava nije pronađena.'
@@ -134,9 +154,11 @@ onMounted(async () => {
       title: newsData.title,
       content: newsData.content,
       image_url: newsData.image_url || '',
-      role_model_ids: newsData.role_models?.map(m => m.id) || []
+      role_model_ids: newsData.role_models?.map(m => m.id) || [],
+      category_ids: newsData.categories?.map(c => c.id) || []
     }
     allRoleModels.value = roleModels
+    allCategories.value = [...categoriesData].sort((a, b) => a.name.localeCompare(b.name))
   } catch {
     serverError.value = 'Greška pri učitavanju objave.'
   }
@@ -148,6 +170,14 @@ function validate() {
   if (!form.value.content.trim()) e.content = 'Sadržaj je obavezan'
   errors.value = e
   return Object.keys(e).length === 0
+}
+
+function toggleCategory(id) {
+  if (form.value.category_ids.includes(id)) {
+    form.value.category_ids = form.value.category_ids.filter(c => c !== id)
+  } else {
+    form.value.category_ids.push(id)
+  }
 }
 
 async function handleSubmit() {
