@@ -159,7 +159,7 @@ export default {
       return { headers: { Authorization: `Bearer ${token}` } }
     },
 
-    async fetchDashboardData() {
+  async fetchDashboardData() {
       this.dashboardError = null
       try {
         const response = await axios.get(
@@ -174,7 +174,6 @@ export default {
         this.dashboardError = 'Nije moguće učitati podatke. Provjerite jeste li prijavljeni.'
       }
     },
-
     async handleRegister(workshopId) {
       try {
         const response = await axios.post(

@@ -63,18 +63,32 @@
 
             <!-- Osobne informacije -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-              <div class="flex items-center gap-2 mb-5">
-                <span class="text-violet-500">👤</span>
-                <h3 class="text-sm font-semibold text-gray-800">Osobne informacije</h3>
-              </div>
-              <div>
-                <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Ime i prezime</label>
-                <p v-if="!isEditMode" class="text-sm font-medium text-gray-800">{{ form.full_name || 'Nije uneseno' }}</p>
-                <input v-else v-model="form.full_name" type="text" placeholder="Unesite ime i prezime"
-                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"/>
-                <p v-if="errors.full_name" class="text-red-500 text-xs mt-1">{{ errors.full_name }}</p>
-              </div>
-            </div>
+  <div class="flex items-center gap-2 mb-5">
+    <span class="text-violet-500">👤</span>
+    <h3 class="text-sm font-semibold text-gray-800">Osobne informacije</h3>
+  </div>
+  <div>
+   
+    <div v-if="!isEditMode">
+  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Ime</p>
+  <p class="text-sm font-medium text-gray-800 mb-3">{{ form.first_name || 'Nije uneseno' }}</p>
+  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Prezime</p>
+  <p class="text-sm font-medium text-gray-800">{{ form.last_name || 'Nije uneseno' }}</p>
+</div>
+    <div v-else class="flex flex-col gap-2">
+      <div>
+        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Ime</label>
+        <input v-model="form.first_name" type="text" placeholder="Ime"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"/>
+      </div>
+      <div>
+        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Prezime</label>
+        <input v-model="form.last_name" type="text" placeholder="Prezime"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"/>
+      </div>
+    </div>
+  </div>
+</div>
 
             <!-- Kontakt podaci -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -468,6 +482,8 @@ export default {
     passwordSuccess: '',
     passwordError: '',
     form: {
+      first_name: '',
+      last_name: '',
       full_name: '',
       biography: '',
       field: '',
@@ -527,7 +543,14 @@ export default {
 
 watch: {
   // String fields
-  fullName:    { immediate: true, handler(val) { this.form.full_name   = val || '' } },
+fullName: { 
+  immediate: true, 
+  handler(val) { 
+    this.form.full_name = val || ''
+    this.form.first_name = val?.split(' ')[0] || ''
+    this.form.last_name = val?.split(' ').slice(1).join(' ') || ''
+  } 
+},
   field:       { immediate: true, handler(val) { this.form.field       = val || '' } },
   biography:   { immediate: true, handler(val) { this.form.biography   = val || '' } },
   location:    { immediate: true, handler(val) { this.form.location    = val || '' } },
@@ -575,6 +598,8 @@ watch: {
 
   try {
     const token = localStorage.getItem('token')
+
+    this.form.full_name = `${this.form.first_name} ${this.form.last_name}`.trim()
     const payload = {
       full_name: this.form.full_name,
       biography: this.form.biography,
