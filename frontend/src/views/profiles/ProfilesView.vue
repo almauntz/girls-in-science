@@ -51,7 +51,12 @@
           :newWorkshops="newWorkshops"
           :availableWorkshops="availableWorkshops"
           :dashboardError="dashboardError"
+          :myStudents="myStudents"
+          :mentorRequests="mentorRequests"
+          :mentorDashboardError="mentorDashboardError"
           @register="handleRegister"
+          @accept-request="handleAcceptRequest"
+          @reject-request="handleRejectRequest"
         />
         
       <ActivityHistory v-if="activeTab === 'aktivnosti'" />
@@ -91,6 +96,9 @@ export default {
       dashboardError: null,
       isLoading: false,
       profileLoaded: false,
+      myStudents: [],
+      mentorRequests: [],
+      mentorDashboardError: null,
     }
   },
 
@@ -98,6 +106,7 @@ export default {
   this.isLoading = true
   await this.loadProfile()
   await this.fetchDashboardData()
+  await this.fetchMentorData()
   this.isLoading = false
 },
 
@@ -191,7 +200,52 @@ export default {
     handleDeactivated() {
     localStorage.removeItem('token')
     this.$router.push('/login')
-}
+},
+async fetchMentorData() {
+  if (this.userRole !== 'mentor') return
+  this.mentorDashboardError = null
+  try {
+    const response = await axios.get(
+      'http://localhost:8000/mentoring/my-applications',
+      this.getAuthHeaders()
+    )
+    this.myStudents = response.data.filter(r => r.status?.toUpperCase() === 'ACCEPTED')
+    this.mentorRequests = response.data.filter(r => r.status?.toUpperCase() === 'PENDING')
+  } catch (error) {
+    if (error.response?.status === 404) {
+      this.myStudents = []
+      this.mentorRequests = []
+    } else {
+      console.error('Mentor dashboard greška:', error)
+      this.mentorDashboardError = 'Nije moguće učitati podatke o mentorstvu.'
+    }
+  }
+},
+async handleAcceptRequest(applicationId) {
+  try {
+    await axios.put(
+      `http://localhost:8000/mentoring/applications/${applicationId}/status`,
+      { status: 'ACCEPTED' },
+      this.getAuthHeaders()
+    )
+    this.fetchMentorData()
+  } catch (err) {
+    this.mentorDashboardError = err.response?.data?.detail || 'Greška pri ažuriranju zahtjeva.'
+  }
+},
+
+async handleRejectRequest(applicationId) {
+  try {
+    await axios.put(
+      `http://localhost:8000/mentoring/applications/${applicationId}/status`,
+      { status: 'REJECTED' },
+      this.getAuthHeaders()
+    )
+    this.fetchMentorData()
+  } catch (err) {
+    this.mentorDashboardError = err.response?.data?.detail || 'Greška pri ažuriranju zahtjeva.'
+  }
+},
   }
 }
 </script>
