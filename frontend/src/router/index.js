@@ -107,6 +107,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/bookmarks',
+    name: 'bookmarks',
+    component: () => import('../views/rolemodels/BookmarksView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/role-models/:id/edit',
     name: 'rolemodels-edit',
     component: () => import('../views/rolemodels/RoleModelEdit.vue'),
