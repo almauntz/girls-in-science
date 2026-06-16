@@ -408,8 +408,7 @@ def approve_proposal(
             "end_time": data.end_time,
             "capacity": data.capacity,
             "organizer_name": data.organizer_name,
-            "organizer_email": data.organizer_email,
-            "organizer_phone": data.organizer_phone
+            "organizer_email": data.organizer_email
         }.items() if v is None]
         if missing:
             raise HTTPException(
