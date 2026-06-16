@@ -71,6 +71,8 @@ def create_news_post(
 def get_news_posts(db: Session = Depends(get_db)):
     statement = select(NewsPost).order_by(NewsPost.created_at.desc())
     news_posts = db.exec(statement).all()
+    for post in news_posts:
+        _ = post.categories
     return news_posts
 
 @router.get("/{id}", response_model=NewsPostRead)
@@ -120,6 +122,13 @@ def update_news_post(
             if role_model:
                 role_models.append(role_model)
         news_post.role_models = role_models
+    if hasattr(data, 'category_ids') and data.category_ids is not None:
+        categories = []
+        for category_id in data.category_ids:
+            category = db.get(NewsCategory, category_id)
+            if category:
+                categories.append(category)
+        news_post.categories = categories
     db.add(news_post)
     db.commit()
     db.refresh(news_post)
