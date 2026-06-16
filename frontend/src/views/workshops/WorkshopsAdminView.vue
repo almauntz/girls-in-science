@@ -699,6 +699,25 @@
                         <span v-if="workshopErrors.end_time" class="err-msg">{{ workshopErrors.end_time }}</span>
                       </div>
                     </div>
+                    <div class="field">
+    <label>Organizator - Ime i prezime <span class="req">*</span></label>
+    <input v-model="workshopForm.organizer_name" type="text" placeholder="npr. Ime Prezime"
+           :class="{ 'input-error': workshopErrors.organizer_name }"/>
+    <span v-if="workshopErrors.organizer_name" class="err-msg">{{ workshopErrors.organizer_name }}</span>
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label>Organizator - Email <span class="req">*</span></label>
+      <input v-model="workshopForm.organizer_email" type="email" placeholder="organizator@primjer.com"
+             :class="{ 'input-error': workshopErrors.organizer_email }"/>
+      <span v-if="workshopErrors.organizer_email" class="err-msg">{{ workshopErrors.organizer_email }}</span>
+    </div>
+    <div class="field">
+      <label>Organizator - Telefon</label>
+      <input v-model="workshopForm.organizer_phone" type="text" placeholder="+387 61 123 456"/>
+    </div>
+  </div>
+
                   </template>
  
                   <div class="form-actions">
@@ -1141,8 +1160,8 @@ const createWorkshop     = ref(false)
 const proposalConfirmConfig = ref(null)
 const proposalBusy       = ref(false)
  
-const workshopForm   = reactive({ location: '', date: '', end_time: '', capacity: null })
-const workshopErrors = reactive({ location: '', date: '', end_time: '', capacity: '' })
+const workshopForm   = reactive({ location: '', date: '', end_time: '', capacity: null, organizer_name: '', organizer_email: '', organizer_phone: '' })
+const workshopErrors = reactive({ location: '', date: '', end_time: '', capacity: '', organizer_name: '', organizer_email: '' })
 const proposalToast  = reactive({ show: false, type: 'success', message: '' })
  
 const filters = [
@@ -1183,6 +1202,9 @@ async function doApprove() {
       body.date      = dateToISO(workshopForm.date)
       body.end_time  = dateToISO(workshopForm.end_time)
       body.capacity  = workshopForm.capacity
+       body.organizer_name  = workshopForm.organizer_name.trim()
+      body.organizer_email = workshopForm.organizer_email.trim()
+      body.organizer_phone = workshopForm.organizer_phone.trim() || null
     }
     const res = await fetch(
       `${BASE_URL}/workshops/proposals/${detailProposal.value.id}/approve`,
@@ -1260,8 +1282,8 @@ function openDetail(p) {
   actionMode.value = null
   actionNote.value = ''
   createWorkshop.value = false
-  Object.assign(workshopForm, { location: '', date: '', end_time: '', capacity: null })
-  Object.assign(workshopErrors, { location: '', date: '', end_time: '', capacity: '' })
+  Object.assign(workshopForm, { location: '', date: '', end_time: '', capacity: null, organizer_name: '', organizer_email: '', organizer_phone: '' })
+Object.assign(workshopErrors, { location: '', date: '', end_time: '', capacity: '', organizer_name: '', organizer_email: '' })
 }
  
 function closeDetail() {
@@ -1283,6 +1305,8 @@ function validateWorkshopForm() {
   if (!workshopForm.capacity || workshopForm.capacity < 1) { workshopErrors.capacity = 'Mora biti ≥ 1.'; ok = false }
   if (workshopForm.date && workshopForm.end_time && workshopForm.date > workshopForm.end_time)
     { workshopErrors.end_time = 'Kraj mora biti nakon početka.'; ok = false }
+  if (!workshopForm.organizer_name.trim())  { workshopErrors.organizer_name = 'Obavezno.'; ok = false }
+  if (!workshopForm.organizer_email.trim()) { workshopErrors.organizer_email = 'Obavezno.'; ok = false }
   return ok
 }
  

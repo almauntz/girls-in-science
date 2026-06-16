@@ -406,7 +406,9 @@ def approve_proposal(
             "location": data.location,
             "date": data.date,
             "end_time": data.end_time,
-            "capacity": data.capacity
+            "capacity": data.capacity,
+            "organizer_name": data.organizer_name,
+            "organizer_email": data.organizer_email
         }.items() if v is None]
         if missing:
             raise HTTPException(
@@ -422,6 +424,9 @@ def approve_proposal(
             capacity=data.capacity,
             created_by_id=admin.id,
             status=WorkshopStatus.upcoming,
+            organizer_name=data.organizer_name,
+            organizer_email=data.organizer_email,
+            organizer_phone=data.organizer_phone
         )
         db.add(workshop)
 
