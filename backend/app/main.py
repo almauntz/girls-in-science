@@ -12,7 +12,7 @@ from app.models.user import User
 
 from app.routers import (
     auth, mentoring, workshops, profiles,
-    role_models, news, admin, requests, students
+    role_models, news, admin, requests, students, bookmarks
 )
 from app.routers import admin_users
 
@@ -58,6 +58,7 @@ app.include_router(students.router)
 app.include_router(admin.router)
 app.include_router(admin_users.router)
 app.include_router(requests.router)
+app.include_router(bookmarks.router)
 
 # Serve uploaded static files
 os.makedirs("static", exist_ok=True)
