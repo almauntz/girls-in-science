@@ -7,7 +7,7 @@ from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.workshops_models import (RegistrationRead, Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
                                           WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WorkshopProposal,
-                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList, UserNotification,WorkshopRating, RatingCreate, RatingRead)
+                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList, UserNotification,WorkshopRating, RatingCreate, RatingRead, WorkshopFilter)
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -106,6 +106,50 @@ def cancel_registration(
         "message": "Uspješno ste odustali od radionice.",
         "promoted_user_id": promoted_user_id
     }
+
+
+#Filtiranje radionica
+@router.get("/search", response_model=list[WorkshopList])
+def search_workshops(
+    db: Session = Depends(get_db),
+    filters: WorkshopFilter = Depends(),
+):
+    statement = select(Workshop)
+
+
+    if filters.title:
+        statement = statement.where(Workshop.title.ilike(f"%{filters.title}%"))
+
+
+    if filters.location:
+        statement = statement.where(Workshop.location.ilike(f"%{filters.location}%"))
+
+
+    if filters.date_from:
+        statement = statement.where(Workshop.date >= filters.date_from)
+
+
+    if filters.date_to:
+        statement = statement.where(Workshop.date <= filters.date_to)
+
+
+    workshops = db.execute(statement).scalars().all()
+
+
+    result = []
+    for w in workshops:
+        broj_prijava = db.execute(
+            select(func.count(Registration.id)).where(
+                Registration.workshop_id == w.ID_workshop
+            )
+        ).scalar() or 0
+        workshop_dict = w.model_dump()
+        workshop_dict["free_spots"] = w.capacity - broj_prijava
+        result.append(workshop_dict)
+
+
+    return result
+
 
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
