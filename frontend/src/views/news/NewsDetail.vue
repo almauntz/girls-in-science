@@ -19,6 +19,7 @@
         <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ newsPost.title }}</h1>
         <p class="text-sm text-gray-400 mb-1">{{ formatDate(newsPost.created_at) }}</p>
         <p v-if="newsPost.author" class="text-sm text-gray-500 mb-6">Autor: {{ newsPost.author }}</p>
+
         <div v-if="successMessage" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
           {{ successMessage }}
         </div>
@@ -63,14 +64,28 @@
           </div>
         </div>
 
+        <div v-if="newsPost.categories && newsPost.categories.length > 0" class="mt-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-3">Kategorije</h2>
+          <div class="flex flex-wrap gap-2">
+            <span
+              v-for="category in newsPost.categories"
+              :key="category.id"
+              class="bg-violet-100 text-violet-700 text-sm px-3 py-1 rounded-full"
+            >
+              {{ category.name }}
+            </span>
+          </div>
+        </div>
+
       </div>
     </div>
+
     <ConfirmDeleteModal
-  v-if="showModal"
-  message="Da li ste sigurni da želite obrisati ovu objavu?"
-  @confirm="handleDelete"
-  @cancel="showModal = false"
-/>
+      v-if="showModal"
+      message="Da li ste sigurni da želite obrisati ovu objavu?"
+      @confirm="handleDelete"
+      @cancel="showModal = false"
+    />
   </div>
 </template>
 
