@@ -153,11 +153,11 @@
                 <span class="text-violet-500">📖</span>
                 <h3 class="text-sm font-semibold text-gray-800">Biografija</h3>
               </div>
-              <div v-if="!isEditMode" class="border-l-4 border-violet-200 pl-4 py-1 mb-4">
+              <div v-if="!isEditMode" class="border-l-4 border-violet-200 pl-4 py-1 mb-4 min-h-[120px]">
                 <p class="text-sm text-gray-600 italic leading-relaxed whitespace-pre-wrap">"{{ form.biography || 'Nije uneseno' }}"</p>
               </div>
               <div v-else>
-                <textarea v-model="form.biography" placeholder="Napišite nešto o sebi..." rows="6" spellcheck="false"
+                <textarea v-model="form.biography" placeholder="Napišite nešto o sebi..." rows="8" spellcheck="false"
                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 resize-none"></textarea>
                 <div class="flex justify-between mt-1">
                   <p v-if="errors.biography" class="text-red-500 text-xs">{{ errors.biography }}</p>
