@@ -145,7 +145,9 @@ class ProposalApprove(BaseModel):
     date: Optional[datetime] = None
     end_time: Optional[datetime] = None
     capacity: Optional[int] = None 
-
+    organizer_name: Optional[str] = None
+    organizer_email: Optional[str] = None
+    organizer_phone: Optional[str] = None
 ### ---------------------------------------------------------------------------
 
 class WorkshopList(BaseModel):
