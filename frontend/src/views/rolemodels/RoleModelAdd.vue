@@ -189,9 +189,9 @@
         <!-- Dugmad -->
         <div class="flex gap-4">
           <button
-            @click="handleSubmit"
+            @click.once="handleSubmit"
             :disabled="isLoading"
-            class="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-xl transition"
+            class="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ isLoading ? "Kreiranje..." : "➕ Kreiraj profil" }}
           </button>
@@ -225,6 +225,8 @@ const form = ref({
   achievements: "",
 });
 
+let isSubmitting = false
+
 const errors = ref({});
 const serverError = ref("");
 const successMessage = ref("");
@@ -256,36 +258,37 @@ function validate() {
 }
 
 async function handleSubmit() {
+  if (isSubmitting) return
+  isSubmitting = true
+  isLoading.value = true
   serverError.value = "";
   successMessage.value = "";
 
-  if (!validate()) return;
-
-  isLoading.value = true;
+  if (!validate()) {
+    isLoading.value = false;
+    isSubmitting = false
+    return;
+  }
   try {
     const token = localStorage.getItem("token");
     if (selectedImage.value) {
       const formData = new FormData();
-
       formData.append("file", selectedImage.value);
-
       const uploadResponse = await uploadRoleModelImage(formData);
-
       form.value.image_url = uploadResponse.image_url;
     }
     const result = await addRoleModel(form.value, token);
-
     if (result.id) {
       successMessage.value = "Profil je uspješno dodan u direktorij!";
       setTimeout(() => router.push("/role-models"), 1500);
     } else {
-      serverError.value =
-        result.detail || "Došlo je do greške. Pokušajte ponovo.";
+      serverError.value = result.detail || "Došlo je do greške. Pokušajte ponovo.";
     }
   } catch (err) {
     serverError.value = "Greška pri komunikaciji sa serverom.";
   } finally {
     isLoading.value = false;
+    isSubmitting = false
   }
 }
 </script>
