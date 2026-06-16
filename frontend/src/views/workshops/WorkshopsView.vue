@@ -200,9 +200,17 @@
                     Odustani
                   </button>
                   <button
+                    v-else-if="waitingList[workshop.ID_workshop]"
+                    @click="handleLeaveWaitingList(workshop.ID_workshop)"
+                    class="text-xs font-semibold text-red-500 uppercase tracking-wide transition-colors"
+                  >
+                    Napusti listu čekanja
+                  </button>
+                  <button
                     v-else-if="getFreeSpots(workshop) === 0"
                     @click="handleJoinWaitingList(workshop.ID_workshop)"
-                    class="text-xs font-semibold uppercase tracking-wide transition-colors" style="color:#d97706;"
+                    class="text-xs font-semibold uppercase tracking-wide transition-colors"
+                    style="color:#d97706;"
                   >
                     Lista čekanja
                   </button>
@@ -329,7 +337,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted,reactive } from 'vue'
+import axios from "axios";
 import Swal from 'sweetalert2'
 import { useRouter } from 'vue-router'
 import CalendarView from './Calendar.vue'
@@ -342,6 +351,7 @@ const workshops = ref([])
 const error = ref(null)
 const viewType = ref('list')
 const registrations = ref({})
+const waitingList = reactive({})
 
 const activeWorkshops = computed(() => workshops.value.filter(w => w.status === 'upcoming'))
 const completedWorkshops = computed(() => workshops.value.filter(w => w.status === 'completed'))
@@ -512,10 +522,21 @@ const checkAllRegistrations = async () => { await Promise.all(workshops.value.ma
 
 const handleJoinWaitingList = async (workshopId) => {
   try {
-    const res = await fetch(`${BASE_URL}/workshops/waiting-list/join/${workshopId}`, { method: 'POST', headers: { ...getAuthHeaders() } })
+    const res = await fetch(
+      `${BASE_URL}/workshops/waiting-list/join/${workshopId}`,
+      {
+        method: 'POST',
+        headers: { ...getAuthHeaders() }
+      }
+    )
+
     const data = await res.json()
     if (!res.ok) throw new Error(data.detail || 'Neuspješno dodavanje na listu čekanja.')
+
+    waitingList[workshopId] = true
+
     await Swal.fire('Uspjeh', 'Dodani ste na listu čekanja.', 'success')
+
     await refreshWorkshops()
   } catch (err) {
     if (err.message === 'NO_TOKEN') return
@@ -546,6 +567,73 @@ const handleCancel = async (id, title) => {
   }
 }
 
+const handleLeaveWaitingList = async (id) => {
+  const result = await Swal.fire({
+    title: 'Lista čekanja?',
+    text: `Želite li napustiti listu čekanja za ovu radionicu?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Da, napusti',
+    cancelButtonText: 'Ne',
+    confirmButtonColor: '#d33'
+  })
+
+  if (!result.isConfirmed) return
+
+  try {
+    const response = await fetch(
+      `${BASE_URL}/workshops/waiting-list/${id}`,
+      {
+        method: 'DELETE',
+        headers: { ...getAuthHeaders() }
+      }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(data.detail || 'Neuspješno uklanjanje sa liste čekanja.')
+    }
+
+    delete waitingList[id]
+
+    await Swal.fire(
+      'Uklonjeno',
+      'Uspješno ste uklonjeni sa liste čekanja.',
+      'success'
+    )
+
+    await refreshWorkshops()
+
+  } catch (err) {
+    if (err.message === 'NO_TOKEN') return
+    Swal.fire('Greška', err.message || 'Server nije dostupan.', 'error')
+  }
+}
+
+
+
+const fetchWaitingList = async () => {
+  const res = await fetch(`${BASE_URL}/workshops/waiting-list/me`, {
+    headers: getAuthHeaders()
+  })
+
+  const data = await res.json()
+
+  // reset
+  Object.keys(waitingList).forEach(k => delete waitingList[k])
+
+  data.forEach(item => {
+    waitingList[item.workshop_id] = true
+  })
+}
+
+
+
+
+
+
+
 const checkMyPromotion = async () => {
   try {
     const res = await fetch(`${BASE_URL}/workshops/my-promotion`, { headers: { ...getAuthHeaders() } })
@@ -566,5 +654,6 @@ const refreshWorkshops = async () => { await fetchWorkshops(); await checkAllReg
 onMounted(async () => {
   await refreshWorkshops()
   await checkMyPromotion()
+  await fetchWaitingList()
 })
 </script>

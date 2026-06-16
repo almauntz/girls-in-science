@@ -13,6 +13,26 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
+@router.get("/waiting-list/me")
+def get_my_waiting_list(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    entries = db.execute(
+        select(WaitingList).where(
+            WaitingList.user_id == current_user.id
+        )
+    ).scalars().all()
+
+    return [
+        {
+            "workshop_id": e.workshop_id
+        }
+        for e in entries
+    ]
+
+
+
 
 @router.get("/my-promotion")
 def my_promotion(
@@ -780,3 +800,33 @@ def get_ratings_average(workshop_id: int, db: Session = Depends(get_db)):
     count = int(row[1]) if row and row[1] is not None else 0
 
     return {"average": round(avg, 2), "count": count}
+
+
+
+@router.delete("/waiting-list/{workshop_id}")
+def leave_waiting_list(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # nađi entry u waiting listi
+    statement = select(WaitingList).where(
+        WaitingList.workshop_id == workshop_id,
+        WaitingList.user_id == current_user.id
+    )
+
+    waiting_entry = db.execute(statement).scalars().first()
+
+    if not waiting_entry:
+        raise HTTPException(
+            status_code=404,
+            detail="Niste na listi čekanja za ovu radionicu."
+        )
+
+    db.delete(waiting_entry)
+    db.commit()
+
+    return {
+        "message": "Uspješno ste napustili listu čekanja."
+    }
+
