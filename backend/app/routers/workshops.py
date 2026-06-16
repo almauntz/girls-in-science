@@ -13,6 +13,26 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
+@router.get("/waiting-list/me")
+def get_my_waiting_list(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    entries = db.execute(
+        select(WaitingList).where(
+            WaitingList.user_id == current_user.id
+        )
+    ).scalars().all()
+
+    return [
+        {
+            "workshop_id": e.workshop_id
+        }
+        for e in entries
+    ]
+
+
+
 
 @router.get("/my-promotion")
 def my_promotion(
@@ -809,3 +829,4 @@ def leave_waiting_list(
     return {
         "message": "Uspješno ste napustili listu čekanja."
     }
+

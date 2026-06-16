@@ -338,6 +338,7 @@
 
 <script setup>
 import { ref, computed, onMounted,reactive } from 'vue'
+import axios from "axios";
 import Swal from 'sweetalert2'
 import { useRouter } from 'vue-router'
 import CalendarView from './Calendar.vue'
@@ -594,7 +595,6 @@ const handleLeaveWaitingList = async (id) => {
       throw new Error(data.detail || 'Neuspješno uklanjanje sa liste čekanja.')
     }
 
-    // 🔥 KLJUČNO
     delete waitingList[id]
 
     await Swal.fire(
@@ -614,7 +614,7 @@ const handleLeaveWaitingList = async (id) => {
 
 
 const fetchWaitingList = async () => {
-  const res = await fetch(`${BASE_URL}/workshops/waiting-list`, {
+  const res = await fetch(`${BASE_URL}/workshops/waiting-list/me`, {
     headers: getAuthHeaders()
   })
 
@@ -654,5 +654,6 @@ const refreshWorkshops = async () => { await fetchWorkshops(); await checkAllReg
 onMounted(async () => {
   await refreshWorkshops()
   await checkMyPromotion()
+  await fetchWaitingList()
 })
 </script>
