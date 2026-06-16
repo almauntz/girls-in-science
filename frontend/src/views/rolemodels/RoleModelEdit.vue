@@ -1,10 +1,19 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-10 px-4">
     <div class="max-w-2xl mx-auto">
-      <h1 class="text-3xl font-bold text-gray-900 mb-1">Uredi profil</h1>
-      <p class="text-gray-500 mb-8">Ažuriraj informacije o profilu</p>
+ <div class="text-center mb-10">
+  <div class="text-5xl mb-4">✏️</div>
 
-      <div class="bg-white rounded-xl shadow p-8">
+  <h1 class="text-4xl font-bold text-gray-900 mb-2">
+    Uredi profil
+  </h1>
+
+  <p class="text-gray-500 text-lg">
+    Ažuriraj informacije o uzoru
+  </p>
+</div>
+
+      <div class="bg-white rounded-3xl shadow-lg p-8">
         <!-- Greška sa servera -->
         <div v-if="serverError" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
           {{ serverError }}
@@ -14,7 +23,9 @@
         <div v-if="successMessage" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
           {{ successMessage }}
         </div>
-
+<h2 class="text-xl font-bold text-gray-900 mb-8">
+  Osnovne informacije
+</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <!-- Ime -->
           <div>
@@ -91,7 +102,9 @@
           />
           <p v-if="errors.position" class="text-red-500 text-xs mt-1">{{ errors.position }}</p>
         </div>
-
+<h2 class="text-xl font-bold text-gray-900 mb-8 mt-10">
+  Profesionalni podaci
+</h2>
         <!-- Biografija -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -124,12 +137,12 @@
         </div>
 
         <!-- Dugmad -->
-        <div class="flex gap-4">
+        <div class="flex gap-4 mt-8">
           <button
             @click="handleSubmit"
             :disabled="isLoading"
-            class="bg-purple-700 hover:bg-purple-800 text-white font-medium px-6 py-2 rounded-lg text-sm transition disabled:opacity-50"
-          >
+            class="bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition"          
+            >
             {{ isLoading ? 'Čuvanje...' : 'Sačuvaj izmjene' }}
           </button>
           <button
