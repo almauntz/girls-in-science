@@ -52,6 +52,18 @@
               Obriši
             </button>
           </div>
+          <button
+            v-if="isLoggedIn"
+            @click="toggleBookmark"
+            class="mt-4 flex items-center gap-2 px-4 py-2 rounded-xl border transition"
+            :class="
+              isBookmarked
+                ? 'bg-violet-600 text-white border-violet-600'
+                : 'bg-white text-violet-600 border-violet-600'
+            "
+          >
+            {{ isBookmarked ? "♥ Ukloni iz favorita" : "♡ Dodaj u favorite" }}
+          </button>
         </div>
 
         <div
@@ -87,7 +99,14 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { getRoleModel, deleteRoleModel, getMe } from "../../services/api.js";
+import {
+  getRoleModel,
+  deleteRoleModel,
+  getMe,
+  addBookmark,
+  removeBookmark,
+  getBookmarks,
+} from "../../services/api.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -95,6 +114,8 @@ const roleModel = ref(null);
 const loading = ref(true);
 const error = ref(null);
 const isAdmin = ref(false);
+const isLoggedIn = ref(false);
+const isBookmarked = ref(false);
 
 const achievements = computed(() => {
   if (!roleModel.value?.achievements) return [];
@@ -114,12 +135,27 @@ async function handleDelete() {
   }
 }
 
+async function toggleBookmark() {
+  if (isBookmarked.value) {
+    await removeBookmark(roleModel.value.id);
+    isBookmarked.value = false;
+  } else {
+    await addBookmark(roleModel.value.id);
+    isBookmarked.value = true;
+  }
+}
+
 onMounted(async () => {
   try {
     const token = localStorage.getItem("token");
     if (token) {
       const user = await getMe(token);
       isAdmin.value = user.role === "admin";
+      isLoggedIn.value = true;
+      const bookmarks = await getBookmarks();
+      isBookmarked.value = bookmarks.some(
+        (b) => b.id === parseInt(route.params.id),
+      );
     }
     const data = await getRoleModel(route.params.id);
     if (data.detail) {
