@@ -3,7 +3,8 @@ from sqlmodel import Session, select, not_
 from app.database import get_db
 from app.core.security import get_current_user, verify_password, hash_password, create_access_token,decode_access_token
 from app.models.user import User, UserRole
-from app.models.profile import Profile, ProfileUpdate, ProfileResponse, Workshop, WorkshopRegistration, ChangePasswordRequest, PublicProfileResponse
+from app.models.profile import Profile, ProfileUpdate, ProfileResponse, ChangePasswordRequest, PublicProfileResponse
+from app.models.workshops_models import Workshop, Registration as WorkshopRegistration
 from datetime import datetime
 from typing import Dict, Any
 import uuid
@@ -166,69 +167,69 @@ def get_personal_dashboard(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Dohvata personalizovani dashboard za trenutno ulogovanog korisnika.
-    Vraća tri sekcije: Moje radionice, Nove radionice i Dostupne radionice.
-    """
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Niste autorizovani."
-        )
     user_id = current_user.id
 
-    # 1. Moje radionice - Radionice na koje je korisnik prijavljen
-    # Radimo JOIN između Workshop i WorkshopRegistration da dobijemo radionice na koje je trenutni korisnik prijavljen
-    my_workshops_query = (
+    # IDs of workshops the user is registered for
+    my_registration_workshop_ids = [
+        r.workshop_id for r in db.exec(
+            select(WorkshopRegistration).where(WorkshopRegistration.user_id == user_id)
+        ).all()
+    ]
+
+    # My workshops
+    if my_registration_workshop_ids:
+        my_workshops = db.exec(
+            select(Workshop)
+            .where(Workshop.id.in_(my_registration_workshop_ids))
+            .order_by(Workshop.date.asc())
+        ).all()
+    else:
+        my_workshops = []
+
+    # New workshops (latest 3 upcoming)
+    new_workshops = db.exec(
         select(Workshop)
-        .join(WorkshopRegistration)
-        .where(WorkshopRegistration.user_id == user_id)
-        .order_by(Workshop.date.asc()) 
-    )
-    my_workshops = db.exec(my_workshops_query).all()
+        .where(Workshop.date >= datetime.utcnow())
+        .order_by(Workshop.created_at.desc())
+        .limit(3)
+    ).all()
 
-    # Izvlačimo samo ID-eve mojih radionica da bismo ih lakše filtrirali u "Dostupne radionice"
-    my_workshop_ids = [w.id for w in my_workshops]
-
-    # 2. SEKCIJA: Nove radionice (posljednje 3 dodane u sistem a da im datum nije prošao)
-    new_workshops_query = (
-        select(Workshop)
-        .where(Workshop.date >= datetime.utcnow())  # Samo buduće radionice
-        .order_by(Workshop.created_at.desc())  # Najnovije prvo
-        .limit(3)  # Ograničavamo na 3 najnovije
-    )
-    new_workshops = db.exec(new_workshops_query).all()
-
-    # 3. SEKCIJA: Dostupne radionice (sve buduće radionice na koje korisnik nije prijavljen)
-    # Koristimo not_(Workshop.id.in_(my_workshop_ids)) da izuzmemo radionice na koje je korisnik već prijavljen
-    if my_workshop_ids:
-        available_workshops_query = (
+    # Available workshops (upcoming, not already registered)
+    if my_registration_workshop_ids:
+        available_workshops = db.exec(
             select(Workshop)
             .where(
-                Workshop.date >= datetime.utcnow(),  # Samo buduće radionice
-                not_(Workshop.id.in_(my_workshop_ids))  # Izuzimamo moje radionice
+                Workshop.date >= datetime.utcnow(),
+                not_(Workshop.id.in_(my_registration_workshop_ids))
             )
-            .order_by(Workshop.date.asc())  # Najbliže prvo
-        )
-    else: 
-        # Ako korisnik nije prijavljen ni na jednu radionicu, prikazujemo sve buduće radionice
-        available_workshops_query = (
+            .order_by(Workshop.date.asc())
+        ).all()
+    else:
+        available_workshops = db.exec(
             select(Workshop)
-            .where(Workshop.date >= datetime.utcnow())  # Samo buduće radionice
-            .order_by(Workshop.date.asc())  # Najbliže prvo
-        )
-    available_workshops = db.exec(available_workshops_query).all()
+            .where(Workshop.date >= datetime.utcnow())
+            .order_by(Workshop.date.asc())
+        ).all()
 
-    # Pakujemo sve u jedan jasan JSON odgovor za Vue frontend
+    def workshop_to_dict(w):
+        return {
+            "id": w.id,
+            "title": w.title,
+            "description": w.description,
+            "date": w.date.isoformat() if w.date else None,
+            "capacity": w.capacity,
+            "created_at": w.created_at.isoformat() if w.created_at else None,
+        }
+
     return {
         "user": {
             "id": current_user.id,
             "full_name": current_user.full_name,
             "role": current_user.role
         },
-        "my_workshops": my_workshops,
-        "new_workshops": new_workshops,
-        "available_workshops": available_workshops
+        "my_workshops": [workshop_to_dict(w) for w in my_workshops],
+        "new_workshops": [workshop_to_dict(w) for w in new_workshops],
+        "available_workshops": [workshop_to_dict(w) for w in available_workshops],
     }
 
 
@@ -238,66 +239,35 @@ def register_for_workshop(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """
-    Omogućava trenutno ulogovanom korisniku da se prijavi na dostupnu radionicu.
-    (GIS4-18: direktna prijava sa dashboarda)
-    """
-    if not current_user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Niste autorizovani."
-        )
-    
-    # Provjeravamo da li radionica postoji u bazi podataka
-    workshop = db.get(Workshop, workshop_id)
+    workshop = db.exec(select(Workshop).where(Workshop.id == workshop_id)).first()
     if not workshop:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Radionica ne postoji."
-        )
-    # Provjeravamo da li je radionica već prošla
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Radionica ne postoji.")
+
     if workshop.date < datetime.utcnow():
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ne možete se prijaviti na radionicu koja je već prošla."
-        )
-    # Provjeravamo da li je korisnik već prijavljen na ovu radionicu
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Ne možete se prijaviti na radionicu koja je već prošla.")
+
     already_registered = db.exec(
         select(WorkshopRegistration).where(
             WorkshopRegistration.user_id == current_user.id,
             WorkshopRegistration.workshop_id == workshop_id
         )
     ).first()
-
     if already_registered:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Već ste prijavljeni na ovu radionicu."
-        )
-    # Provjeravamo da li je radionica popunjena (ako radionica ima ograničen broj mjesta)
-    # Brojimo koliko je trenutno prijavljenih korisnika na ovu radionicu
-    current_registrations_count = len (
-        db.exec(
-            select(WorkshopRegistration).where(
-                WorkshopRegistration.workshop_id == workshop_id
-            )
-        ).all()
-    )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Već ste prijavljeni na ovu radionicu.")
 
-    if current_registrations_count >= workshop.capacity:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Nažalost, sva mjesta za ovu radionicu su popunjena."
-        )
-    
-    # Kreiranje nove prijave
+    current_count = len(db.exec(
+        select(WorkshopRegistration).where(WorkshopRegistration.workshop_id == workshop_id)
+    ).all())
+    if current_count >= workshop.capacity:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nažalost, sva mjesta su popunjena.")
+
     new_registration = WorkshopRegistration(
         user_id=current_user.id,
         workshop_id=workshop_id
     )
     db.add(new_registration)
     db.commit()
-    return {"message": "Uspješno ste se prijavili na radionicu: {workshop.title}."}
+    return {"message": f"Uspješno ste se prijavili na radionicu: {workshop.title}."}
 
 # Endpoint za upload avatara
 UPLOAD_DIR = "static/avatars"
