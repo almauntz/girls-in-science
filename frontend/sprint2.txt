@@ -1,0 +1,83 @@
+================================================================
+USER STORIJE I TASKOVI
+================================================================
+
+FAJL 1: Kalendar radionica (WorkshopCalendar)
+================================================================
+
+USER STORIJA 1:
+Kao korisnica platforme Girls in Science, želim pregledati
+kalendar radionica po mjesecima kako bih znala koje radionice
+su dostupne i kada se održavaju.
+
+TASKOVI:
+---------
+Naziv: Prikaz kalendara po mjesecima
+Opis: Implementirati kalendarsku mrežu koja prikazuje radionice
+po danima za odabrani mjesec, sa mogućnošću navigacije između
+mjeseci i godina.
+
+Naziv: Pretraga radionica
+Opis: Dodati polje za pretragu koje filtrira radionice u
+kalendaru prema nazivu ili lokaciji u realnom vremenu.
+
+Naziv: Prikaz statistike
+Opis: Prikazati ukupan broj radionica, slobodnih mjesta i
+korisničinih prijava za trenutni mjesec.
+
+Naziv: Označavanje statusa radionice
+Opis: Svaka radionica u kalendaru treba biti vizualno označena
+bojom - zelena za slobodne, crvena za popunjene, ljubičasta
+za one na koje je korisnica prijavljena.
+
+----------------------------------------------------------------
+
+USER STORIJA 2:
+Kao korisnica, želim da mi se vizualno istakne današnji datum
+u kalendaru kako bih lakše pronašla radionice koje se
+održavaju danas.
+
+TASKOVI:
+---------
+Naziv: Isticanje današnjeg datuma
+Opis: Današnji datum označiti ljubičastim kružićem, a
+radionice tog dana dobijaju ljubičastu sjenu kako bi
+bile uočljivije.
+
+
+================================================================
+
+FAJL 2: Notifikacije (Notifications)
+================================================================
+
+USER STORIJA 1:
+Kao ulogovana korisnica, želim automatski primati obavijesti
+o novim informacijama vezanim za radionice kako ne bih
+propustila važne promjene ili najave.
+
+TASKOVI:
+---------
+Naziv: Polling notifikacija
+Opis: Implementirati mehanizam koji svakih 10 sekundi šalje
+zahtjev serveru i provjerava postoje li nepročitane
+notifikacije za ulogovanog korisnika.
+
+Naziv: Prikaz toast notifikacije
+Opis: Svaku nepročitanu notifikaciju prikazati kao SweetAlert2
+toast u gornjem desnom uglu ekrana, sa naslovom i tekstom
+poruke, koji se automatski zatvara nakon 5 sekundi.
+
+----------------------------------------------------------------
+
+USER STORIJA 2:
+Kao korisnica, želim da notifikacije vidim samo kada sam
+ulogovana, kako bi moji podaci ostali sigurni.
+
+TASKOVI:
+---------
+Naziv: Provjera autentifikacije
+Opis: Prije svakog zahtjeva prema serveru provjeriti postoji
+li token u localStorage - ako ne postoji, ne slati zahtjev
+i ne prikazivati notifikacije.
+
+================================================================
