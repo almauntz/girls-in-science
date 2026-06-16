@@ -4,53 +4,80 @@
     <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>
     <div v-else-if="roleModel">
 
-      <router-link to="/role-models" class="text-sm text-blue-600 hover:underline mb-6 inline-block">
-        ← Povratak na listu
-      </router-link>
+     
 
-      <div class="bg-white border border-gray-200 rounded-xl p-8">
-        <div class="flex items-center gap-6 mb-6">
-          <div class="w-20 h-20 rounded-full bg-blue-600 text-white flex items-center justify-center text-2xl font-bold flex-shrink-0">
+      <div class="bg-white rounded-3xl shadow-lg p-8 mb-8">
+        <router-link
+          to="/role-models"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-white text-violet-700 rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition mb-8"
+        >
+          ← Nazad na direktorij
+        </router-link>
+
+  <div class="flex items-start justify-between gap-12">
+
+    <div class="flex items-center gap-8 mb-8">
+
+      <div
+        class="w-28 h-28 rounded-full bg-violet-600 text-white flex items-center justify-center text-2xl font-bold"
+      >
             {{ getInitials(roleModel.first_name, roleModel.last_name) }}
           </div>
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">{{ roleModel.first_name }} {{ roleModel.last_name }}</h1>
-            <p class="text-blue-600 font-medium">{{ roleModel.stem_field }}</p>
-            <p class="text-gray-500">{{ roleModel.institution }}</p>
-            <p class="text-gray-400 text-sm">{{ roleModel.position }}</p>
+            <h1 class="text-4xl font-bold text-gray-900">{{ roleModel.first_name }} {{ roleModel.last_name }}</h1>
+            <p class="text-violet-600 font-medium mt-2">{{ roleModel.stem_field }}</p>
+             <p class="text-gray-500 mt-2">
+              {{ roleModel.institution }} • {{ roleModel.position }}
+            </p>
           </div>
         </div>
 
-        <div class="flex gap-3 mb-8" v-if="isAdmin">
+        <div class="flex gap-3 mt-5" v-if="isAdmin">
           <router-link
             :to="`/role-models/${roleModel.id}/edit`"
-            class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg text-sm transition"
-          >
+            class="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-xl font-medium transition"          
+            >
             Uredi
           </router-link>
           <button
             @click="handleDelete"
-            class="bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 rounded-lg text-sm transition"
+            class="bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 rounded-xl font-medium transition"
           >
             Obriši
           </button>
         </div>
+      </div>
 
-        <div class="mb-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-2">Biografija</h2>
-          <p class="text-gray-700 whitespace-pre-line leading-relaxed">
-            {{ roleModel.biography || 'Nema dostupne biografije.' }}
-          </p>
-        </div>
 
-        <div>
-          <h2 class="text-lg font-semibold text-gray-900 mb-2">Postignuća</h2>
-          <ul class="list-disc list-inside text-gray-700 space-y-1">
-            <li v-for="(achievement, index) in achievements" :key="index">
-              {{ achievement }}
-            </li>
-          </ul>
-        </div>
+  <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-sm transition mt-8">
+  <h2 class="text-xl font-bold text-gray-900 mb-4">
+    Biografija
+  </h2>
+
+  <p class="text-gray-700 leading-relaxed whitespace-pre-line">
+    {{ roleModel.biography }}
+  </p>
+
+</div>
+
+<div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-sm transition mt-6">
+  <h2 class="text-xl font-bold text-gray-900 mb-4">
+    Postignuća
+  </h2>
+
+  <ul class="space-y-2">
+
+    <li
+      v-for="(achievement, index) in achievements"
+      :key="index"
+      class="text-gray-700"
+    >
+      • {{ achievement }}
+    </li>
+
+  </ul>
+
+</div>
       </div>
     </div>
   </div>
