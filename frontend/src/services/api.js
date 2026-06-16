@@ -268,6 +268,23 @@ export async function deleteNewsPost(id, token) {
   return response.json()
 }
 
+export async function getCategories() {
+  const response = await fetch(`${BASE_URL}/news/categories`)
+  return response.json()
+}
+
+export async function createCategory(data, token) {
+  const response = await fetch(`${BASE_URL}/news/categories`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
+
 /* =========================================================
    ADMIN — USER MANAGEMENT
 ========================================================= */
