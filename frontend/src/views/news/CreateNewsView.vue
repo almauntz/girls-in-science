@@ -100,6 +100,21 @@
   />
 </div>
 
+<div class="mb-6">
+  <label class="block mb-2 font-medium">Kategorije</label>
+  <div class="flex flex-wrap gap-2">
+    <button
+      v-for="category in categories"
+      :key="category.id"
+      @click="toggleCategory(category.id)"
+      :class="form.category_ids.includes(category.id) ? 'bg-violet-600 text-white' : 'bg-gray-100 text-gray-700'"
+      class="px-3 py-1 rounded-full text-sm font-medium transition"
+    >
+      {{ category.name }}
+    </button>
+  </div>
+</div>
+
     <!-- Dugme -->
     <button
       @click="handleSubmit"
@@ -116,11 +131,9 @@
 
 import { onMounted, ref } from 'vue'
 
-import { createNewsPost } from '../../services/api'
-
 import { useRouter } from 'vue-router'
 
-import { getRoleModels } from '../../services/api'
+import { createNewsPost,getRoleModels, getCategories } from '../../services/api'
 import Multiselect from '@vueform/multiselect'
 
 import '@vueform/multiselect/themes/default.css'
@@ -129,7 +142,8 @@ const form = ref({
   title: '',
   content: '',
   image_url: '',
-  role_model_ids: []
+  role_model_ids: [],
+  category_ids: []
 })
 
 const errors = ref({})
@@ -141,6 +155,9 @@ const serverError = ref('')
 const router = useRouter()
 
 const roleModels=ref([])
+
+const categories = ref([])
+
 import { computed } from 'vue'
 
 const profileOptions = computed(() =>
@@ -151,6 +168,8 @@ const profileOptions = computed(() =>
 )
 onMounted(async() => {
   roleModels.value=await getRoleModels()
+  const cats = await getCategories()
+  categories.value = Array.isArray(cats) ? cats : []
 })
 
 function validate() {
@@ -168,6 +187,14 @@ function validate() {
   errors.value = e
 
   return Object.keys(e).length === 0
+}
+
+function toggleCategory(id) {
+  if (form.value.category_ids.includes(id)) {
+    form.value.category_ids = form.value.category_ids.filter(c => c !== id)
+  } else {
+    form.value.category_ids.push(id)
+  }
 }
 
 
