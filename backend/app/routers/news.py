@@ -67,7 +67,7 @@ def create_news_post(
     return news_post
 
 
-@router.get("/")
+@router.get("/", response_model=list[NewsPostRead])
 def get_news_posts(db: Session = Depends(get_db)):
     statement = select(NewsPost).order_by(NewsPost.created_at.desc())
     news_posts = db.exec(statement).all()
