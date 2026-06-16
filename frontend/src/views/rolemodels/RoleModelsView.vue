@@ -38,34 +38,49 @@ function resetFilter() {
 </script>
 
 <template>
-  <div class="max-w-4xl mx-auto px-6 py-10">
-    <h1 class="text-3xl font-bold text-gray-900 mb-1">Direktorij žena u nauci</h1>
-    <p class="text-gray-500 mb-6">Pronađite inspirativne uzore iz STEM oblasti</p>
+  <div class="max-w-6xl mx-auto px-6 py-10">
+  <div class="bg-gradient-to-r from-violet-600 to-purple-600 rounded-3xl p-10 text-center text-white mb-10 shadow-lg">
+  <div class="text-center mb-10">
 
-    <div class="flex gap-4 mb-8">
-      <input
-        v-model="search"
-        type="text"
-        placeholder="Pretraži po imenu, oblasti ili instituciji"
-        class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-      />
+    <h1 class="text-4xl font-bold text-white mb-3">
+      Direktorij žena u nauci
+    </h1>
 
-      <button
-        v-if="search"
-        @click="resetFilter"
-        class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-5 py-2 rounded-lg text-sm transition"
-      >
-        Reset
-      </button>
+    <p class="text-lg text-violet-100 max-w-2xl mx-auto mb-8">
+      Pronađite inspirativne uzore iz STEM oblasti i upoznajte njihove karijerne puteve.
+    </p>
 
-      <button
-        v-if="isAdmin"
-        @click="router.push('/role-models/add')"
-        class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-5 py-2 rounded-lg text-sm transition"
-      >
-        Dodaj novi profil
-      </button>
-    </div>
+  </div>
+   <div class="max-w-2xl mx-auto mb-8 flex gap-3">
+
+  <input
+    v-model="search"
+    type="text"
+    placeholder="Pretraži po imenu, oblasti ili instituciji"
+    class="flex-1 border border-gray-300 rounded-xl px-5 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"  />
+
+  <button
+    v-if="search"
+    @click="resetFilter"
+    class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 rounded-xl transition"
+  >
+    Reset
+  </button>
+
+</div>
+</div>
+
+<div
+  v-if="isAdmin"
+  class="flex justify-center mb-10"
+>
+  <button
+    @click="router.push('/role-models/add')"
+    class="bg-violet-600 hover:bg-violet-700 text-white font-medium px-6 py-3 rounded-xl transition"
+  >
+    Dodaj novi profil
+  </button>
+</div>
 
     <div v-if="filteredRoleModels.length === 0 && search" class="text-center text-gray-500 py-12">
       Nema rezultata.
@@ -75,21 +90,36 @@ function resetFilter() {
       Trenutno nema dostupnih profila.
     </div>
 
-    <div class="flex flex-col gap-4">
+    <div class="grid md:grid-cols-2 gap-6">
       <div
         v-for="model in filteredRoleModels"
         :key="model.id"
         @click="router.push(`/role-models/${model.id}`)"
-        class="flex items-center gap-4 bg-white border border-gray-200 rounded-xl px-6 py-4 cursor-pointer hover:shadow-md transition"
+        class="bg-white border border-gray-100 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition"
       >
-        <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
-          {{ getInitials(model.first_name, model.last_name) }}
-        </div>
-        <div>
-          <p class="font-semibold text-gray-900">{{ model.first_name }} {{ model.last_name }}</p>
-          <p class="text-sm text-blue-600">{{ model.stem_field }}</p>
-          <p class="text-sm text-gray-500">{{ model.institution }}</p>
-        </div>
+       <div class="flex items-center gap-4">
+
+  <div
+    class="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0"
+  >
+    {{ getInitials(model.first_name, model.last_name) }}
+  </div>
+
+  <div>
+    <p class="font-semibold text-gray-900">
+      {{ model.first_name }} {{ model.last_name }}
+    </p>
+
+    <p class="text-sm text-violet-600 font-medium">
+      {{ model.stem_field }}
+    </p>
+
+    <p class="text-sm text-gray-500">
+      {{ model.institution }}
+    </p>
+  </div>
+
+</div>
       </div>
     </div>
   </div>
