@@ -92,7 +92,8 @@ onMounted(async () => {
     isAdmin.value = user.role === 'admin'
   }
   newsPosts.value = await getNewsPosts()
-  categories.value = await getCategories()
+  const cats = await getCategories()
+  categories.value = Array.isArray(cats) ? cats : []
   loading.value = false
 })
 
