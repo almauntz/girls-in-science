@@ -226,7 +226,6 @@ def get_personal_dashboard(
         "user": {
             "id": current_user.id,
             "full_name": current_user.full_name,
-            "role": current_user.role
         },
         "my_workshops": [workshop_to_dict(w) for w in my_workshops],
         "new_workshops": [workshop_to_dict(w) for w in new_workshops],
@@ -263,8 +262,12 @@ def register_for_workshop(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nažalost, sva mjesta su popunjena.")
 
     new_registration = WorkshopRegistration(
-        user_id=current_user.id,
-        workshop_id=workshop_id
+    user_id=current_user.id,
+    workshop_id=workshop_id,
+    first_name=current_user.full_name.split(" ")[0] if current_user.full_name else "Nepoznato",
+    last_name=" ".join(current_user.full_name.split(" ")[1:]) if current_user.full_name and len(current_user.full_name.split(" ")) > 1 else "-",
+    email=current_user.email,
+    phone=getattr(current_user, "phone", None) or "-"
     )
     db.add(new_registration)
     db.commit()
