@@ -114,27 +114,33 @@ def search_workshops(
     db: Session = Depends(get_db),
     filters: WorkshopFilter = Depends(),
 ):
+    from datetime import timedelta
     statement = select(Workshop)
-
 
     if filters.title:
         statement = statement.where(Workshop.title.ilike(f"%{filters.title}%"))
 
-
     if filters.location:
         statement = statement.where(Workshop.location.ilike(f"%{filters.location}%"))
 
-
-    if filters.date_from:
-        statement = statement.where(Workshop.date >= filters.date_from)
-
-
-    if filters.date_to:
-        statement = statement.where(Workshop.date <= filters.date_to)
-
+    if filters.date_from and filters.date_to:
+        date_to_end = filters.date_to.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        statement = statement.where(
+            Workshop.date >= filters.date_from,
+            Workshop.date < date_to_end
+        )
+    elif filters.date_from:
+        dan_pocetak = filters.date_from.replace(hour=0, minute=0, second=0, microsecond=0)
+        dan_kraj = dan_pocetak + timedelta(days=1)
+        statement = statement.where(
+            Workshop.date >= dan_pocetak,
+            Workshop.date < dan_kraj
+        )
+    elif filters.date_to:
+        date_to_end = filters.date_to.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        statement = statement.where(Workshop.date < date_to_end)
 
     workshops = db.execute(statement).scalars().all()
-
 
     result = []
     for w in workshops:
@@ -146,7 +152,6 @@ def search_workshops(
         workshop_dict = w.model_dump()
         workshop_dict["free_spots"] = w.capacity - broj_prijava
         result.append(workshop_dict)
-
 
     return result
 
@@ -746,11 +751,19 @@ def get_ratings(workshop_id: int, db: Session = Depends(get_db)):
     if not workshop:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
 
-    return db.execute(
+    ratings = db.execute(
         select(WorkshopRating).where(WorkshopRating.workshop_id == workshop_id)
         .order_by(WorkshopRating.created_at.desc())
     ).scalars().all()
 
+    result = []
+    for rating in ratings:
+        user = db.get(User, rating.user_id)
+        rating_data = RatingRead.model_validate(rating)
+        rating_data.user_name = user.full_name if user else "Nepoznat"
+        result.append(rating_data)
+
+    return result
 
 @router.get("/{workshop_id}/ratings/average")
 def get_ratings_average(workshop_id: int, db: Session = Depends(get_db)):

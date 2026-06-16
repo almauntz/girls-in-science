@@ -281,7 +281,7 @@ class RatingRead(BaseModel):
     score: int
     comment: Optional[str]
     created_at: Optional[datetime]
-
+    user_name: Optional[str] = None 
     class Config:
         from_attributes = True
   
