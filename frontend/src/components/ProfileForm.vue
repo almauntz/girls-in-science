@@ -9,7 +9,7 @@
         </button>
       </div>
       <div class="absolute w-full left-0 bottom-4 px-6 flex items-end gap-6">
-        <div class="relative cursor-pointer group flex-shrink-0" @click="$refs.fileInput.click()">
+        <div class="relative flex-shrink-0" :class="isEditMode ? 'cursor-pointer group' : ''" @click="isEditMode && $refs.fileInput.click()">
           <div class="w-32 h-32 rounded-3xl border-4 border-white bg-violet-400 flex items-center justify-center overflow-hidden shadow-lg">
             <img v-if="avatarUrl" :src="avatarUrl" alt="Avatar" class="w-full h-full object-cover" />
             <span v-else class="text-5xl">👤</span>
@@ -20,7 +20,7 @@
           <div v-if="isUploading" class="absolute inset-0 rounded-3xl bg-black bg-opacity-40 flex items-center justify-center">
             <span class="text-white text-xs">...</span>
           </div>
-          <button v-if="avatarUrl" type="button" @click.stop="handleDeleteAvatar"
+          <button v-if="avatarUrl && isEditMode" type="button" @click.stop="handleDeleteAvatar"
             class="absolute -top-1 -right-1 w-6 h-6 bg-red-500 hover:bg-red-600 text-white rounded-full flex items-center justify-center text-xs transition-colors z-10">✕</button>
         </div>
         <input ref="fileInput" type="file" accept=".jpg,.jpeg,.png" class="hidden" @change="handleAvatarChange" />
