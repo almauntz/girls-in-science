@@ -112,7 +112,7 @@ def update_news_post(
     news_post = db.get(NewsPost, id)
     if not news_post:
         raise HTTPException(status_code=404, detail="Objava nije pronađena")
-    update_data = data.model_dump(exclude_unset=True, exclude={"role_model_ids"})
+    update_data = data.model_dump(exclude_unset=True, exclude={"role_model_ids": True, "category_ids": True})
     for key, value in update_data.items():
         setattr(news_post, key, value)
     if data.role_model_ids is not None:
