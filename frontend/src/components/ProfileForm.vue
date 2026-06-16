@@ -251,7 +251,7 @@
         </div>
 
         <!-- RED 2: Iskustvo + Obrazovanje -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
 
           <!-- Iskustvo -->
           <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
