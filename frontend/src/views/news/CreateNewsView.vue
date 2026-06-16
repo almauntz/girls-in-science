@@ -133,7 +133,7 @@ import { onMounted, ref } from 'vue'
 
 import { useRouter } from 'vue-router'
 
-import { createNewsPost,getRoleModels, getCategories } from '../../services/api'
+import { createNewsPost,getRoleModels, getCategories } from '../../services/api.js'
 import Multiselect from '@vueform/multiselect'
 
 import '@vueform/multiselect/themes/default.css'
