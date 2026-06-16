@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, status, Body, Request
 from sqlmodel import Session, select, not_
+from sqlalchemy import func
 from app.database import get_db
 from app.core.security import get_current_user, verify_password, hash_password, create_access_token,decode_access_token
 from app.models.user import User, UserRole
@@ -131,7 +132,7 @@ def get_personal_dashboard(
     if my_registration_workshop_ids:
         my_workshops = db.exec(
             select(Workshop)
-            .where(Workshop.id.in_(my_registration_workshop_ids))
+            .where(Workshop.ID_workshop.in_(my_registration_workshop_ids))
             .order_by(Workshop.date.asc())
         ).all()
     else:
@@ -151,7 +152,7 @@ def get_personal_dashboard(
             select(Workshop)
             .where(
                 Workshop.date >= datetime.utcnow(),
-                not_(Workshop.id.in_(my_registration_workshop_ids))
+                not_(Workshop.ID_workshop.in_(my_registration_workshop_ids))
             )
             .order_by(Workshop.date.asc())
         ).all()
@@ -164,7 +165,7 @@ def get_personal_dashboard(
 
     def workshop_to_dict(w):
         return {
-            "id": w.id,
+            "id": w.ID_workshop,
             "title": w.title,
             "description": w.description,
             "date": w.date.isoformat() if w.date else None,
@@ -190,7 +191,7 @@ def register_for_workshop(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    workshop = db.exec(select(Workshop).where(Workshop.id == workshop_id)).first()
+    workshop = db.exec(select(Workshop).where(Workshop.ID_workshop == workshop_id)).first()
     if not workshop:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Radionica ne postoji.")
 
@@ -371,10 +372,10 @@ def get_my_workshop_history(
 ):
     history = db.exec(
         select(Workshop)
-        .join(WorkshopRegistration)
+        .join(WorkshopRegistration, WorkshopRegistration.workshop_id == Workshop.ID_workshop)
         .where(
             WorkshopRegistration.user_id == current_user.id,
-            Workshop.date < datetime.utcnow()
+            func.coalesce(Workshop.end_time, Workshop.date) < datetime.utcnow()
         )
         .order_by(Workshop.date.desc())
     ).all()
