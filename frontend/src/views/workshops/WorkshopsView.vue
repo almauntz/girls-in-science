@@ -9,6 +9,58 @@
       <p class="text-gray-600">
         Izaberi radionicu i prijavi se u par klikova.
       </p>
+      <!-- Search bar -->
+<div class="max-w-2xl mx-auto px-4 mb-6">
+  <div ref="searchBarRef" class="relative bg-white rounded-2xl px-4 py-3 shadow-lg">
+    <div class="flex items-center gap-3">
+      <svg class="w-4 h-4 flex-shrink-0 text-purple-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input
+        v-model="searchQuery"
+        @input="handleSearch"
+        @blur="hideDropdown"
+        type="text"
+        placeholder="Pretraži radionice po nazivu..."
+        class="flex-1 bg-transparent text-sm focus:outline-none text-gray-800 placeholder-gray-400"
+      />
+      <button @click="dateOpen = !dateOpen" class="flex items-center gap-1.5 text-sm font-medium text-purple-600">
+        📅 Datum
+      </button>
+    </div>
+
+    <div v-if="searchResults.length > 0 && searchQuery.trim()"
+      class="absolute left-0 right-0 bg-white rounded-2xl shadow-xl border border-purple-100 overflow-y-auto"
+      style="top: calc(100% + 8px); z-index: 9999; max-height: 320px;">
+      <div v-for="workshop in searchResults" :key="workshop.ID_workshop"
+        @mousedown.prevent="goToWorkshop(workshop)"
+        class="px-4 py-3 hover:bg-purple-50 cursor-pointer border-b border-gray-50 last:border-0">
+        <p class="text-sm font-semibold text-gray-800">{{ workshop.title }}</p>
+        <p class="text-xs text-gray-400">{{ formatDate(workshop.date) }} · {{ workshop.location }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Date panel -->
+  <div v-if="dateOpen" class="bg-white rounded-2xl px-4 py-3 mt-2 flex items-center gap-3 flex-wrap shadow-md">
+    <span class="text-xs text-gray-400">Od</span>
+    <input v-model="filterDateFrom" type="date" class="text-sm px-3 py-1.5 rounded-lg border border-purple-200 focus:outline-none bg-white" />
+    <span class="text-xs text-gray-400">Do</span>
+    <input v-model="filterDateTo" type="date" class="text-sm px-3 py-1.5 rounded-lg border border-purple-200 focus:outline-none bg-white" />
+    <button @click="applyFilters" class="ml-auto px-4 py-1.5 text-white text-sm font-semibold rounded-lg" style="background:#7c3aed;">
+      Primijeni
+    </button>
+  </div>
+
+  <!-- Location chips -->
+  <div class="flex gap-2 flex-wrap mt-3">
+    <button v-for="loc in locationChips" :key="loc" @click="selectLocation(loc)"
+      :class="filterLocation === loc ? 'bg-purple-600 text-white' : 'bg-white text-purple-600 border border-purple-200'"
+      class="px-4 py-1.5 rounded-full text-sm font-semibold transition-all">
+      {{ loc }}
+    </button>
+  </div>
+</div>
     </div>
 
     <div class="py-12 px-4 max-w-7xl mx-auto">
@@ -219,11 +271,13 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import Swal from 'sweetalert2'
+import { useRouter } from 'vue-router'
 
 const BASE_URL = 'http://127.0.0.1:8000'
-import CalendarView from './Calendar.vue' // DODATO: Import komponente
-import Notifications from './Notifications.vue' // DODATO: Import tvoje komponente za notifikacije
+import CalendarView from './Calendar.vue'
+import Notifications from './Notifications.vue'
 
+const router = useRouter()
 const workshops = ref([])
 const error = ref(null)
 const viewType = ref('list')
@@ -231,6 +285,76 @@ const registrations = ref({})
 
 const activeWorkshops = computed(() => workshops.value.filter(w => w.status === 'upcoming'))
 const completedWorkshops = computed(() => workshops.value.filter(w => w.status === 'completed'))
+
+/* ---------------- SEARCH & FILTERI ---------------- */
+const searchQuery = ref('')
+const searchResults = ref([])
+const searchBarRef = ref(null)
+const filterLocation = ref('Sve')
+const filterDateFrom = ref('')
+const filterDateTo = ref('')
+const dateOpen = ref(false)
+const locationChips = ref(['Sve'])
+let searchTimeout = null
+
+const filtersActive = computed(() =>
+  (filterLocation.value && filterLocation.value !== 'Sve') ||
+  filterDateFrom.value !== '' ||
+  filterDateTo.value !== ''
+)
+
+const handleSearch = () => {
+  clearTimeout(searchTimeout)
+  if (searchQuery.value.trim() === '') { searchResults.value = []; return }
+  searchTimeout = setTimeout(async () => {
+    await fetchSearchResults(searchQuery.value.trim())
+  }, 400)
+}
+
+const fetchSearchResults = async (title) => {
+  try {
+    const res = await fetch(`${BASE_URL}/workshops/search?title=${encodeURIComponent(title)}`)
+    const data = await res.json()
+    searchResults.value = Array.isArray(data) ? data : []
+  } catch { searchResults.value = [] }
+}
+
+const hideDropdown = () => {
+  setTimeout(() => { searchResults.value = [] }, 200)
+}
+
+const goToWorkshop = (workshop) => {
+  searchQuery.value = ''
+  searchResults.value = []
+  router.push(`/workshops/${workshop.ID_workshop}`)
+}
+
+const selectLocation = async (loc) => { filterLocation.value = loc; await applyFilters() }
+
+const clearDates = async () => {
+  filterDateFrom.value = ''; filterDateTo.value = ''; dateOpen.value = false; await applyFilters()
+}
+
+const applyFilters = async () => {
+  try {
+    error.value = null
+    const params = new URLSearchParams()
+    if (filterLocation.value && filterLocation.value !== 'Sve') params.append('location', filterLocation.value)
+    if (filterDateFrom.value) params.append('date_from', filterDateFrom.value)
+    if (filterDateTo.value) params.append('date_to', filterDateTo.value)
+    const url = params.toString() ? `${BASE_URL}/workshops/search?${params.toString()}` : `${BASE_URL}/workshops/active`
+    const res = await fetch(url)
+    const data = await res.json()
+    workshops.value = Array.isArray(data) ? data : []
+    if (workshops.value.length === 0) error.value = 'Nema radionica koje odgovaraju filterima.'
+    await checkAllRegistrations()
+  } catch { error.value = 'Greška pri filtriranju.' }
+}
+
+const resetFilters = async () => {
+  filterLocation.value = 'Sve'; filterDateFrom.value = ''; filterDateTo.value = ''; dateOpen.value = false
+  await refreshWorkshops()
+}
 
 /* ---------------- RATING ---------------- */
 const showRatingModal = ref(false)
@@ -276,24 +400,18 @@ const submitRating = async () => {
 /* ---------------- AUTH HELPER ---------------- */
 function getAuthHeaders() {
   const token = localStorage.getItem('token')
-
   if (!token) {
     Swal.fire('Greška', 'Morate biti prijavljeni.', 'warning')
     throw new Error('NO_TOKEN')
   }
-
-  return {
-    Authorization: `Bearer ${token}`
-  }
+  return { Authorization: `Bearer ${token}` }
 }
 
 /* ---------------- FORMAT DATE ---------------- */
 function formatDate(dateStr) {
   if (!dateStr) return ''
   const d = new Date(dateStr + 'Z')
-  return `${String(d.getDate()).padStart(2, '0')}.${String(
-    d.getMonth() + 1
-  ).padStart(2, '0')}.${d.getFullYear()}`
+  return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}.${d.getFullYear()}`
 }
 
 /* ---------------- CAPACITY ---------------- */
@@ -304,26 +422,22 @@ const getFreeSpots = (w) => {
   return Math.max(0, (w.capacity ?? 0) - getRegisteredCount(w))
 }
 
-const getCapacityClass = (w) =>
-  getFreeSpots(w) > 0 ? 'text-green-600' : 'text-red-500'
+const getCapacityClass = (w) => getFreeSpots(w) > 0 ? 'text-green-600' : 'text-red-500'
 
 /* ---------------- FETCH WORKSHOPS ---------------- */
 const fetchWorkshops = async () => {
   try {
     error.value = null
-
-    // auto-complete prije fetcha
     try {
       await fetch(`${BASE_URL}/workshops/auto-complete`, { method: 'POST' })
     } catch {
       console.warn('auto-complete nije uspio')
     }
-
     const res = await fetch(`${BASE_URL}/workshops/active`)
     const data = await res.json()
-
     workshops.value = Array.isArray(data) ? data : []
-
+    const locations = [...new Set(workshops.value.map(w => w.location).filter(Boolean))]
+    locationChips.value = ['Sve', ...locations]
     if (!Array.isArray(data)) {
       error.value = 'Trenutno nema aktivnih radionica.'
     }
@@ -335,54 +449,33 @@ const fetchWorkshops = async () => {
 /* ---------------- REGISTRATION CHECK ---------------- */
 const checkRegistration = async (workshopId) => {
   try {
-    const res = await fetch(
-      `${BASE_URL}/workshops/registration/check/${workshopId}`,
-      {
-        method: 'GET',
-        headers: {
-          ...getAuthHeaders()
-        }
-      }
-    )
-
+    const res = await fetch(`${BASE_URL}/workshops/registration/check/${workshopId}`, {
+      method: 'GET',
+      headers: { ...getAuthHeaders() }
+    })
     const data = await res.json()
-
-    registrations.value = {
-      ...registrations.value,
-      [workshopId]: data.registered
-    }
+    registrations.value = { ...registrations.value, [workshopId]: data.registered }
   } catch (err) {
     if (err.message === 'NO_TOKEN') return
-
-    registrations.value = {
-      ...registrations.value,
-      [workshopId]: false
-    }
+    registrations.value = { ...registrations.value, [workshopId]: false }
   }
 }
 
 const checkAllRegistrations = async () => {
-  await Promise.all(
-    workshops.value.map(w => checkRegistration(w.ID_workshop))
-  )
+  await Promise.all(workshops.value.map(w => checkRegistration(w.ID_workshop)))
 }
 
 /* ---------------- REGISTER ---------------- */
 const handleRegister = async (workshopId) => {
   try {
     const user = JSON.parse(localStorage.getItem('user'))
-
     if (!user) {
       Swal.fire('Greška', 'Niste prijavljeni.', 'warning')
       return
     }
-
     const res = await fetch(`${BASE_URL}/workshops/registration`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...getAuthHeaders()
-      },
+      headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
       body: JSON.stringify({
         first_name: user.first_name,
         last_name: user.last_name,
@@ -393,13 +486,9 @@ const handleRegister = async (workshopId) => {
         github_profile: ''
       })
     })
-
     const data = await res.json()
-
     if (!res.ok) throw new Error(data.detail)
-
     await Swal.fire('Uspjeh', 'Uspješno ste prijavljeni.', 'success')
-
     await refreshWorkshops()
   } catch (err) {
     if (err.message === 'NO_TOKEN') return
@@ -410,24 +499,13 @@ const handleRegister = async (workshopId) => {
 /* ---------------- WAITING LIST ---------------- */
 const handleJoinWaitingList = async (workshopId) => {
   try {
-    const res = await fetch(
-      `${BASE_URL}/workshops/waiting-list/join/${workshopId}`,
-      {
-        method: 'POST',
-        headers: {
-          ...getAuthHeaders()
-        }
-      }
-    )
-
+    const res = await fetch(`${BASE_URL}/workshops/waiting-list/join/${workshopId}`, {
+      method: 'POST',
+      headers: { ...getAuthHeaders() }
+    })
     const data = await res.json()
-
-    if (!res.ok) {
-      throw new Error(data.detail || 'Neuspješno dodavanje na listu čekanja.')
-    }
-
+    if (!res.ok) throw new Error(data.detail || 'Neuspješno dodavanje na listu čekanja.')
     await Swal.fire('Uspjeh', 'Dodani ste na listu čekanja.', 'success')
-
     await refreshWorkshops()
   } catch (err) {
     if (err.message === 'NO_TOKEN') return
@@ -446,42 +524,20 @@ const handleCancel = async (id, title) => {
     cancelButtonText: 'Ne',
     confirmButtonColor: '#d33'
   })
-
   if (!result.isConfirmed) return
-
   try {
-    const response = await fetch(
-      `${BASE_URL}/workshops/cancellation/${id}`,
-      {
-        method: 'DELETE',
-        headers: {
-          ...getAuthHeaders()
-        }
-      }
-    )
-
+    const response = await fetch(`${BASE_URL}/workshops/cancellation/${id}`, {
+      method: 'DELETE',
+      headers: { ...getAuthHeaders() }
+    })
     const data = await response.json()
-
-    if (!response.ok) {
-      throw new Error(data.detail || 'Neuspješno otkazivanje.')
-    }
-
+    if (!response.ok) throw new Error(data.detail || 'Neuspješno otkazivanje.')
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
-
-    if (
-      data.promotion &&
-      currentUser?.id &&
-      data.promotion.user_id === currentUser.id
-    ) {
-      await Swal.fire(
-        '🎉 Automatska prijava!',
-        `Ti si upravo prijavljen na "${title}" jer si bio prvi na listi čekanja.`,
-        'success'
-      )
+    if (data.promotion && currentUser?.id && data.promotion.user_id === currentUser.id) {
+      await Swal.fire('🎉 Automatska prijava!', `Ti si upravo prijavljen na "${title}" jer si bio prvi na listi čekanja.`, 'success')
     } else {
       await Swal.fire('Otkazano', 'Prijava je poništena.', 'success')
     }
-
     await refreshWorkshops()
   } catch (err) {
     if (err.message === 'NO_TOKEN') return
@@ -494,34 +550,15 @@ const checkMyPromotion = async () => {
   try {
     const res = await fetch(`${BASE_URL}/workshops/my-promotion`, {
       method: 'GET',
-      headers: {
-        ...getAuthHeaders()
-      }
+      headers: { ...getAuthHeaders() }
     })
-
     const data = await res.json()
     const promotion = data?.promotion
-
     if (!promotion?.is_promoted) return
-
-    const alreadyNotified = localStorage.getItem(
-      `promotion_notified_${promotion.workshop_id}`
-    )
-
+    const alreadyNotified = localStorage.getItem(`promotion_notified_${promotion.workshop_id}`)
     if (alreadyNotified) return
-
-    await Swal.fire(
-      '🎉 Automatska prijava!',
-      `Prebačen si na radionicu: ${promotion.workshop_title}`,
-      'success'
-    )
-
-    // zapamti po workshop_id (ne globalno)
-    localStorage.setItem(
-      `promotion_notified_${promotion.workshop_id}`,
-      'true'
-    )
-
+    await Swal.fire('🎉 Automatska prijava!', `Prebačen si na radionicu: ${promotion.workshop_title}`, 'success')
+    localStorage.setItem(`promotion_notified_${promotion.workshop_id}`, 'true')
   } catch (err) {
     Swal.fire('Greška', err.message || 'Server greška.', 'error')
   }
