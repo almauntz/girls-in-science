@@ -7,7 +7,7 @@ from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.workshops_models import (RegistrationRead, Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
                                           WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WorkshopProposal,
-                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList, UserNotification,WorkshopRating, RatingCreate, RatingRead)
+                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList, UserNotification,WorkshopRating, RatingCreate, RatingRead, WorkshopFilter)
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -106,6 +106,55 @@ def cancel_registration(
         "message": "Uspješno ste odustali od radionice.",
         "promoted_user_id": promoted_user_id
     }
+
+
+#Filtiranje radionica
+@router.get("/search", response_model=list[WorkshopList])
+def search_workshops(
+    db: Session = Depends(get_db),
+    filters: WorkshopFilter = Depends(),
+):
+    from datetime import timedelta
+    statement = select(Workshop)
+
+    if filters.title:
+        statement = statement.where(Workshop.title.ilike(f"%{filters.title}%"))
+
+    if filters.location:
+        statement = statement.where(Workshop.location.ilike(f"%{filters.location}%"))
+
+    if filters.date_from and filters.date_to:
+        date_to_end = filters.date_to.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        statement = statement.where(
+            Workshop.date >= filters.date_from,
+            Workshop.date < date_to_end
+        )
+    elif filters.date_from:
+        dan_pocetak = filters.date_from.replace(hour=0, minute=0, second=0, microsecond=0)
+        dan_kraj = dan_pocetak + timedelta(days=1)
+        statement = statement.where(
+            Workshop.date >= dan_pocetak,
+            Workshop.date < dan_kraj
+        )
+    elif filters.date_to:
+        date_to_end = filters.date_to.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        statement = statement.where(Workshop.date < date_to_end)
+
+    workshops = db.execute(statement).scalars().all()
+
+    result = []
+    for w in workshops:
+        broj_prijava = db.execute(
+            select(func.count(Registration.id)).where(
+                Registration.workshop_id == w.ID_workshop
+            )
+        ).scalar() or 0
+        workshop_dict = w.model_dump()
+        workshop_dict["free_spots"] = w.capacity - broj_prijava
+        result.append(workshop_dict)
+
+    return result
+
 
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
@@ -702,11 +751,19 @@ def get_ratings(workshop_id: int, db: Session = Depends(get_db)):
     if not workshop:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
 
-    return db.execute(
+    ratings = db.execute(
         select(WorkshopRating).where(WorkshopRating.workshop_id == workshop_id)
         .order_by(WorkshopRating.created_at.desc())
     ).scalars().all()
 
+    result = []
+    for rating in ratings:
+        user = db.get(User, rating.user_id)
+        rating_data = RatingRead.model_validate(rating)
+        rating_data.user_name = user.full_name if user else "Nepoznat"
+        result.append(rating_data)
+
+    return result
 
 @router.get("/{workshop_id}/ratings/average")
 def get_ratings_average(workshop_id: int, db: Session = Depends(get_db)):
