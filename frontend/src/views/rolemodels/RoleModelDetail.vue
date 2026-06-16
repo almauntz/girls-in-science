@@ -88,6 +88,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getRoleModel, deleteRoleModel, getMe } from "../../services/api.js";
+import Swal from 'sweetalert2'
 
 const route = useRoute();
 const router = useRouter();
@@ -106,10 +107,20 @@ function getInitials(first, last) {
 }
 
 async function handleDelete() {
-  if (!confirm("Da li ste sigurni da želite obrisati ovaj profil?")) return;
+  const result = await Swal.fire({
+    title: 'Obriši profil',
+    text: 'Da li ste sigurni da želite obrisati ovaj profil?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#7c3aed',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Obriši',
+    cancelButtonText: 'Odustani'
+  })
+  if (!result.isConfirmed) return;
   const token = localStorage.getItem("token");
-  const result = await deleteRoleModel(roleModel.value.id, token);
-  if (result.message) {
+  const deleteResult = await deleteRoleModel(roleModel.value.id, token);
+  if (deleteResult.message) {
     router.push("/role-models");
   }
 }
