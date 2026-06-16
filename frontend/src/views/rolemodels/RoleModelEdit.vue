@@ -1,69 +1,68 @@
 <template>
   <div class="min-h-screen bg-gray-50 py-10 px-4">
     <div class="max-w-2xl mx-auto">
- <div class="text-center mb-10">
-  <div class="text-5xl mb-4">✏️</div>
+      <div class="text-center mb-10">
+        <div class="text-5xl mb-4">✏️</div>
 
-  <h1 class="text-4xl font-bold text-gray-900 mb-2">
-    Uredi profil
-  </h1>
+        <h1 class="text-4xl font-bold text-gray-900 mb-2">Uredi profil</h1>
 
-  <p class="text-gray-500 text-lg">
-    Ažuriraj informacije o uzoru
-  </p>
-</div>
+        <p class="text-gray-500 text-lg">Ažuriraj informacije o uzoru</p>
+      </div>
 
       <div class="bg-white rounded-3xl shadow-lg p-8">
         <!-- Greška sa servera -->
-        <div v-if="serverError" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div
+          v-if="serverError"
+          class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+        >
           {{ serverError }}
         </div>
 
         <!-- Uspjeh -->
-        <div v-if="successMessage" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+        <div
+          v-if="successMessage"
+          class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+        >
           {{ successMessage }}
         </div>
         <h2 class="text-xl font-bold text-gray-900 mb-8">
-  Profilna fotografija 
-</h2>
+          Profilna fotografija
+        </h2>
         <div class="flex justify-center mb-8">
+          <label class="cursor-pointer relative">
+            <img
+              v-if="imagePreview"
+              :src="imagePreview"
+              class="w-32 h-32 rounded-full object-cover border-4 border-violet-200 shadow-md"
+            />
 
- <label class="cursor-pointer relative">
+            <button
+              v-if="imagePreview"
+              type="button"
+              @click.stop="removeImage"
+              class="absolute top-0 right-0 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center hover:bg-red-600 shadow-md border-2 border-white"
+            >
+              ✕
+            </button>
 
-  <img
-    v-if="imagePreview"
-    :src="imagePreview"
-    class="w-32 h-32 rounded-full object-cover border-4 border-violet-200 shadow-md"
-  />
+            <div
+              v-else
+              class="w-32 h-32 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-4xl hover:bg-violet-200 transition"
+            >
+              📷
+            </div>
 
-  <button
-    v-if="imagePreview"
-    type="button"
-    @click.stop="removeImage"
-    class="absolute top-0 right-0 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center hover:bg-red-600 shadow-md border-2 border-white"  >
-    ✕
-  </button>
-
-  <div
-    v-else
-    class="w-32 h-32 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-4xl hover:bg-violet-200 transition"
-  >
-    📷
-  </div>
-
-  <input
-    type="file"
-    accept="image/*"
-    class="hidden"
-    @change="handleImageChange"
-  />
-
-</label>
-
-</div>
-<h2 class="text-xl font-bold text-gray-900 mb-8">
-  Osnovne informacije
-</h2>
+            <input
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleImageChange"
+            />
+          </label>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-8">
+          Osnovne informacije
+        </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <!-- Ime -->
@@ -78,7 +77,9 @@
               class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               :class="{ 'border-red-400': errors.first_name }"
             />
-            <p v-if="errors.first_name" class="text-red-500 text-xs mt-1">{{ errors.first_name }}</p>
+            <p v-if="errors.first_name" class="text-red-500 text-xs mt-1">
+              {{ errors.first_name }}
+            </p>
           </div>
 
           <!-- Prezime -->
@@ -93,7 +94,9 @@
               class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
               :class="{ 'border-red-400': errors.last_name }"
             />
-            <p v-if="errors.last_name" class="text-red-500 text-xs mt-1">{{ errors.last_name }}</p>
+            <p v-if="errors.last_name" class="text-red-500 text-xs mt-1">
+              {{ errors.last_name }}
+            </p>
           </div>
         </div>
 
@@ -109,7 +112,9 @@
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             :class="{ 'border-red-400': errors.stem_field }"
           />
-          <p v-if="errors.stem_field" class="text-red-500 text-xs mt-1">{{ errors.stem_field }}</p>
+          <p v-if="errors.stem_field" class="text-red-500 text-xs mt-1">
+            {{ errors.stem_field }}
+          </p>
         </div>
 
         <!-- Institucija -->
@@ -124,7 +129,9 @@
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             :class="{ 'border-red-400': errors.institution }"
           />
-          <p v-if="errors.institution" class="text-red-500 text-xs mt-1">{{ errors.institution }}</p>
+          <p v-if="errors.institution" class="text-red-500 text-xs mt-1">
+            {{ errors.institution }}
+          </p>
         </div>
 
         <!-- Pozicija/Zvanje -->
@@ -139,11 +146,13 @@
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             :class="{ 'border-red-400': errors.position }"
           />
-          <p v-if="errors.position" class="text-red-500 text-xs mt-1">{{ errors.position }}</p>
+          <p v-if="errors.position" class="text-red-500 text-xs mt-1">
+            {{ errors.position }}
+          </p>
         </div>
-<h2 class="text-xl font-bold text-gray-900 mb-8 mt-10">
-  Profesionalni podaci
-</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-8 mt-10">
+          Profesionalni podaci
+        </h2>
         <!-- Biografija -->
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -156,7 +165,9 @@
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
             :class="{ 'border-red-400': errors.biography }"
           ></textarea>
-          <p v-if="errors.biography" class="text-red-500 text-xs mt-1">{{ errors.biography }}</p>
+          <p v-if="errors.biography" class="text-red-500 text-xs mt-1">
+            {{ errors.biography }}
+          </p>
         </div>
 
         <!-- Postignuća -->
@@ -171,8 +182,12 @@
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
             :class="{ 'border-red-400': errors.achievements }"
           ></textarea>
-          <p class="text-gray-400 text-xs mt-1">Unesite svako postignuće u novi red</p>
-          <p v-if="errors.achievements" class="text-red-500 text-xs mt-1">{{ errors.achievements }}</p>
+          <p class="text-gray-400 text-xs mt-1">
+            Unesite svako postignuće u novi red
+          </p>
+          <p v-if="errors.achievements" class="text-red-500 text-xs mt-1">
+            {{ errors.achievements }}
+          </p>
         </div>
 
         <!-- Dugmad -->
@@ -180,9 +195,9 @@
           <button
             @click="handleSubmit"
             :disabled="isLoading"
-            class="bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition"          
-            >
-            {{ isLoading ? 'Čuvanje...' : 'Sačuvaj izmjene' }}
+            class="bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition"
+          >
+            {{ isLoading ? "Čuvanje..." : "Sačuvaj izmjene" }}
           </button>
           <button
             @click="$router.push(`/role-models/${route.params.id}`)"
@@ -197,56 +212,58 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { getRoleModel, updateRoleModel, uploadRoleModelImage } from '../../services/api.js'
+import { ref, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import {
+  getRoleModel,
+  updateRoleModel,
+  uploadRoleModelImage,
+} from "../../services/api.js";
 
-const router = useRouter()
-const route = useRoute()
+const router = useRouter();
+const route = useRoute();
 
 const form = ref({
-  first_name: '',
-  last_name: '',
-  stem_field: '',
-  institution: '',
-  position: '',
-  biography: '',
-  achievements: '',
-  image_url: ''
-})
+  first_name: "",
+  last_name: "",
+  stem_field: "",
+  institution: "",
+  position: "",
+  biography: "",
+  achievements: "",
+  image_url: "",
+});
 
-const errors = ref({})
-const serverError = ref('')
-const successMessage = ref('')
-const isLoading = ref(false)
-const selectedImage = ref(null)
-const imagePreview = ref(null)
+const errors = ref({});
+const serverError = ref("");
+const successMessage = ref("");
+const isLoading = ref(false);
+const selectedImage = ref(null);
+const imagePreview = ref(null);
 
 function handleImageChange(event) {
-  const file = event.target.files[0]
+  const file = event.target.files[0];
 
-  if (!file) return
+  if (!file) return;
 
-  selectedImage.value = file
-  imagePreview.value = URL.createObjectURL(file)
+  selectedImage.value = file;
+  imagePreview.value = URL.createObjectURL(file);
 }
 function removeImage() {
-  imagePreview.value = null
-  selectedImage.value = null
-  form.value.image_url = null
+  imagePreview.value = null;
+  selectedImage.value = null;
+  form.value.image_url = null;
 }
 
 onMounted(async () => {
   try {
-    const data = await getRoleModel(route.params.id)
+    const data = await getRoleModel(route.params.id);
     if (data.detail) {
-      serverError.value = 'Profil nije pronađen.'
-      return
+      serverError.value = "Profil nije pronađen.";
+      return;
     }
     if (data.image_url) {
-    imagePreview.value =
-    `http://localhost:8000${data.image_url}`
-    
+      imagePreview.value = `http://localhost:8000${data.image_url}`;
     }
     form.value = {
       first_name: data.first_name,
@@ -256,56 +273,56 @@ onMounted(async () => {
       position: data.position,
       biography: data.biography,
       achievements: data.achievements,
-      image_url: data.image_url
-    }
+      image_url: data.image_url,
+    };
   } catch {
-    serverError.value = 'Greška pri učitavanju profila.'
+    serverError.value = "Greška pri učitavanju profila.";
   }
-})
+});
 
 function validate() {
-  const e = {}
-  if (!form.value.first_name.trim()) e.first_name = 'Ime je obavezno'
-  if (!form.value.last_name.trim()) e.last_name = 'Prezime je obavezno'
-  if (!form.value.stem_field.trim()) e.stem_field = 'STEM oblast je obavezna'
-  if (!form.value.institution.trim()) e.institution = 'Institucija je obavezna'
-  if (!form.value.position.trim()) e.position = 'Pozicija/Zvanje je obavezno'
-  if (!form.value.biography.trim()) e.biography = 'Biografija je obavezna'
-  if (!form.value.achievements.trim()) e.achievements = 'Postignuća su obavezna'
-  errors.value = e
-  return Object.keys(e).length === 0
+  const e = {};
+  if (!form.value.first_name.trim()) e.first_name = "Ime je obavezno";
+  if (!form.value.last_name.trim()) e.last_name = "Prezime je obavezno";
+  if (!form.value.stem_field.trim()) e.stem_field = "STEM oblast je obavezna";
+  if (!form.value.institution.trim()) e.institution = "Institucija je obavezna";
+  if (!form.value.position.trim()) e.position = "Pozicija/Zvanje je obavezno";
+  if (!form.value.biography.trim()) e.biography = "Biografija je obavezna";
+  if (!form.value.achievements.trim())
+    e.achievements = "Postignuća su obavezna";
+  errors.value = e;
+  return Object.keys(e).length === 0;
 }
 
 async function handleSubmit() {
-  serverError.value = ''
-  successMessage.value = ''
+  serverError.value = "";
+  successMessage.value = "";
 
-  if (!validate()) return
+  if (!validate()) return;
 
-  isLoading.value = true
+  isLoading.value = true;
   try {
     if (selectedImage.value) {
-  const formData = new FormData()
+      const formData = new FormData();
 
-  formData.append('file', selectedImage.value)
+      formData.append("file", selectedImage.value);
 
-  const uploadResponse =
-    await uploadRoleModelImage(formData)
+      const uploadResponse = await uploadRoleModelImage(formData);
 
-  form.value.image_url =
-    uploadResponse.image_url
-}
-    const result = await updateRoleModel(route.params.id, form.value)
+      form.value.image_url = uploadResponse.image_url;
+    }
+    const result = await updateRoleModel(route.params.id, form.value);
     if (result.id) {
-      successMessage.value = 'Profil je uspješno ažuriran!'
-      setTimeout(() => router.push(`/role-models/${route.params.id}`), 1500)
+      successMessage.value = "Profil je uspješno ažuriran!";
+      setTimeout(() => router.push(`/role-models/${route.params.id}`), 1500);
     } else {
-      serverError.value = result.detail || 'Došlo je do greške. Pokušajte ponovo.'
+      serverError.value =
+        result.detail || "Došlo je do greške. Pokušajte ponovo.";
     }
   } catch {
-    serverError.value = 'Greška pri komunikaciji sa serverom.'
+    serverError.value = "Greška pri komunikaciji sa serverom.";
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
 </script>
