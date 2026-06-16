@@ -32,6 +32,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

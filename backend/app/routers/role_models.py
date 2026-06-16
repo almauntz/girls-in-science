@@ -4,6 +4,9 @@ from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.role_model import RoleModel, RoleModelCreate, RoleModelUpdate
+from fastapi import UploadFile, File
+import shutil
+import os
 
 router = APIRouter(prefix="/role-models", tags=["role_models"])
 
@@ -61,3 +64,18 @@ def delete_role_model(
     db.delete(role_model)
     db.commit()
     return {"message": "Profil je uspješno obrisan"}
+
+@router.post("/upload-image")
+async def upload_image(file: UploadFile = File(...)):
+    upload_dir = "uploads/rolemodels"
+
+    os.makedirs(upload_dir, exist_ok=True)
+
+    file_path = os.path.join(upload_dir, file.filename)
+
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    return {
+        "image_url": f"/uploads/rolemodels/{file.filename}"
+    }

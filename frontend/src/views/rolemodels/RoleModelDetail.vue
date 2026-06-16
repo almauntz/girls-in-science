@@ -18,11 +18,18 @@
 
     <div class="flex items-center gap-8 mb-8">
 
-      <div
-        class="w-28 h-28 rounded-full bg-violet-600 text-white flex items-center justify-center text-2xl font-bold"
-      >
-            {{ getInitials(roleModel.first_name, roleModel.last_name) }}
-          </div>
+     <img
+  v-if="roleModel.image_url"
+  :src="`http://localhost:8000${roleModel.image_url}`"
+  class="w-28 h-28 rounded-full object-cover"
+/>
+
+<div
+  v-else
+  class="w-28 h-28 rounded-full bg-violet-600 text-white flex items-center justify-center text-2xl font-bold"
+>
+  {{ getInitials(roleModel.first_name, roleModel.last_name) }}
+</div>
           <div>
             <h1 class="text-4xl font-bold text-gray-900">{{ roleModel.first_name }} {{ roleModel.last_name }}</h1>
             <p class="text-violet-600 font-medium mt-2">{{ roleModel.stem_field }}</p>
