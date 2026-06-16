@@ -188,17 +188,24 @@
               <button class="close-btn" @click="closeModal">&#x2715;</button>
             </div>
  
-            <!-- Korak 1: samo polje za ID -->
+            <!-- Korak 1: padajući meni sa radionicama -->
             <div v-if="editStep === 1" class="modal-body">
               <div class="field">
-                <label>ID radionice <span class="req">*</span></label>
-                <input v-model.number="editId" type="number" min="1" placeholder="npr. 5"
-                       :class="{ 'input-error': errors.editId }"/>
+                <label>Radionica <span class="req">*</span></label>
+                <select v-model.number="editId" class="workshop-select" :class="{ 'input-error': errors.editId }">
+                  <option value="" disabled>— Odaberi radionicu —</option>
+                  <option
+                    v-for="w in workshops"
+                    :key="w.ID_workshop"
+                    :value="w.ID_workshop"
+                  >
+                    {{ w.title }} · {{ new Date(w.date).toLocaleDateString('bs-BA') }}
+                  </option>
+                </select>
                 <span v-if="errors.editId" class="err-msg">{{ errors.editId }}</span>
               </div>
-              <p class="hint-text">ID možeš pronaći na listi radionica.</p>
-            </div>
- 
+            </div> 
+
             <!-- Korak 2: forma popunjena podacima s API-ja -->
             <div v-else class="modal-body">
               <p class="loaded-label">Ostavi polje prazno ako ga ne želiš mijenjati</p>
@@ -291,11 +298,20 @@
  
             <div class="modal-body">
               <div class="field">
-                <label>ID radionice <span class="req">*</span></label>
-                <input v-model.number="deleteId" type="number" min="1" placeholder="npr. 5"
-                       :class="{ 'input-error': errors.deleteId }"/>
+                <label>Radionica <span class="req">*</span></label>
+                <select v-model.number="deleteId" class="workshop-select" :class="{ 'input-error': errors.deleteId }">
+                  <option value="" disabled>— Odaberi radionicu —</option>
+                  <option
+                    v-for="w in workshops"
+                    :key="w.ID_workshop"
+                    :value="w.ID_workshop"
+                  >
+                    {{ w.title }} · {{ new Date(w.date).toLocaleDateString('bs-BA') }}
+                  </option>
+                </select>
                 <span v-if="errors.deleteId" class="err-msg">{{ errors.deleteId }}</span>
               </div>
+
               <!-- Vizuelno upozorenje da je brisanje trajno -->
               <div class="danger-notice">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -385,18 +401,18 @@
       <!-- Odabir radionice -->
       <div class="bg-white rounded-lg shadow p-6 mb-8">
         <label class="block text-lg font-semibold mb-4">Odaberi radionicu:</label>
-        <select 
+        <select
           v-model="selectedWorkshopId"
           @change="loadRegistrations"
-          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          class="workshop-select"
         >
-          <option value="" disabled>-- Odaberi radionicu --</option>
-          <option 
-            v-for="workshop in workshops" 
-            :key="workshop.ID_workshop" 
+          <option value="" disabled>— Odaberi radionicu —</option>
+          <option
+            v-for="workshop in workshops"
+            :key="workshop.ID_workshop"
             :value="workshop.ID_workshop"
           >
-            {{ workshop.title }} ({{ new Date(workshop.date).toLocaleDateString('sr-RS') }})
+            {{ workshop.title }} · {{ new Date(workshop.date).toLocaleDateString('bs-BA') }}
           </option>
         </select>
       </div>
@@ -772,8 +788,8 @@ const activeModal  = ref(null)
 const confirmConfig = ref(null)
 const busy         = ref(false)
 const editStep     = ref(1)
-const editId       = ref(null)
-const deleteId     = ref(null)
+const editId       = ref('')
+const deleteId     = ref('')
  
 const form = reactive({
   title: '',
@@ -834,8 +850,8 @@ function resetAll() {
     organizer_name: '', organizer_email: '', organizer_phone: '',
     editId: '', deleteId: ''
   })
-  editId.value   = null
-  deleteId.value = null
+  editId.value   = ''
+  deleteId.value = ''
   editStep.value = 1
 }
  
@@ -874,12 +890,12 @@ function askConfirm(action) {
   if (action === 'create' && !validateCreate()) return
   if (action === 'delete') {
     errors.deleteId = ''
-    if (!deleteId.value || deleteId.value < 1) {
-      errors.deleteId = 'Upiši ispravan ID.'
-      return
-    }
+  if (!deleteId.value) {
+    errors.deleteId = 'Odaberi radionicu.'
+    return
   }
- 
+}
+
   const configs = {
     create: {
       title:     'Potvrdi kreiranje',
@@ -951,9 +967,9 @@ async function doCreate() {
  
 async function loadWorkshop() {
   errors.editId = ''
-  if (!editId.value || editId.value < 1) {
-    errors.editId = 'Upiši ispravan ID.'
-    return
+  if (!editId.value) {
+  errors.editId = 'Odaberi radionicu.'
+  return
   }
   busy.value = true
   try {
@@ -1046,6 +1062,11 @@ function showToast(type, message) {
     setTimeout(() => { toast.show = false }, 3800)
   }, 40)
 }
+
+onMounted(async () => {
+  const res = await fetch(`${BASE_URL}/workshops/active`)
+  workshops.value = await res.json()
+})
  
 // ================================================================
 // PREGLED PRIJAVLJENIH
@@ -1505,6 +1526,7 @@ onMounted(() => {
 .req { color: #dc2626; }
  
 .field input,
+.fiels select,
 .field textarea {
   background: #fafafa; border: 1.5px solid #e5e7eb;
   border-radius: 10px; padding: 0.48rem 0.7rem;
@@ -1513,12 +1535,22 @@ onMounted(() => {
   font-family: inherit;
 }
 .field input:focus,
+.field select:focus,
 .field textarea:focus {
   border-color: #7c3aed;
   box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
 }
 .field textarea { resize: vertical; min-height: 76px; }
- 
+
+.field select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  padding-right: 2rem;
+  cursor: pointer;
+} 
 .input-error { border-color: #dc2626 !important; }
 .err-msg { font-size: 0.71rem; color: #dc2626; font-weight: 600; }
  
@@ -1790,5 +1822,36 @@ onMounted(() => {
   transition: left .2s;
 }
 .toggle-input:checked ~ .toggle-track .toggle-thumb { left: 20px; }
+/* ================================================================
+   WORKSHOP SELECT
+   ================================================================ */
+.workshop-select {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #fafafa;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 0.55rem 2.5rem 0.55rem 0.85rem;
+  font-size: 0.86rem;
+  color: #111827;
+  outline: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color .15s, box-shadow .15s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%237c3aed' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+}
+
+.workshop-select:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, .1);
+}
+
+.workshop-select option:disabled {
+  color: #9ca3af;
+}
+
 </style>
  
