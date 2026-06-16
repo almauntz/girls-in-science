@@ -13,7 +13,14 @@
 
         <div class="flex items-start justify-between gap-12">
           <div class="flex items-center gap-8 mb-8">
+            <img
+              v-if="roleModel.image_url"
+              :src="`http://localhost:8000${roleModel.image_url}`"
+              class="w-28 h-28 rounded-full object-cover"
+            />
+
             <div
+              v-else
               class="w-28 h-28 rounded-full bg-violet-600 text-white flex items-center justify-center text-2xl font-bold"
             >
               {{ getInitials(roleModel.first_name, roleModel.last_name) }}

@@ -26,8 +26,44 @@
           {{ successMessage }}
         </div>
         <h2 class="text-xl font-bold text-gray-900 mb-8">
+          Profilna fotografija
+        </h2>
+        <div class="flex justify-center mb-8">
+          <label class="cursor-pointer relative">
+            <img
+              v-if="imagePreview"
+              :src="imagePreview"
+              class="w-32 h-32 rounded-full object-cover border-4 border-violet-200 shadow-md"
+            />
+
+            <button
+              v-if="imagePreview"
+              type="button"
+              @click.stop="removeImage"
+              class="absolute top-0 right-0 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center hover:bg-red-600 shadow-md border-2 border-white"
+            >
+              ✕
+            </button>
+
+            <div
+              v-else
+              class="w-32 h-32 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-4xl hover:bg-violet-200 transition"
+            >
+              📷
+            </div>
+
+            <input
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleImageChange"
+            />
+          </label>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-8">
           Osnovne informacije
         </h2>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <!-- Ime -->
           <div>
@@ -178,7 +214,11 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import { getRoleModel, updateRoleModel } from "../../services/api.js";
+import {
+  getRoleModel,
+  updateRoleModel,
+  uploadRoleModelImage,
+} from "../../services/api.js";
 
 const router = useRouter();
 const route = useRoute();
@@ -191,12 +231,29 @@ const form = ref({
   position: "",
   biography: "",
   achievements: "",
+  image_url: "",
 });
 
 const errors = ref({});
 const serverError = ref("");
 const successMessage = ref("");
 const isLoading = ref(false);
+const selectedImage = ref(null);
+const imagePreview = ref(null);
+
+function handleImageChange(event) {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  selectedImage.value = file;
+  imagePreview.value = URL.createObjectURL(file);
+}
+function removeImage() {
+  imagePreview.value = null;
+  selectedImage.value = null;
+  form.value.image_url = null;
+}
 
 onMounted(async () => {
   try {
@@ -204,6 +261,9 @@ onMounted(async () => {
     if (data.detail) {
       serverError.value = "Profil nije pronađen.";
       return;
+    }
+    if (data.image_url) {
+      imagePreview.value = `http://localhost:8000${data.image_url}`;
     }
     form.value = {
       first_name: data.first_name,
@@ -213,6 +273,7 @@ onMounted(async () => {
       position: data.position,
       biography: data.biography,
       achievements: data.achievements,
+      image_url: data.image_url,
     };
   } catch {
     serverError.value = "Greška pri učitavanju profila.";
@@ -241,6 +302,15 @@ async function handleSubmit() {
 
   isLoading.value = true;
   try {
+    if (selectedImage.value) {
+      const formData = new FormData();
+
+      formData.append("file", selectedImage.value);
+
+      const uploadResponse = await uploadRoleModelImage(formData);
+
+      form.value.image_url = uploadResponse.image_url;
+    }
     const result = await updateRoleModel(route.params.id, form.value);
     if (result.id) {
       successMessage.value = "Profil je uspješno ažuriran!";

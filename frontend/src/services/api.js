@@ -303,3 +303,15 @@ export async function updateUserRole(token, userId, newRole) {
   if (!response.ok) throw new Error('Greška prilikom izmjene uloge na serveru')
   return response.json()
 }
+
+export async function uploadRoleModelImage(formData) {
+  const response = await fetch(
+    "http://localhost:8000/role-models/upload-image",
+    {
+      method: "POST",
+      body: formData
+    }
+  )
+
+  return await response.json()
+}

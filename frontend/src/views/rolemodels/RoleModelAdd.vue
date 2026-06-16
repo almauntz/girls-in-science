@@ -26,6 +26,35 @@
         >
           {{ successMessage }}
         </div>
+        <div class="mb-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">
+            Profilna fotografija
+          </h2>
+
+          <div class="flex justify-center mb-8">
+            <label class="cursor-pointer">
+              <div
+                v-if="!imagePreview"
+                class="w-32 h-32 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-4xl hover:bg-violet-200 transition"
+              >
+                📷
+              </div>
+
+              <img
+                v-else
+                :src="imagePreview"
+                class="w-28 h-28 rounded-full object-cover border-4 border-violet-200"
+              />
+
+              <input
+                type="file"
+                accept="image/*"
+                class="hidden"
+                @change="handleImageChange"
+              />
+            </label>
+          </div>
+        </div>
         <h2 class="text-lg font-semibold text-gray-900 mb-4">
           Osnovne informacije
         </h2>
@@ -182,6 +211,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { addRoleModel } from "../../services/api.js";
+import { uploadRoleModelImage } from "../../services/api";
 
 const router = useRouter();
 
@@ -199,6 +229,17 @@ const errors = ref({});
 const serverError = ref("");
 const successMessage = ref("");
 const isLoading = ref(false);
+const selectedImage = ref(null);
+const imagePreview = ref(null);
+
+function handleImageChange(event) {
+  const file = event.target.files[0];
+
+  if (!file) return;
+
+  selectedImage.value = file;
+  imagePreview.value = URL.createObjectURL(file);
+}
 
 function validate() {
   const e = {};
@@ -223,6 +264,15 @@ async function handleSubmit() {
   isLoading.value = true;
   try {
     const token = localStorage.getItem("token");
+    if (selectedImage.value) {
+      const formData = new FormData();
+
+      formData.append("file", selectedImage.value);
+
+      const uploadResponse = await uploadRoleModelImage(formData);
+
+      form.value.image_url = uploadResponse.image_url;
+    }
     const result = await addRoleModel(form.value, token);
 
     if (result.id) {
