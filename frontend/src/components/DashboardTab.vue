@@ -82,7 +82,9 @@
           </div>
         </div>
       </section>
-    </div> <div v-else-if="userRole === 'mentor'" class="space-y-6">
+    </div>
+
+    <div v-else-if="userRole === 'mentor'" class="space-y-6">
       <div class="mb-6">
         <h2 class="text-2xl font-bold text-gray-800">Mentorski panel</h2>
         <p class="text-gray-500 text-sm mt-1">Fokusiran na upravljanje edukativnim procesom</p>
@@ -94,8 +96,16 @@
             <div class="w-2 h-6 bg-violet-500 rounded-full"></div>
             <h3 class="text-lg font-bold text-gray-800">Moje studentice</h3>
           </div>
-          <div class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
+          <div v-if="myStudents.length === 0"
+               class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
             Trenutno nemate dodijeljenih studentica.
+          </div>
+          <div v-else class="space-y-3">
+            <div v-for="s in myStudents" :key="s.id"
+                 class="bg-violet-50 rounded-lg p-3 border border-violet-100">
+              <p class="font-semibold text-gray-800 text-sm">{{ s.student_name }}</p>
+              <p class="text-gray-500 text-xs">{{ s.student_email }}</p>
+            </div>
           </div>
         </section>
 
@@ -104,8 +114,27 @@
             <div class="w-2 h-6 bg-purple-400 rounded-full"></div>
             <h3 class="text-lg font-bold text-gray-800">Zahtjevi mentoringa</h3>
           </div>
-          <div class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
+          <div v-if="mentorRequests.length === 0"
+               class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
             Nema novih zahtjeva za mentorstvo.
+          </div>
+          <div v-else class="space-y-3">
+            <div v-for="r in mentorRequests" :key="r.id"
+                 class="bg-purple-50 rounded-lg p-3 border border-purple-100">
+              <p class="font-semibold text-gray-800 text-sm">{{ r.student_name }}</p>
+              <p class="text-gray-600 text-xs mt-1">{{ r.message }}</p>
+              <p class="text-gray-400 text-xs mt-2">{{ formatDate(r.created_at) }}</p>
+              <div class="flex gap-2 mt-3">
+                <button @click="$emit('accept-request', r.id)"
+                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                  Prihvati
+                </button>
+                <button @click="$emit('reject-request', r.id)"
+                        class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                  Odbij
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -126,56 +155,7 @@
         <h2 class="text-2xl font-bold text-gray-800">Admin</h2>
         <p class="text-gray-500 text-sm mt-1">Glavni panel za upravljanje platformom</p>
       </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div class="bg-purple-50 p-5 rounded-xl border border-purple-100 shadow-sm">
-          <p class="text-xs text-purple-700 font-semibold uppercase tracking-wider">Ukupan broj korisnica</p>
-          <p class="text-3xl font-black text-purple-900 mt-2">{{ stats.total }}</p>
-        </div>
-        <div class="bg-green-50 p-5 rounded-xl border border-green-100 shadow-sm">
-          <p class="text-xs text-green-700 font-semibold uppercase tracking-wider">Aktivni računi</p>
-          <p class="text-3xl font-black text-green-900 mt-2">{{ stats.active }}</p>
-        </div>
-        <div class="bg-red-50 p-5 rounded-xl border border-red-100 shadow-sm">
-          <p class="text-xs text-red-700 font-semibold uppercase tracking-wider">Neaktivni računi</p>
-          <p class="text-3xl font-black text-red-900 mt-2">{{ stats.inactive }}</p>
-        </div>
       </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <section class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <div class="flex items-center space-x-2 mb-4">
-            <div class="w-2 h-6 bg-gray-600 rounded-full"></div>
-            <h3 class="text-lg font-bold text-gray-800">Broj po ulogama</h3>
-          </div>
-          <div class="space-y-3 text-sm text-gray-600">
-            <div class="flex justify-between border-b border-gray-100 pb-2">
-              <span class="font-medium text-gray-500">Studentice (member)</span> 
-              <span class="font-bold text-gray-900 bg-gray-100 px-2.5 py-0.5 rounded-full">{{ stats.roles.member }}</span>
-            </div>
-            <div class="flex justify-between border-b border-gray-100 pb-2">
-              <span class="font-medium text-gray-500">Mentorice (mentor)</span> 
-              <span class="font-bold text-gray-900 bg-gray-100 px-2.5 py-0.5 rounded-full">{{ stats.roles.mentor }}</span>
-            </div>
-            <div class="flex justify-between pb-1">
-              <span class="font-medium text-gray-500">Administratori (admin)</span> 
-              <span class="font-bold text-gray-900 bg-gray-100 px-2.5 py-0.5 rounded-full">{{ stats.roles.admin }}</span>
-            </div>
-          </div>
-        </section>
-
-        <section class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-          <div class="flex items-center space-x-2 mb-4">
-            <div class="w-2 h-6 bg-green-500 rounded-full"></div>
-            <h3 class="text-lg font-bold text-gray-800">Aktivne radionice</h3>
-          </div>
-          <div class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
-            Trenutno nema aktivnih radionica na platformi.
-          </div>
-        </section>
-      </div>
-    </div>
-
   </div>
 </template>
 
@@ -191,10 +171,13 @@ export default {
     myWorkshops: { type: Array, default: () => [] },
     newWorkshops: { type: Array, default: () => [] },
     availableWorkshops: { type: Array, default: () => [] },
-    dashboardError: { type: String, default: null }
+    dashboardError: { type: String, default: null },
+    myStudents: { type: Array, default: () => [] },
+    mentorRequests: { type: Array, default: () => [] },
+    mentorDashboardError: { type: String, default: null }
   },
 
-  emits: ['register'],
+  emits: ['register','accept-request', 'reject-request'],
 
   data() {
     return {

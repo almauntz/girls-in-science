@@ -31,6 +31,13 @@
           :showBiography="profileData.show_biography"
           :showField="profileData.show_field"
           :showLocation="profileData.show_location"
+          :languages="profileData.languages"
+          :experience="profileData.experience"
+          :education="profileData.education"
+          :skills="profileData.skills"
+          :linkedinUrl="profileData.linkedin_url"
+          :githubUrl="profileData.github_url"
+          :twitterUrl="profileData.twitter_url"
           @profile-updated="handleProfileUpdated"
           @avatar-uploaded="avatarUrl = $event"
           @avatar-deleted="avatarUrl = null"
@@ -44,7 +51,12 @@
           :newWorkshops="newWorkshops"
           :availableWorkshops="availableWorkshops"
           :dashboardError="dashboardError"
+          :myStudents="myStudents"
+          :mentorRequests="mentorRequests"
+          :mentorDashboardError="mentorDashboardError"
           @register="handleRegister"
+          @accept-request="handleAcceptRequest"
+          @reject-request="handleRejectRequest"
         />
         
       <AdminView v-if="activeTab === 'admin_panel' && userRole === 'admin'" />
@@ -88,15 +100,21 @@ export default {
       dashboardError: null,
       isLoading: false,
       profileLoaded: false,
+      myStudents: [],
+      mentorRequests: [],
+      mentorDashboardError: null,
     }
   },
 
   async mounted() {
-  this.isLoading = true
-  await this.loadProfile()
-  if (this.userRole !== 'admin') {
-    await this.fetchDashboardData()
-  }  this.isLoading = false
+    this.isLoading = true
+    await this.loadProfile()
+
+    if (this.userRole !== 'admin') {
+        await this.fetchDashboardData()
+        await this.fetchMentorData() 
+    }
+    this.isLoading = false
 },
 
   methods: {
@@ -114,6 +132,13 @@ export default {
         show_biography: data.show_biography ?? true,
         show_field: data.show_field ?? true,
         show_location: data.show_location ?? true,
+        languages:    data.languages   || [],
+        experience:   data.experience  || [],
+        education:    data.education   || [],
+        skills:       data.skills      || [],
+        linkedin_url: data.linkedin_url || '',
+        github_url:   data.github_url   || '',
+        twitter_url:  data.twitter_url  || '',
       }
 
       if (data.role) {
@@ -137,13 +162,20 @@ export default {
       this.profileData.show_biography = data.show_biography
       this.profileData.show_field = data.show_field
       this.profileData.show_location = data.show_location
+      this.profileData.languages    = data.languages   || []
+      this.profileData.experience   = data.experience  || []
+      this.profileData.education    = data.education   || []
+      this.profileData.skills       = data.skills      || []
+      this.profileData.linkedin_url = data.linkedin_url || ''
+      this.profileData.github_url   = data.github_url   || ''
+      this.profileData.twitter_url  = data.twitter_url  || ''
     },
     getAuthHeaders() {
       const token = localStorage.getItem('token')
       return { headers: { Authorization: `Bearer ${token}` } }
     },
 
-    async fetchDashboardData() {
+  async fetchDashboardData() {
       this.dashboardError = null
       try {
         const response = await axios.get(
@@ -158,7 +190,6 @@ export default {
         this.dashboardError = 'Nije moguće učitati podatke. Provjerite jeste li prijavljeni.'
       }
     },
-
     async handleRegister(workshopId) {
       try {
         const response = await axios.post(
@@ -176,7 +207,52 @@ export default {
     handleDeactivated() {
     localStorage.removeItem('token')
     this.$router.push('/login')
-}
+},
+async fetchMentorData() {
+  if (this.userRole !== 'mentor') return
+  this.mentorDashboardError = null
+  try {
+    const response = await axios.get(
+      'http://localhost:8000/mentoring/my-applications',
+      this.getAuthHeaders()
+    )
+    this.myStudents = response.data.filter(r => r.status?.toUpperCase() === 'ACCEPTED')
+    this.mentorRequests = response.data.filter(r => r.status?.toUpperCase() === 'PENDING')
+  } catch (error) {
+    if (error.response?.status === 404) {
+      this.myStudents = []
+      this.mentorRequests = []
+    } else {
+      console.error('Mentor dashboard greška:', error)
+      this.mentorDashboardError = 'Nije moguće učitati podatke o mentorstvu.'
+    }
+  }
+},
+async handleAcceptRequest(applicationId) {
+  try {
+    await axios.put(
+      `http://localhost:8000/mentoring/applications/${applicationId}/status`,
+      { status: 'ACCEPTED' },
+      this.getAuthHeaders()
+    )
+    this.fetchMentorData()
+  } catch (err) {
+    this.mentorDashboardError = err.response?.data?.detail || 'Greška pri ažuriranju zahtjeva.'
+  }
+},
+
+async handleRejectRequest(applicationId) {
+  try {
+    await axios.put(
+      `http://localhost:8000/mentoring/applications/${applicationId}/status`,
+      { status: 'REJECTED' },
+      this.getAuthHeaders()
+    )
+    this.fetchMentorData()
+  } catch (err) {
+    this.mentorDashboardError = err.response?.data?.detail || 'Greška pri ažuriranju zahtjeva.'
+  }
+},
   }
 }
 </script>
