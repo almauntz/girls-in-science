@@ -323,7 +323,7 @@ export async function updateUserRole(token, userId, newRole) {
 
 export async function uploadRoleModelImage(formData) {
   const response = await fetch(
-    "http://localhost:8000/role-models/upload-image",
+    `${BASE_URL}/role-models/upload-image`,
     {
       method: "POST",
       headers: {
