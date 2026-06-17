@@ -327,7 +327,7 @@ const fetchRatings = async () => {
     const regData = await regRes.json()
     wasRegistered.value = regData.registered
 
-// Provjeri je li korisnik već ostavio ocjenu
+
 const username = localStorage.getItem('username')
 alreadyRated.value = ratings.value.some(r => r.user_name === username)
   }
@@ -337,6 +337,12 @@ const submitRating = async () => {
   ratingSubmitting.value = true
   ratingError.value = ''
   const token = localStorage.getItem('token')
+
+  if (!token) {
+    ratingError.value = 'Morate biti prijavljeni da biste ocijenili radionicu.'
+    ratingSubmitting.value = false
+    return
+  }
 
   try {
     const res = await fetch(`${BASE_URL}/workshops/${route.params.id}/ratings`, {
@@ -353,7 +359,10 @@ const submitRating = async () => {
 
     if (!res.ok) {
       const err = await res.json()
-      ratingError.value = err.detail || 'Greška pri slanju ocjene.'
+      const poruka = err.detail === 'Could not validate credentials'
+        ? 'Morate biti prijavljeni da biste ocijenili radionicu.'
+        : err.detail || 'Greška pri slanju ocjene.'
+      ratingError.value = poruka
       return
     }
 
