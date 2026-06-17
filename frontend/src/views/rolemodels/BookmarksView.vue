@@ -19,8 +19,18 @@
         class="bg-white border border-gray-100 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition"
       >
         <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold text-lg flex-shrink-0">
-            {{ getInitials(model.first_name, model.last_name) }}
+          <div class="w-14 h-14 flex-shrink-0">
+            <img
+              v-if="model.image_url"
+              :src="`http://localhost:8000${model.image_url}`"
+              class="w-14 h-14 rounded-full object-cover"
+            />
+            <div
+              v-else
+              class="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold text-lg"
+              >
+                {{ getInitials(model.first_name, model.last_name) }}
+              </div>
           </div>
           <div>
             <p class="font-semibold text-gray-900">{{ model.first_name }} {{ model.last_name }}</p>
