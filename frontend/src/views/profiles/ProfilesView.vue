@@ -106,15 +106,12 @@ export default {
     }
   },
 
-  async mounted() {
-    this.isLoading = true
-    await this.loadProfile()
-
-    if (this.userRole !== 'admin') {
-        await this.fetchDashboardData()
-        await this.fetchMentorData() 
-    }
-    this.isLoading = false
+async mounted() {
+  this.isLoading = true
+  await this.loadProfile()
+  await this.fetchDashboardData()
+  await this.fetchMentorData() 
+  this.isLoading = false
 },
 
   methods: {
