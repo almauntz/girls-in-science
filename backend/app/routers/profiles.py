@@ -5,7 +5,8 @@ from app.database import get_db
 from app.core.security import get_current_user, verify_password, hash_password, create_access_token,decode_access_token
 from app.models.user import User, UserRole
 from app.models.profile import Profile, ProfileUpdate, ProfileResponse, ChangePasswordRequest, PublicProfileResponse
-from app.models.workshops_models import Workshop, Registration as WorkshopRegistration
+from app.models.workshops_models import Workshop, Registration as WorkshopRegistration, UserNotification
+import re
 from datetime import datetime
 from typing import Dict, Any
 import uuid
@@ -403,6 +404,83 @@ def reactivate_account(
 
     token = create_access_token({"sub": str(user.id)})
     return {"access_token": token, "token_type": "bearer"}
+
+@router.get("/notifications/count")
+def get_notification_count(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    count = len(db.exec(
+        select(UserNotification).where(
+            UserNotification.user_id == current_user.id,
+            UserNotification.is_read == False
+        )
+    ).all())
+    return {"count": count}
+
+
+@router.get("/notifications")
+def get_notifications(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        notifications = db.exec(
+            select(UserNotification).where(
+                UserNotification.user_id == current_user.id,
+                UserNotification.is_read == False
+            )
+        ).all()
+    except Exception as e:
+        print(f"NOTIF GREŠKA: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+    result = []
+    for n in notifications:
+        item = {"id": n.id, "title": n.title, "body": n.body, "workshop": None}
+        try:
+            match = re.search(r"'(.+?)'", n.body or "")
+            if match:
+                workshop_title = match.group(1)
+                workshop = db.exec(
+                    select(Workshop).where(Workshop.title == workshop_title)
+                ).first()
+                if workshop:
+                    registered_count = len(db.exec(
+                        select(WorkshopRegistration).where(
+                            WorkshopRegistration.workshop_id == workshop.ID_workshop
+                        )
+                    ).all())
+                    item["workshop"] = {
+                        "title": workshop.title,
+                        "date": workshop.date.isoformat() if workshop.date else None,
+                        "free_spots": (workshop.capacity or 0) - registered_count,
+                    }
+        except Exception as e:
+            print(f"NOTIF enrichment greška za notif {n.id}: {e}")
+        result.append(item)
+
+    return result
+
+
+@router.delete("/notifications")
+def clear_notifications(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    notifications = db.exec(
+        select(UserNotification).where(
+            UserNotification.user_id == current_user.id,
+            UserNotification.is_read == False
+        )
+    ).all()
+    for n in notifications:
+        n.is_read = True
+        db.add(n)
+    if notifications:
+        db.commit()
+    return {"deleted": len(notifications)}
+
 
 @router.get("/{user_id}", response_model=PublicProfileResponse)
 def get_public_profile(
