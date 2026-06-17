@@ -193,9 +193,9 @@
         <!-- Dugmad -->
         <div class="flex gap-4 mt-8">
           <button
-            @click="handleSubmit"
+            @click.once="handleSubmit"
             :disabled="isLoading"
-            class="bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition"
+            class="bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ isLoading ? "Čuvanje..." : "Sačuvaj izmjene" }}
           </button>
@@ -222,6 +222,8 @@ import {
 
 const router = useRouter();
 const route = useRoute();
+
+let isSubmitting = false
 
 const form = ref({
   first_name: "",
@@ -295,20 +297,21 @@ function validate() {
 }
 
 async function handleSubmit() {
+  if (isSubmitting) return
+  isSubmitting = true
+  isLoading.value = true
   serverError.value = "";
   successMessage.value = "";
-
-  if (!validate()) return;
-
-  isLoading.value = true;
+  if (!validate()) {
+    isLoading.value = false;
+    isSubmitting = false
+    return;
+  }
   try {
     if (selectedImage.value) {
       const formData = new FormData();
-
       formData.append("file", selectedImage.value);
-
       const uploadResponse = await uploadRoleModelImage(formData);
-
       form.value.image_url = uploadResponse.image_url;
     }
     const result = await updateRoleModel(route.params.id, form.value);
@@ -316,13 +319,13 @@ async function handleSubmit() {
       successMessage.value = "Profil je uspješno ažuriran!";
       setTimeout(() => router.push(`/role-models/${route.params.id}`), 1500);
     } else {
-      serverError.value =
-        result.detail || "Došlo je do greške. Pokušajte ponovo.";
+      serverError.value = result.detail || "Došlo je do greške. Pokušajte ponovo.";
     }
   } catch {
     serverError.value = "Greška pri komunikaciji sa serverom.";
   } finally {
     isLoading.value = false;
+    isSubmitting = false
   }
 }
 </script>
