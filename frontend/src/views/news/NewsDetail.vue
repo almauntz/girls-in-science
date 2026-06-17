@@ -101,6 +101,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getNewsPost, deleteNewsPost, getMe } from "../../services/api.js";
+import Swal from 'sweetalert2'
 
 const route = useRoute();
 const router = useRouter();
@@ -123,10 +124,20 @@ function formatDate(dateStr) {
 }
 
 async function handleDelete() {
-  if (!confirm("Da li ste sigurni da želite obrisati ovu objavu?")) return;
+  const result = await Swal.fire({
+    title: 'Obriši objavu',
+    text: 'Da li ste sigurni da želite obrisati ovu objavu?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#7c3aed',
+    cancelButtonColor: '#6b7280',
+    confirmButtonText: 'Obriši',
+    cancelButtonText: 'Odustani'
+  })
+  if (!result.isConfirmed) return;
   const token = localStorage.getItem("token");
-  const result = await deleteNewsPost(newsPost.value.id, token);
-  if (result.message) {
+  const deleteResult = await deleteNewsPost(newsPost.value.id, token);
+  if (deleteResult.message) {
     router.push("/news");
   }
 }
