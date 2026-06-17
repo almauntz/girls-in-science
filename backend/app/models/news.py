@@ -60,6 +60,7 @@ class RoleModelSimple(SQLModel):
     first_name: str
     last_name: str
     stem_field: str
+    image_url: Optional[str] = None
 class CategoryRead(SQLModel):
     id: int
     name: str
