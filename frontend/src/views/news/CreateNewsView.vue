@@ -58,17 +58,6 @@
           </p>
         </div>
 
-        <!-- Slika -->
-        <div class="mb-6">
-          <label class="block mb-2 font-medium"> URL slike </label>
-
-          <input
-            v-model="form.image_url"
-            type="text"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-        </div>
-
         <h2 class="text-xl font-bold text-gray-900 mb-8 mt-10">
           Povezani sadržaj
         </h2>
@@ -84,6 +73,27 @@
             placeholder="Pretraži i odaberi profile"
             class="multiselect-violet"
           />
+        </div>
+
+        <!-- Kategorije -->
+        <div class="mb-6">
+          <label class="block mb-2 font-medium">Kategorije</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="category in categories"
+              :key="category.id"
+              type="button"
+              @click="toggleCategory(category.id)"
+              :class="
+                form.category_ids.includes(category.id)
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-violet-100 text-violet-700'
+              "
+                class="px-3 py-1 rounded-full text-sm font-medium transition"
+            >
+              {{ category.name }}
+            </button>
+          </div>
         </div>
 
         <!-- Slika -->
