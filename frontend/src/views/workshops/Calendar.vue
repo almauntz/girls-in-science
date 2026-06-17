@@ -153,7 +153,6 @@
         </Motion>
       </Presence>
 
-      <!-- Poruka za prazan mjesec -->
       <div
         v-if="noWorkshopsInMonth"
         class="flex flex-col items-center justify-center py-16 text-center bg-white"
@@ -163,7 +162,6 @@
         <p class="text-gray-400 text-xs mt-1">Pokušaj pregledati drugi mjesec</p>
       </div>
 
-      <!-- Poruka kad pretraga nema rezultata -->
       <div
         v-if="noSearchResults"
         class="flex flex-col items-center justify-center py-16 text-center bg-white"
@@ -174,7 +172,6 @@
       </div>
     </div>
 
-    <!-- Expired Modal -->
     <Transition name="modal-fade">
       <div v-if="showExpiredModal" class="fixed inset-0 z-50 flex items-center justify-center">
         <div class="absolute inset-0 bg-black/40 backdrop-blur-sm" @click="showExpiredModal = false"></div>
