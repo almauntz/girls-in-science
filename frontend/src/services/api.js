@@ -364,3 +364,15 @@ export async function removeBookmark(roleModelId) {
   })
   return response.json()
 }
+
+export async function uploadNewsImage(formData) {
+  const response = await fetch(
+    `${BASE_URL}/news/upload-image`,
+    {
+      method: "POST",
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      body: formData
+    }
+  )
+  return await response.json()
+}

@@ -86,23 +86,23 @@
           />
         </div>
 
+        <!-- Slika -->
         <div class="mb-6">
-          <label class="block mb-2 font-medium">Kategorije</label>
-          <div class="flex flex-wrap gap-2">
-            <button
-              v-for="category in categories"
-              :key="category.id"
-              @click="toggleCategory(category.id)"
-              :class="
-                form.category_ids.includes(category.id)
-                  ? 'bg-violet-600 text-white'
-                  : 'bg-violet-100 text-violet-700'
-              "
-              class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
+          <label class="block mb-2 font-medium">Naslovna slika</label>
+          <label class="cursor-pointer block">
+            <img
+              v-if="imagePreview"
+              :src="imagePreview"
+              class="w-full h-48 object-cover rounded-xl border border-gray-200"
+            />
+            <div
+              v-else
+              class="w-full h-48 rounded-xl bg-violet-50 text-violet-400 flex items-center justify-center text-4xl hover:bg-violet-100 transition"
             >
-              {{ category.name }}
-            </button>
-          </div>
+              📷
+            </div>
+            <input type="file" accept="image/*" class="hidden" @change="handleImageChange" />
+          </label>
         </div>
 
         <!-- Dugme -->
@@ -127,6 +127,7 @@ import {
   createNewsPost,
   getRoleModels,
   getCategories,
+  uploadNewsImage,
 } from "../../services/api.js";
 import Multiselect from "@vueform/multiselect";
 
@@ -154,6 +155,8 @@ const router = useRouter();
 
 
 const categories = ref([]);
+const selectedImage = ref(null)
+const imagePreview = ref(null)
 
 const profileOptions = ref([])
 
@@ -183,6 +186,13 @@ function validate() {
   return Object.keys(e).length === 0;
 }
 
+function handleImageChange(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  selectedImage.value = file
+  imagePreview.value = URL.createObjectURL(file)
+}
+
 function toggleCategory(id) {
   if (form.value.category_ids.includes(id)) {
     form.value.category_ids = form.value.category_ids.filter((c) => c !== id);
@@ -203,8 +213,15 @@ async function handleSubmit() {
     return;
   }
 
-  try {
+try {
     const token = localStorage.getItem("token");
+
+    if (selectedImage.value) {
+      const formData = new FormData()
+      formData.append("file", selectedImage.value)
+      const uploadResponse = await uploadNewsImage(formData)
+      form.value.image_url = uploadResponse.image_url
+    }
 
     const result = await createNewsPost(form.value, token);
     if (result.id) {

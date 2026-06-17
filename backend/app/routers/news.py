@@ -5,6 +5,9 @@ from app.models.role_model import RoleModel
 from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.news import NewsPost, NewsPostCreate, NewsPostUpdate, NewsPostRead, NewsCategory
+from fastapi import UploadFile, File
+import shutil
+import os
 
 
 router = APIRouter(prefix="/news", tags=["news"])
@@ -135,3 +138,18 @@ def update_news_post(
     _ = news_post.role_models
     db.refresh(news_post)
     return news_post
+
+
+@router.post("/upload-image")
+async def upload_news_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Samo administratorica može uploadovati slike")
+    upload_dir = "uploads/news"
+    os.makedirs(upload_dir, exist_ok=True)
+    file_path = os.path.join(upload_dir, file.filename)
+    with open(file_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+    return {"image_url": f"/uploads/news/{file.filename}"}
