@@ -81,6 +81,7 @@
           trackBy="full_name"
           :searchable="true"
           placeholder="Pretraži i odaberi profile"
+          class="multiselect-violet"
         />
       </div>
 
@@ -94,9 +95,9 @@
             :class="
               form.category_ids.includes(category.id)
                 ? 'bg-violet-600 text-white'
-                : 'bg-gray-100 text-gray-700'
+                : 'bg-violet-100 text-violet-700'
             "
-            class="inline-flex items-center bg-violet-100 text-violet-700 px-3 py-1 rounded-full font-medium transition-all duration-200 hover:bg-violet-200 hover:shadow-sm"
+            class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
           >
             {{ category.name }}
           </button>
@@ -211,3 +212,36 @@ async function handleSubmit() {
   }
 }
 </script>
+
+<style scoped>
+:deep(.multiselect-violet) {
+  --ms-ring-color: rgb(139 92 246);
+  --ms-border-color: #d1d5db;
+
+  --ms-tag-bg: rgb(139 92 246);
+  --ms-tag-color: white;
+
+  --ms-option-bg-selected: rgb(139 92 246);
+  --ms-option-color-selected: white;
+
+  --ms-option-bg-pointed: rgb(237 233 254);
+  --ms-option-color-pointed: rgb(109 40 217);
+}
+
+:deep(.multiselect-violet .multiselect) {
+  border-radius: 12px;
+  min-height: 48px;
+}
+
+:deep(.multiselect-violet .multiselect:hover) {
+  border-color: rgb(139 92 246);
+}
+
+:deep(.multiselect-violet .multiselect.is-active) {
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+:deep(.multiselect-tag) {
+  border-radius: 9999px !important;
+  padding: 4px 10px !important;
+}
+</style>
