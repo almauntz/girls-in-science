@@ -59,20 +59,32 @@
         </div>
 
         <!-- Slika -->
+        <!-- Slika -->
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">
-            URL slike
+          <label class="block text-sm font-medium text-gray-700 mb-1">Naslovna slika</label>
+          <label class="cursor-pointer block relative">
+            <img
+              v-if="imagePreview"
+              :src="imagePreview"
+              class="w-full h-48 object-cover rounded-xl border border-gray-200"
+            />
+            <button
+              v-if="imagePreview"
+              type="button"
+              @click.stop="removeImage"
+              class="absolute top-2 right-2 w-7 h-7 rounded-full bg-red-500 text-white text-xs flex items-center justify-center hover:bg-red-600 shadow-md border-2 border-white"
+            >
+              ✕
+            </button>
+            <div
+              v-else
+              class="w-full h-48 rounded-xl bg-violet-50 text-violet-400 flex items-center justify-center text-4xl hover:bg-violet-100 transition"
+            >
+              📷
+            </div>
+            <input type="file" accept="image/*" class="hidden" @change="handleImageChange" />
           </label>
-          <input
-            v-model="form.image_url"
-            type="text"
-            placeholder="Unesite URL slike (opcionalno)"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
         </div>
-        <h2 class="text-xl font-bold text-gray-900 mb-8 mt-10">
-          Povezani sadržaj
-        </h2>
 
         <!-- Povezani profili -->
         <div class="mb-6">
@@ -140,6 +152,7 @@ import {
   updateNewsPost,
   getRoleModels,
   getCategories,
+  uploadNewsImage,
 } from "../../services/api.js";
 import Multiselect from "@vueform/multiselect";
 import "@vueform/multiselect/themes/default.css";
@@ -163,6 +176,8 @@ let isSubmitting = false
 const allRoleModels = ref([]);
 const allCategories = ref([]);
 const roleModelOptions = ref([]);
+const selectedImage = ref(null)
+const imagePreview = ref(null)
 
 onMounted(async () => {
   try {
@@ -182,6 +197,9 @@ onMounted(async () => {
       role_model_ids: newsData.role_models?.map((m) => m.id) || [],
       category_ids: newsData.categories?.map((c) => c.id) || [],
     };
+    if (newsData.image_url) {
+      imagePreview.value = `http://localhost:8000${newsData.image_url}`
+    }
     allRoleModels.value = roleModels;
     roleModelOptions.value = roleModels.map((model) => ({
       value: model.id,
@@ -203,6 +221,19 @@ function validate() {
   return Object.keys(e).length === 0;
 }
 
+function handleImageChange(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  selectedImage.value = file
+  imagePreview.value = URL.createObjectURL(file)
+}
+
+function removeImage() {
+  imagePreview.value = null
+  selectedImage.value = null
+  form.value.image_url = null
+}
+
 function toggleCategory(id) {
   if (form.value.category_ids.includes(id)) {
     form.value.category_ids = form.value.category_ids.filter((c) => c !== id);
@@ -222,6 +253,13 @@ async function handleSubmit() {
   }
   isLoading.value = true;
   try {
+    if (selectedImage.value) {
+      const formData = new FormData()
+      formData.append("file", selectedImage.value)
+      const uploadResponse = await uploadNewsImage(formData)
+      form.value.image_url = uploadResponse.image_url
+    }
+
     const result = await updateNewsPost(route.params.id, form.value);
     if (result.id) {
       successMessage.value = "Objava je uspješno ažurirana!";

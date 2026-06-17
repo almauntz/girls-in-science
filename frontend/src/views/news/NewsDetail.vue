@@ -70,7 +70,7 @@
               <div class="w-12 h-12 flex-shrink-0">
                 <img
                   v-if="model.image_url"
-                  :src="model.image_url"
+                  :src="`http://localhost:8000${model.image_url}`"
                   class="w-12 h-12 rounded-full object-cover"
                 />
 

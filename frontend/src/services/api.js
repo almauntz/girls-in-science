@@ -326,10 +326,12 @@ export async function uploadRoleModelImage(formData) {
     "http://localhost:8000/role-models/upload-image",
     {
       method: "POST",
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
       body: formData
     }
   )
-
   return await response.json()
 }
 
@@ -361,4 +363,16 @@ export async function removeBookmark(roleModelId) {
     headers: { 'Authorization': `Bearer ${token}` }
   })
   return response.json()
+}
+
+export async function uploadNewsImage(formData) {
+  const response = await fetch(
+    `${BASE_URL}/news/upload-image`,
+    {
+      method: "POST",
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      body: formData
+    }
+  )
+  return await response.json()
 }
