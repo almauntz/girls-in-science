@@ -47,6 +47,7 @@
         </label>
 
         <textarea
+          v-model="form.content"
           rows="8"
           class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
         ></textarea>
