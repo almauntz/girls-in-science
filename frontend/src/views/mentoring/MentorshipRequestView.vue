@@ -1,5 +1,6 @@
 <template>
-  <div class="max-w-2xl mx-auto p-4">
+  <div class="min-h-screen p-6" style="background: linear-gradient(to right, #d0c8f9, #F9DBE7); margin: 0;">
+  <div class="max-w-2xl mx-auto">
 
     <!-- Header -->
   <button @click="router.back()" class="mb-4 text-sm text-blue-600 hover:underline">
@@ -7,7 +8,8 @@
   </button>
 
     <!-- Info o mentorici -->
-    <div class="border rounded-xl p-6 mb-4" v-if="mentor">
+   
+    <div class="rounded-xl p-6 mb-4 bg-white" style="border: 3px solid #d8b4fe;" v-if="mentor">
       <div class="flex items-center gap-4">
         <img
           :src="mentor.profile_img_url || 'https://placehold.co/80x80'"
@@ -30,7 +32,8 @@
     </div>
 
     <!-- Forma -->
-    <div class="border rounded-xl p-6 mb-4">
+    
+    <div class="rounded-xl p-6 mb-4 bg-white" style="border: 3px solid #d8b4fe;">
 
       <div class="flex gap-4">
         <div class="flex gap-4">
@@ -45,7 +48,7 @@
     <textarea
       v-model="skills"
       placeholder="Vještine - Koje vještine ili znanja želite unaprijediti?"
-      class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-gray-50 placeholder-gray-400"
+      class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm resize-none h-24 mb-3 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-gray-50 placeholder-gray-400"
     ></textarea>
   </div>
         </div>
@@ -97,6 +100,7 @@
       </div>
 
     </div>
+  </div>
   </div>
 </template>
 
