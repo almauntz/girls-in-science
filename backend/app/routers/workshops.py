@@ -178,7 +178,6 @@ def search_workshops(
 
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
-    #izmjena na prikazu radionica - dodan upit za radionice koje su upcoming  i completed
     statement = select(Workshop).where(    
         Workshop.status.in_([WorkshopStatus.upcoming, WorkshopStatus.completed])
     )
@@ -192,6 +191,7 @@ def get_active_workshops(db: Session = Depends(get_db)):
         workshop_dict["free_spots"] = w.capacity - broj_prijava
         result.append(workshop_dict)
     return result
+
 # Za  automatsko ažuriranje statusa radionica nakon isteka vremena
 @router.post("/auto-complete", status_code=200)
 def auto_complete_workshops(db: Session = Depends(get_db)):
@@ -727,16 +727,11 @@ def create_rating(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # 1. Postoji li radionica?
     workshop = db.get(Workshop, workshop_id)
     if not workshop:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
-
-    # 2. Je li radionica završena?
     if workshop.status != WorkshopStatus.completed:
         raise HTTPException(status_code=400, detail="Radionica još nije završena.")
-
-    # 3. Je li korisnica bila registrovana?
     registration = db.execute(
         select(Registration).where(
             Registration.workshop_id == workshop_id,
@@ -746,8 +741,6 @@ def create_rating(
 
     if not registration:
         raise HTTPException(status_code=403, detail="Niste bili prijavljeni na ovu radionicu.")
-
-    # 4. Je li već ostavila ocjenu?
     existing = db.execute(
         select(WorkshopRating).where(
             WorkshopRating.registration_id == registration.id

@@ -277,7 +277,7 @@
 
       </div>
     </div>
-      <!-- Floating prijedlog dugme -->
+      <!-- Prijedlog dugme -->
      <router-link
   to="/workshops/my-proposals"
   class="fixed bottom-8 right-8 flex items-center gap-3 text-white text-sm font-bold px-6 py-4 rounded-full shadow-2xl transition-all hover:-translate-y-1 hover:shadow-purple-400/50 hover:shadow-2xl"
@@ -451,9 +451,15 @@ const openRatingModal = (workshopId, title) => {
 
 const submitRating = async () => {
   if (!ratingForm.value.score) return
+
+  const token = localStorage.getItem('token')
+  if (!token) {
+    Swal.fire('Greška', 'Morate biti prijavljeni da biste ocijenili radionicu.', 'error')
+    return
+  }
+
   ratingSubmitting.value = true
   try {
-    const token = localStorage.getItem('token')
     const res = await fetch(`${BASE_URL}/workshops/${selectedWorkshopId.value}/ratings`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -472,14 +478,18 @@ const submitRating = async () => {
 
     await Swal.fire('Hvala!', 'Vaša ocjena je uspješno poslana.', 'success')
   } catch (err) {
-    Swal.fire('Greška', err.message || 'Neuspješno slanje ocjene.', 'error')
-  } finally { ratingSubmitting.value = false }
+    const poruka = err.message === 'Could not validate credentials'
+      ? 'Morate biti prijavljeni da biste ocijenili radionicu.'
+      : err.message || 'Neuspješno slanje ocjene.'
+    Swal.fire('Greška', poruka, 'error')
+  } finally { 
+    ratingSubmitting.value = false 
+  }
 }
-
 /* --- Auth helper ---- */
 function getAuthHeaders() {
   const token = localStorage.getItem('token')
-  if (!token) { Swal.fire('Greška', 'Morate biti prijavljeni.', 'warning'); throw new Error('NO_TOKEN') }
+ /* if (!token) { Swal.fire('Greška', 'Morate biti prijavljeni.', 'warning'); throw new Error('NO_TOKEN') } */
   return { Authorization: `Bearer ${token}` }
 }
 
@@ -518,7 +528,10 @@ const checkRegistration = async (workshopId) => {
   }
 }
 
-const checkAllRegistrations = async () => { await Promise.all(workshops.value.map(w => checkRegistration(w.ID_workshop))) }
+const checkAllRegistrations = async () => { 
+  const token = localStorage.getItem('token')
+  if (!token) return
+  await Promise.all(workshops.value.map(w => checkRegistration(w.ID_workshop))) }
 
 const handleJoinWaitingList = async (workshopId) => {
   try {
@@ -614,6 +627,8 @@ const handleLeaveWaitingList = async (id) => {
 
 
 const fetchWaitingList = async () => {
+  const token = localStorage.getItem('token')
+  if (!token) return
   const res = await fetch(`${BASE_URL}/workshops/waiting-list/me`, {
     headers: getAuthHeaders()
   })
@@ -627,12 +642,6 @@ const fetchWaitingList = async () => {
     waitingList[item.workshop_id] = true
   })
 }
-
-
-
-
-
-
 
 const checkMyPromotion = async () => {
   try {
