@@ -326,10 +326,12 @@ export async function uploadRoleModelImage(formData) {
     "http://localhost:8000/role-models/upload-image",
     {
       method: "POST",
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
       body: formData
     }
   )
-
   return await response.json()
 }
 
