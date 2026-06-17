@@ -117,9 +117,13 @@
             </router-link>
             <button
               @click="handleRegistrationClick"
-              class="flex-1 py-2.5 text-white rounded-xl font-bold text-sm transition hover:opacity-90"
-              style="background: linear-gradient(135deg, #7c3aed, #a855f7);">
-              🎟 Prijavi se
+              :disabled="wasRegistered"
+              class="flex-1 py-2.5 text-white rounded-xl font-bold text-sm transition"
+              :style="wasRegistered
+                ? 'background:#d1d5db; cursor:not-allowed;'
+                : 'background: linear-gradient(135deg, #7c3aed, #a855f7);'"
+              :class="!wasRegistered ? 'hover:opacity-90' : ''">
+              {{ wasRegistered ? '✓ Prijavljeni' : '🎟 Prijavi se' }}
             </button>
           </div>
         </div>
@@ -188,7 +192,6 @@
           </button>
         </div>
 
-       <!-- Lista ocjena -->
 <div v-if="ratings.length > 0" class="space-y-3">
   <div v-for="r in ratings" :key="r.id"
     class="flex items-start gap-3 p-4 rounded-xl border border-gray-50"
@@ -210,7 +213,6 @@
       </div>
     </div>
 
-    <!-- Modal za registraciju -->
     <div v-if="showForm" class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-gray-900/70 backdrop-blur-sm" @click="showForm = false"></div>
       <div class="relative z-10 w-[600px] shadow-2xl">
@@ -223,7 +225,6 @@
       </div>
     </div>
 
-    <!-- Rating Modal -->
     <div v-if="showRatingModal" class="fixed inset-0 z-50 flex items-center justify-center">
       <div class="absolute inset-0 bg-gray-900/70 backdrop-blur-sm" @click="showRatingModal = false"></div>
       <div class="relative z-10 bg-white rounded-2xl p-8 w-[480px] shadow-2xl">
@@ -297,6 +298,15 @@ export default {
         const response = await fetch(`${BASE_URL}/workshops/${route.params.id}`)
         if (!response.ok) throw new Error("Radionica nije pronađena")
         workshop.value = await response.json()
+
+        const token = localStorage.getItem('token')
+        if (token) {
+          const regRes = await fetch(`${BASE_URL}/workshops/registration/check/${route.params.id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          })
+          const regData = await regRes.json()
+          wasRegistered.value = regData.registered
+        }
 
         if (workshop.value.status === 'completed') {
           await fetchRatings()
@@ -385,6 +395,8 @@ const submitRating = async () => {
   }
 }
     const handleRegistrationClick = () => {
+      if (wasRegistered.value) return
+
       const token = localStorage.getItem('token')
       if (!token) {
         Swal.fire({
@@ -411,6 +423,7 @@ const submitRating = async () => {
 
     const handleSuccess = () => {
       showForm.value = false
+      wasRegistered.value = true
       fetchWorkshop()
     }
 
