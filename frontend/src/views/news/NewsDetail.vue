@@ -154,7 +154,6 @@ onMounted(async () => {
       error.value = "Objava nije pronađena.";
     } else {
       newsPost.value = data;
-      console.log(newsPost.value.role_models);
     }
   } catch {
     error.value = "Došlo je do greške pri učitavanju objave.";

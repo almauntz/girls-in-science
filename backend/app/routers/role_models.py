@@ -66,7 +66,12 @@ def delete_role_model(
     return {"message": "Profil je uspješno obrisan"}
 
 @router.post("/upload-image")
-async def upload_image(file: UploadFile = File(...)):
+async def upload_image(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role != UserRole.admin:
+        raise HTTPException(status_code=403, detail="Samo administratorica može uploadovati slike")
     upload_dir = "uploads/rolemodels"
 
     os.makedirs(upload_dir, exist_ok=True)

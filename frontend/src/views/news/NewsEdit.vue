@@ -152,6 +152,7 @@ const form = ref({
   content: "",
   image_url: "",
   role_model_ids: [],
+  category_ids: [],
 });
 
 const errors = ref({});
