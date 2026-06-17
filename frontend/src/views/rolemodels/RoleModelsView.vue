@@ -40,14 +40,14 @@ function resetFilter() {
 <template>
   <div class="max-w-6xl mx-auto px-6 py-10">
     <div
-      class="bg-gradient-to-r from-violet-600 to-purple-600 rounded-3xl p-10 text-center text-white mb-10 shadow-lg"
+      class="bg-gradient-to-r from-primary to-secondary rounded-3xl p-10 text-center text-white mb-10 shadow-lg"
     >
       <div class="text-center mb-10">
         <h1 class="text-4xl font-bold text-white mb-3">
           Direktorij žena u nauci
         </h1>
 
-        <p class="text-lg text-violet-100 max-w-2xl mx-auto mb-8">
+        <p class="text-lg text-white/80 max-w-2xl mx-auto mb-8">
           Pronađite inspirativne uzore iz STEM oblasti i upoznajte njihove
           karijerne puteve.
         </p>
@@ -73,7 +73,7 @@ function resetFilter() {
     <div v-if="isAdmin" class="flex justify-center mb-10">
       <button
         @click="router.push('/role-models/add')"
-        class="bg-violet-600 hover:bg-violet-700 text-white font-medium px-6 py-3 rounded-xl transition"
+        class="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-xl transition"
       >
         Dodaj novi profil
       </button>
@@ -110,7 +110,7 @@ function resetFilter() {
 
             <div
               v-else
-              class="w-14 h-14 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold"
+              class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center font-bold"
             >
               {{ getInitials(model.first_name, model.last_name) }}
             </div>
@@ -121,7 +121,7 @@ function resetFilter() {
               {{ model.first_name }} {{ model.last_name }}
             </p>
 
-            <p class="text-sm text-violet-600 font-medium">
+            <p class="text-sm text-primary font-medium">
               {{ model.stem_field }}
             </p>
 

@@ -6,7 +6,7 @@
       <div class="bg-white rounded-3xl shadow-lg p-8 mb-8">
         <router-link
           to="/role-models"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-white text-violet-700 rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition mb-8"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition mb-8"
         >
           ← Nazad na direktorij
         </router-link>
@@ -21,7 +21,7 @@
 
             <div
               v-else
-              class="w-28 h-28 rounded-full bg-violet-600 text-white flex items-center justify-center text-2xl font-bold"
+              class="w-28 h-28 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold"
             >
               {{ getInitials(roleModel.first_name, roleModel.last_name) }}
             </div>
@@ -29,7 +29,7 @@
               <h1 class="text-4xl font-bold text-gray-900">
                 {{ roleModel.first_name }} {{ roleModel.last_name }}
               </h1>
-              <p class="text-violet-600 font-medium mt-2">
+              <p class="text-primary font-medium mt-2">
                 {{ roleModel.stem_field }}
               </p>
               <p class="text-gray-500 mt-2">
@@ -41,7 +41,7 @@
           <div class="flex gap-3 mt-5" v-if="isAdmin">
             <router-link
               :to="`/role-models/${roleModel.id}/edit`"
-              class="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-xl font-medium transition"
+              class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-xl font-medium transition"
             >
               Uredi
             </router-link>
