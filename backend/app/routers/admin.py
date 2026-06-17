@@ -1,116 +1,288 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlmodel import Session, select
+from fastapi import APIRouter, Depends, HTTPException, status, Body
+from sqlalchemy.orm import Session
+from datetime import datetime
+from pydantic import BaseModel
+from typing import List, Optional
 from app.database import get_db
+from app.models.mentor import Mentor, ApplicationStatus
+from app.models.student import Student
+from app.models.user import User, UserRole
 from app.core.security import get_current_user
-from app.models.user import User
-from app.models.profile import Profile, UpdateRoleRequest
+from app.schemas.mentor import MentorApplicationOut, RejectApplicationRequest
+
+router = APIRouter(
+    prefix="/api/v1/admin",
+    tags=["admin"]
+)
 
 
-router = APIRouter(prefix="/admin", tags=["admin"])
-
-
-@router.get("/users")
-def get_admin_users(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    user_role_str = str(current_user.role).upper()
-
-    if "ADMIN" not in user_role_str:
-        raise HTTPException(status_code=403, detail="Pristup odbijen.")
-
-    statement = select(User)
-    users = db.exec(statement).all()
-
-    extended_users = []
-
-    for user in users:
-        profile_statement = select(Profile).where(Profile.user_id == user.id)
-        profile = db.exec(profile_statement).first()
-
-        extended_users.append({
-            "id": user.id,
-            "full_name": user.full_name,
-            "email": user.email,
-            "role": user.role,
-            "is_active": profile.is_active if profile else False
-        })
-
-    return extended_users
-
-@router.put("/{user_id}/status")
-def update_user_status(
-    user_id: int,
-    is_active: bool = Query(..., description="Postavite na true za aktiviranje, false za deaktiviranje"),
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    # Provjera admina
-    user_role_str = str(current_user.role).upper()
-    if "ADMIN" not in user_role_str:
+def require_admin(current_user: User = Depends(get_current_user)) -> User:
+    if current_user.role != UserRole.admin:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Samo administratori mogu mijenjati status korisnika."
+            detail="Only admin can access this resource"
         )
-
-    # Tražimo profile preko user_id
-    statement = select(Profile).where(Profile.user_id == user_id)
-    profile_to_update = db.exec(statement).first()
-
-    # AKO PROFIL NE POSTOJI, KREIRAMO GA ODMAH DA KOD NE PUKNE
-    if not profile_to_update:
-        profile_to_update = Profile(user_id=user_id, is_active=is_active)
-        db.add(profile_to_update)
-    else:
-        # Ako postoji, samo ažuriramo status
-        profile_to_update.is_active = is_active
-        profile_to_update.deactivated_by = "admin" if not is_active else None
-        db.add(profile_to_update)
-
-    db.commit()
-    db.refresh(profile_to_update)
-
-    action_status = "aktivirana" if is_active else "deaktivirana"
-
-    return {
-        "message": f"Status korisnice je uspješno promijenjen na: {action_status}.",
-        "user_id": user_id,
-        "is_active": profile_to_update.is_active
-    }
+    return current_user
 
 
-@router.put("/{user_id}/role")
-def update_user_role(
-    user_id: int,
-    request_data: UpdateRoleRequest,  
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+@router.get("/mentor-applications", response_model=List[MentorApplicationOut])
+def get_mentor_applications(
+    skip: int = 0,
+    limit: int = 100,
+    status: Optional[str] = None,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
-    """
-    GIS4-74 & GIS4-77: Omogućava administratoru da promijeni ulogu korisnice.
-    """
-    user_role_str = str(current_user.role).upper()
-    if "ADMIN" not in user_role_str:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, 
-            detail="Samo admin ima dozvolu za mijenjanje uloga."
-        )
+    query = db.query(Mentor)
+    if status:
+        query = query.filter(Mentor.status == status)
+    applications = query.offset(skip).limit(limit).all()
+    return applications
 
-    statement = select(User).where(User.id == user_id)
-    user_to_update = db.exec(statement).first()
-    if not user_to_update:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Korisnica nije pronađena."
-        )
 
-    user_to_update.role = request_data.role
-    db.add(user_to_update)
+@router.patch("/mentor-applications/{id}/approve", response_model=MentorApplicationOut)
+def approve_mentor_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    mentor = db.query(Mentor).filter(Mentor.id == id).first()
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mentor application with id {id} not found"
+        )
+    mentor.is_approved = True
+    mentor.status = ApplicationStatus.APPROVED
+    mentor.rejection_reason = None
+
+    # Automatski promijeni rolu u users tabeli
+    user = db.query(User).filter(User.email == mentor.email).first()
+    if user:
+        user.role = UserRole.mentor
+
     db.commit()
-    db.refresh(user_to_update)
+    db.refresh(mentor)
+    return mentor
 
-    return {
-        "message": f"Uloga korisnice {user_to_update.full_name} je uspješno promijenjena.",
-        "user_id": user_to_update.id,
-        "new_role": user_to_update.role
-    }
+
+@router.patch("/mentor-applications/{id}/reject", response_model=MentorApplicationOut)
+def reject_mentor_application(
+    id: int,
+    body: Optional[RejectApplicationRequest] = Body(default=None),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    mentor = db.query(Mentor).filter(Mentor.id == id).first()
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mentor application with id {id} not found"
+        )
+    mentor.is_approved = False
+    mentor.status = ApplicationStatus.REJECTED
+    mentor.rejection_reason = body.rejection_reason if body else None
+
+    # Vrati rolu na member u users tabeli
+    user = db.query(User).filter(User.email == mentor.email).first()
+    if user:
+        user.role = UserRole.member
+
+    db.commit()
+    db.refresh(mentor)
+    return mentor
+
+
+@router.patch("/mentor-applications/{id}/resubmit", response_model=MentorApplicationOut)
+def resubmit_mentor_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    mentor = db.query(Mentor).filter(Mentor.id == id).first()
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mentor application with id {id} not found"
+        )
+    mentor.status = ApplicationStatus.PENDING
+    mentor.is_approved = False
+    mentor.rejection_reason = None
+    db.commit()
+    db.refresh(mentor)
+    return mentor
+
+
+@router.delete("/mentor-applications/{id}", status_code=status.HTTP_200_OK)
+def delete_mentor_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    mentor = db.query(Mentor).filter(Mentor.id == id).first()
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Mentor application with id {id} not found"
+        )
+    db.delete(mentor)
+    db.commit()
+    return {"message": f"Mentor application {id} successfully deleted"}
+
+
+@router.get("/mentor-applications/{id}", response_model=MentorApplicationOut)
+def get_mentor_application_detail(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    mentor = db.query(Mentor).filter(Mentor.id == id).first()
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Prijava sa ID-em {id} nije pronađena."
+        )
+    return mentor
+
+
+# ========================================
+# STUDENT APLIKACIJE - Admin panel
+# ========================================
+
+class StudentApplicationOut(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    faculty: Optional[str] = None
+    year_of_study: Optional[str] = None
+    areas_of_interest: Optional[str] = None
+    expectations: Optional[str] = None
+    motivational_message: Optional[str] = None
+    status: str
+    created_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/student-applications", response_model=List[StudentApplicationOut])
+def get_pending_student_applications(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    applications = (
+        db.query(Student)
+        .filter(Student.status == ApplicationStatus.PENDING)
+        .order_by(Student.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return applications
+
+
+@router.get("/student-applications/{id}", response_model=StudentApplicationOut)
+def get_student_application_detail(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    student = db.query(Student).filter(Student.id == id).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student aplikacija sa ID-em {id} nije pronađena."
+        )
+    return student
+
+
+@router.patch("/student-applications/{id}/approve", response_model=StudentApplicationOut)
+def approve_student_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    student = db.query(Student).filter(Student.id == id).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student aplikacija sa ID-em {id} nije pronađena."
+        )
+    student.status = ApplicationStatus.APPROVED
+    db.commit()
+    db.refresh(student)
+    return student
+
+
+@router.patch("/student-applications/{id}/reject", response_model=StudentApplicationOut)
+def reject_student_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    student = db.query(Student).filter(Student.id == id).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student aplikacija sa ID-em {id} nije pronađena."
+        )
+    student.status = ApplicationStatus.REJECTED
+    db.commit()
+    db.refresh(student)
+    return student
+
+
+@router.delete("/student-applications/{id}")
+def delete_student_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    student = db.query(Student).filter(Student.id == id).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student aplikacija sa ID-em {id} nije pronađena."
+        )
+    db.delete(student)
+    db.commit()
+    return {"message": f"Student aplikacija sa ID-em {id} je obrisana."}
+
+
+@router.get("/student-applications-approved", response_model=List[StudentApplicationOut])
+def get_approved_student_applications(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    applications = (
+        db.query(Student)
+        .filter(Student.status == ApplicationStatus.APPROVED)
+        .order_by(Student.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return applications
+
+
+@router.get("/student-applications-rejected", response_model=List[StudentApplicationOut])
+def get_rejected_student_applications(
+    skip: int = 0,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    applications = (
+        db.query(Student)
+        .filter(Student.status == ApplicationStatus.REJECTED)
+        .order_by(Student.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return applications

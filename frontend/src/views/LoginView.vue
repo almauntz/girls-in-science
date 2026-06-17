@@ -86,32 +86,26 @@ export default {
 
       try {
         const response = await loginUser(this.email, this.password)
+        localStorage.setItem('token', response.access_token)
 
-        if (response.access_token) {
-          localStorage.setItem('token', response.access_token)
-          
-          // Provjera statusa
-          const profileResponse = await fetch('http://localhost:8000/profiles/me', {
-            headers: { 'Authorization': `Bearer ${response.access_token}` }
-          })
+        // Check profile status
+        const profileResponse = await fetch('http://localhost:8000/profiles/me', {
+          headers: { 'Authorization': `Bearer ${response.access_token}` }
+        })
 
-          if (profileResponse.status === 403) {
-            const data = await profileResponse.json()
-            localStorage.removeItem('token')
-            this.isDeactivated = true
-            this.canReactivate = data.detail?.reactivatable || false
-          } else {
-            const user = await getMe(response.access_token)
-            localStorage.setItem('username', user.full_name)
-            localStorage.setItem('user_role', user.role)
-            this.$router.push('/profiles')
-          }
+        if (profileResponse.status === 403) {
+          const data = await profileResponse.json()
+          localStorage.removeItem('token')
+          this.isDeactivated = true
+          this.canReactivate = data.detail?.reactivatable || false
         } else {
-          this.error = 'Pogrešan email ili lozinka.'
+          const user = await getMe()
+          localStorage.setItem('username', user.full_name)
+          localStorage.setItem('user_role', user.role)
+          this.$router.push('/profiles')
         }
       } catch (err) {
-        console.error("Greška pri prijavi:", err)
-        this.error = 'Došlo je do greške na serveru. Pokušajte ponovo.'
+        this.error = err.data?.detail || err.message || 'Pogrešan email ili lozinka.'
       } finally {
         this.loading = false
       }

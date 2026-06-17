@@ -10,6 +10,26 @@ class ChangePasswordRequest(BaseModel):
     new_password: str
     confirm_new_password: str
 
+class LanguageEntry(BaseModel):
+    name: str
+    level: Optional[str] = ""  
+
+class ExperienceEntry(BaseModel):
+    title: str
+    organization: Optional[str] = ""
+    location: Optional[str] = None
+    start_date: Optional[str] = ""
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+
+class EducationEntry(BaseModel):
+    degree: str
+    institution: Optional[str] = ""
+    start_date: Optional[str] = ""
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+
+
 # Tabela u bazi
 class Profile(SQLModel, table=True):
     __tablename__ = "profiles"
@@ -28,6 +48,14 @@ class Profile(SQLModel, table=True):
     show_field: bool = Field(default=True)
     show_location: bool = Field(default=True)
 
+    languages: Optional[str] = Field(default=None)    
+    experience: Optional[str] = Field(default=None)   
+    education: Optional[str] = Field(default=None)    
+    skills: Optional[str] = Field(default=None)      
+    linkedin_url: Optional[str] = Field(default=None)
+    github_url: Optional[str] = Field(default=None)
+    twitter_url: Optional[str] = Field(default=None)
+
 # Shema za ažuriranje profila
 class ProfileUpdate(SQLModel):
     full_name: Optional[str] = None
@@ -40,6 +68,14 @@ class ProfileUpdate(SQLModel):
     show_biography: Optional[bool] = None
     show_field: Optional[bool] = None
     show_location: Optional[bool] = None
+
+    languages: Optional[List[LanguageEntry]] = None
+    experience: Optional[List[ExperienceEntry]] = None
+    education: Optional[List[EducationEntry]] = None 
+    skills: Optional[List[str]] = None    
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    twitter_url: Optional[str] = None
 
     @field_validator('full_name')
     @classmethod
@@ -72,30 +108,18 @@ class ProfileResponse(SQLModel):
     show_field: bool = True
     show_location: bool = True
 
+    languages: Optional[List[LanguageEntry]] = None
+    experience: Optional[List[ExperienceEntry]] = None
+    education: Optional[List[EducationEntry]] = None  
+    skills: Optional[List[str]] = None    
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    twitter_url: Optional[str] = None
+
     class Config:
         from_attributes = True
 
-# Pivot tabela
-class WorkshopRegistration(SQLModel, table=True):
-    __tablename__ = "workshop_registrations"
-
-    user_id: int = Field(foreign_key="users.id", primary_key=True)
-    workshop_id: int = Field(foreign_key="workshops.id", primary_key=True)
-    registered_at: datetime = Field(default_factory=datetime.utcnow)
-
-# Glavna tabela za Radionice
-class Workshop(SQLModel, table=True):
-    __tablename__ = "workshops"
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    title: str = Field(nullable=False)
-    description: str = Field(nullable=False)
-    date: datetime = Field(nullable=False)
-    capacity: int = Field(default=20)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-
-    # Veza sa korisnicima preko pivot tabele
-    users: List["User"] = Relationship(link_model=WorkshopRegistration)
+# Pivot tabela - kept in workshops_models.py; removed from here to avoid duplicate table definition
 
 
 class UpdateRoleRequest(BaseModel):
@@ -109,6 +133,13 @@ class PublicProfileResponse(SQLModel):
     avatar: Optional[str] = None
     email: Optional[str] = None
     location: Optional[str] = Field(default=None, nullable=True)
+    languages: Optional[List[LanguageEntry]] = None
+    experience: Optional[List[ExperienceEntry]] = None
+    education: Optional[List[EducationEntry]] = None    
+    skills: Optional[List[str]] = None    
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    twitter_url: Optional[str] = None
 
     class Config:
         from_attributes = True
