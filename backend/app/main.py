@@ -12,9 +12,10 @@ from app.models.user import User
 
 from app.routers import (
     auth, mentoring, workshops, profiles,
-    role_models, news, admin, requests, students, bookmarks
+    role_models, news, admin, requests, students
 )
 from app.routers import admin_users
+from app.routers import bookmarks
 
 
 @asynccontextmanager
