@@ -253,26 +253,39 @@ export default {
   },
 
   async mounted() {
-    this.isLoading = true
-    await this.fetchProfile()
-    this.isLoading = false
-  },
+  const userRole = localStorage.getItem('user_role')
+  if (userRole === 'admin') {
+    this.$router.push('/profiles')
+    return
+  }
+  this.isLoading = true
+  await this.fetchProfile()
+  this.isLoading = false
+},
 
   methods: {
-    async fetchProfile() {
-      const userId = this.$route.params.user_id
-      const token = localStorage.getItem('token')
-      try {
-        const headers = {}
-        if (token) headers['Authorization'] = `Bearer ${token}`
-        const response = await fetch(`http://localhost:8000/profiles/${userId}`, { headers })
-        if (response.status === 404) { this.error = 'Korisnica nije pronađena.'; return }
-        if (!response.ok) { this.error = 'Greška pri učitavanju profila.'; return }
-        this.profile = await response.json()
-      } catch (e) {
-        this.error = 'Nije moguće učitati profil.'
-      }
-    },
+   async fetchProfile() {
+  const userId = this.$route.params.user_id
+  const token = localStorage.getItem('token')
+  try {
+    const headers = {}
+    if (token) headers['Authorization'] = `Bearer ${token}`
+    const response = await fetch(`http://localhost:8000/profiles/${userId}`, { headers })
+    if (response.status === 404) { this.error = 'Korisnica nije pronađena.'; return }
+    if (!response.ok) { this.error = 'Greška pri učitavanju profila.'; return }
+    const data = await response.json()
+    
+    // Ako je profil admina, ne prikazuj ga
+    if (data.role === 'admin') {
+      this.error = 'Ovaj profil nije dostupan.'
+      return
+    }
+    
+    this.profile = data
+  } catch (e) {
+    this.error = 'Nije moguće učitati profil.'
+  }
+},
 
     levelToPercent(level) {
       const map = {

@@ -550,6 +550,9 @@ def get_public_profile(
 
     if profile and not profile.is_active:
         raise HTTPException(status_code=404, detail="Korisnica nije pronađena.")
+    
+    if user.role == UserRole.admin:
+        raise HTTPException(status_code=404, detail="Korisnica nije pronađena.")
 
     # Čitaj token iz Authorization headera
     email = None
