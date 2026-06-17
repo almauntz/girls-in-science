@@ -12,7 +12,7 @@
         </router-link>
         <img
           v-if="newsPost.image_url"
-          :src="`http://localhost:8000${model.image_url}`"
+          :src="`http://localhost:8000${newsPost.image_url}`"
           class="w-full rounded-2xl mb-8 object-cover max-h-[450px] shadow-md"
         />
 
