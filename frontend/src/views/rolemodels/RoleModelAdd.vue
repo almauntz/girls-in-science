@@ -35,7 +35,7 @@
             <label class="cursor-pointer">
               <div
                 v-if="!imagePreview"
-                class="w-32 h-32 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-4xl hover:bg-violet-200 transition"
+                class="w-32 h-32 rounded-full bg-primary/10 text-primary flex items-center justify-center text-4xl hover:bg-primary/20 transition"
               >
                 📷
               </div>
@@ -43,7 +43,7 @@
               <img
                 v-else
                 :src="imagePreview"
-                class="w-28 h-28 rounded-full object-cover border-4 border-violet-200"
+                class="w-28 h-28 rounded-full object-cover border-4 border-primary/30"
               />
 
               <input
@@ -69,7 +69,7 @@
               v-model="form.first_name"
               type="text"
               placeholder="Unesite ime"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               :class="{ 'border-red-400': errors.first_name }"
             />
             <p v-if="errors.first_name" class="text-red-500 text-xs mt-1">
@@ -86,7 +86,7 @@
               v-model="form.last_name"
               type="text"
               placeholder="Unesite prezime"
-              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               :class="{ 'border-red-400': errors.last_name }"
             />
             <p v-if="errors.last_name" class="text-red-500 text-xs mt-1">
@@ -104,7 +104,7 @@
             v-model="form.stem_field"
             type="text"
             placeholder="npr. Računarstvo i softverski inženjering"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             :class="{ 'border-red-400': errors.stem_field }"
           />
           <p v-if="errors.stem_field" class="text-red-500 text-xs mt-1">
@@ -121,7 +121,7 @@
             v-model="form.institution"
             type="text"
             placeholder="npr. Fakultet elektrotehnike, Univerzitet u Tuzli"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             :class="{ 'border-red-400': errors.institution }"
           />
           <p v-if="errors.institution" class="text-red-500 text-xs mt-1">
@@ -138,7 +138,7 @@
             v-model="form.position"
             type="text"
             placeholder="npr. Docent, Vanredni profesor"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             :class="{ 'border-red-400': errors.position }"
           />
           <p v-if="errors.position" class="text-red-500 text-xs mt-1">
@@ -158,7 +158,7 @@
             v-model="form.biography"
             placeholder="Unesite biografiju"
             rows="5"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
             :class="{ 'border-red-400': errors.biography }"
           ></textarea>
           <p v-if="errors.biography" class="text-red-500 text-xs mt-1">
@@ -175,7 +175,7 @@
             v-model="form.achievements"
             placeholder="Unesite postignuća (svako postignuće u novom redu)"
             rows="5"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
             :class="{ 'border-red-400': errors.achievements }"
           ></textarea>
           <p class="text-gray-400 text-xs mt-1">
@@ -191,7 +191,7 @@
           <button
             @click.once="handleSubmit"
             :disabled="isLoading"
-            class="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white font-medium px-6 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-medium px-6 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ isLoading ? "Kreiranje..." : "➕ Kreiraj profil" }}
           </button>
