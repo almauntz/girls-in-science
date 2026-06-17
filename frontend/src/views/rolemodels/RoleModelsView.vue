@@ -8,14 +8,18 @@ const roleModels = ref([]);
 const search = ref("");
 
 const isAdmin = ref(false);
+const isLoggedIn = ref(false);
+
 onMounted(async () => {
   roleModels.value = await getRoleModels();
   const token = localStorage.getItem("token");
   if (token) {
     const user = await getMe(token);
     isAdmin.value = user.role === "admin";
+    isLoggedIn.value = true;
   }
 });
+
 
 const filteredRoleModels = computed(() => {
   if (!search.value.trim()) return roleModels.value;
@@ -76,6 +80,15 @@ function resetFilter() {
         class="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-xl transition"
       >
         Dodaj novi profil
+      </button>
+    </div>
+
+    <div v-if="isLoggedIn && !isAdmin" class="flex justify-center mb-10">
+      <button
+        @click="router.push('/bookmarks')"
+        class="bg-violet-100 hover:bg-violet-200 text-violet-700 font-medium px-6 py-3 rounded-xl transition"
+      >
+        Moji favoriti ♥
       </button>
     </div>
 

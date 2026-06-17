@@ -15,6 +15,7 @@ from app.routers import (
     role_models, news, admin, requests, students
 )
 from app.routers import admin_users
+from app.routers import bookmarks
 
 
 @asynccontextmanager
@@ -58,6 +59,7 @@ app.include_router(students.router)
 app.include_router(admin.router)
 app.include_router(admin_users.router)
 app.include_router(requests.router)
+app.include_router(bookmarks.router)
 
 # Serve uploaded static files
 os.makedirs("static", exist_ok=True)

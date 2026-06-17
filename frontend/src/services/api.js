@@ -332,3 +332,33 @@ export async function uploadRoleModelImage(formData) {
 
   return await response.json()
 }
+
+/* =========================================================
+   BOOKMARKS
+========================================================= */
+
+export async function getBookmarks() {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/bookmarks/`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  return response.json()
+}
+
+export async function addBookmark(roleModelId) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/bookmarks/${roleModelId}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  return response.json()
+}
+
+export async function removeBookmark(roleModelId) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/bookmarks/${roleModelId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  return response.json()
+}
