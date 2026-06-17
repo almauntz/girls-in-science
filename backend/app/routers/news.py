@@ -21,6 +21,12 @@ def create_category(
 ):
     if current_user.role != UserRole.admin:
         raise HTTPException(status_code=403, detail="Samo administratorica može kreirati kategorije")
+    
+    # Provjeri da li kategorija već postoji
+    existing = db.exec(select(NewsCategory).where(NewsCategory.name == data["name"])).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Kategorija sa ovim nazivom već postoji")
+    
     category = NewsCategory(name=data["name"])
     db.add(category)
     db.commit()
