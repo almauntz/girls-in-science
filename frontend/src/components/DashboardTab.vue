@@ -96,8 +96,16 @@
             <div class="w-2 h-6 bg-violet-500 rounded-full"></div>
             <h3 class="text-lg font-bold text-gray-800">Moje studentice</h3>
           </div>
-          <div class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
+          <div v-if="myStudents.length === 0"
+              class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
             Trenutno nemate dodijeljenih studentica.
+          </div>
+          <div v-else class="space-y-3">
+            <div v-for="s in myStudents" :key="s.id"
+                class="bg-violet-50 rounded-lg p-3 border border-violet-100">
+              <p class="font-semibold text-gray-800 text-sm">{{ s.student_name }}</p>
+              <p class="text-gray-500 text-xs">{{ s.student_email }}</p>
+            </div>
           </div>
         </section>
 
@@ -106,8 +114,26 @@
             <div class="w-2 h-6 bg-purple-400 rounded-full"></div>
             <h3 class="text-lg font-bold text-gray-800">Zahtjevi mentoringa</h3>
           </div>
-          <div class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
+          <div v-if="mentorRequests.length === 0"
+              class="bg-gray-50 border border-dashed border-gray-300 rounded-xl p-6 text-center text-gray-500 text-sm">
             Nema novih zahtjeva za mentorstvo.
+          </div>
+          <div v-else class="space-y-3">
+            <div v-for="r in mentorRequests" :key="r.id"
+                class="bg-purple-50 rounded-lg p-3 border border-purple-100">
+              <p class="font-semibold text-gray-800 text-sm">{{ r.student_name }}</p>
+              <p class="text-gray-400 text-xs mt-2">{{ formatDate(r.created_at) }}</p>
+              <div class="flex gap-2 mt-3">
+                <button @click="$emit('accept-request', r.id)"
+                        class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                  Prihvati
+                </button>
+                <button @click="$emit('reject-request', r.id)"
+                        class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg text-xs font-medium transition">
+                  Odbij
+                </button>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -212,10 +238,13 @@ export default {
     dashboardError: { type: String, default: null },
     myStudents: { type: Array, default: () => [] },
     mentorRequests: { type: Array, default: () => [] },
+    mentorDashboardError: { type: String, default: null },
+    myStudents: { type: Array, default: () => [] },
+    mentorRequests: { type: Array, default: () => [] },
     mentorDashboardError: { type: String, default: null }
   },
 
-  emits: ['register','accept-request', 'reject-request'],
+  emits: ['register', 'accept-request', 'reject-request'],
 
   data() {
     return {
