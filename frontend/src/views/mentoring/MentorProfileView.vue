@@ -92,17 +92,22 @@
         </div>
       </div>
 
-      <button
-  :disabled="!mentor.is_available || requestSent"
-  @click="router.push(`/mentoring/${mentor.id}/zahtjev`)"
-  :class="requestSent
-    ? 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'
-    : mentor.is_available
-      ? 'w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition'
-      : 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'"
->
-  {{ requestSent ? 'Status: Na čekanju' : mentor.is_available ? 'Zatraži mentorstvo' : 'Nedostupno' }}
-</button>
+    <div v-if="isStudent">
+  <button
+    :disabled="!mentor.is_available || requestSent"
+    @click="router.push(`/mentoring/${mentor.id}/zahtjev`)"
+    :class="requestSent
+      ? 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'
+      : mentor.is_available
+        ? 'w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition'
+        : 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'"
+  >
+    {{ requestSent ? 'Status: Na čekanju' : mentor.is_available ? 'Zatraži mentorstvo' : 'Nedostupno' }}
+  </button>
+</div>
+<div v-else class="w-full border rounded-xl py-3 text-center text-gray-400 text-sm">
+  Samo registrovane studentice mogu zatražiti mentorstvo.
+</div>
 
     </div>
   </div>
@@ -119,6 +124,7 @@ const mentor = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const requestSent = ref(false) 
+const isStudent = ref(false)
 
 // Dijeli field_of_expertise po zarezu u više tagova
 const expertiseTags = computed(() => {
@@ -136,12 +142,26 @@ onMounted(async () => {
   try {
     const mentorId = route.params.id
     const response = await fetch(`http://127.0.0.1:8000/mentoring/mentors/${mentorId}`)
-    
     if (!response.ok) {
       throw new Error('Mentor nije pronađen')
     }
-    
     mentor.value = await response.json()
+
+    // Provjeri da li je korisnik studentica
+    const token = localStorage.getItem('token')
+    if (token) {
+      const me = await fetch('http://127.0.0.1:8000/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const meData = await me.json()
+
+      const studentCheck = await fetch('http://127.0.0.1:8000/api/v1/students/', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const students = await studentCheck.json()
+      isStudent.value = students.some(s => s.email === meData.email)
+    }
+
   } catch (err) {
     error.value = err.message || 'Greška pri učitavanju profila mentora'
   } finally {
