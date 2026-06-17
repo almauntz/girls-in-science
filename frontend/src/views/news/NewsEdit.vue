@@ -114,7 +114,7 @@
         <!-- Dugmad -->
         <div class="flex gap-4">
           <button
-            @click="handleSubmit"
+            @click.once="handleSubmit"
             :disabled="isLoading"
             class="bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition disabled:opacity-50"
           >
@@ -158,6 +158,7 @@ const errors = ref({});
 const serverError = ref("");
 const successMessage = ref("");
 const isLoading = ref(false);
+let isSubmitting = false
 const allRoleModels = ref([]);
 const allCategories = ref([]);
 const roleModelOptions = ref([]);
@@ -210,9 +211,14 @@ function toggleCategory(id) {
 }
 
 async function handleSubmit() {
+  if (isSubmitting) return
+  isSubmitting = true
   serverError.value = "";
   successMessage.value = "";
-  if (!validate()) return;
+  if (!validate()) {
+    isSubmitting = false
+    return;
+  }
   isLoading.value = true;
   try {
     const result = await updateNewsPost(route.params.id, form.value);
@@ -227,6 +233,7 @@ async function handleSubmit() {
     serverError.value = "Greška pri komunikaciji sa serverom.";
   } finally {
     isLoading.value = false;
+    isSubmitting = false
   }
 }
 </script>

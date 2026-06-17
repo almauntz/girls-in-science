@@ -1,116 +1,119 @@
 <template>
-  <div class="max-w-2xl mx-auto p-8">
-    <div class="text-center mb-10">
-      <div class="text-5xl mb-4">📰</div>
+  <div class="min-h-screen bg-gray-50 py-10 px-4">
+    <div class="max-w-2xl mx-auto">
+      <div class="text-center mb-8">
+        <div class="text-5xl mb-3">📰</div>
 
-      <h1 class="text-4xl font-bold text-gray-900 mb-2">Kreiraj objavu</h1>
+        <h1 class="text-3xl font-bold text-gray-900">Kreiraj objavu</h1>
 
-      <p class="text-gray-500 text-lg">Dodajte novu vijest ili blog objavu</p>
-    </div>
-    <!-- Error -->
-    <div v-if="serverError" class="bg-red-100 text-red-700 p-3 rounded mb-4">
-      {{ serverError }}
-    </div>
-
-    <!-- Success -->
-    <div
-      v-if="successMessage"
-      class="bg-green-100 text-green-700 p-3 rounded mb-4"
-    >
-      {{ successMessage }}
-    </div>
-
-    <div class="bg-white rounded-3xl shadow-lg p-8">
-      <h2 class="text-xl font-bold text-gray-900 mb-8">Osnovne informacije</h2>
-      <!-- Naslov -->
-      <div class="mb-4">
-        <label class="block mb-2 font-medium">
-          Naslov<span class="text-red-500">*</span>
-        </label>
-
-        <input
-          v-model="form.title"
-          type="text"
-          class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-          :class="{ 'border-red-500': errors.title }"
-        />
-
-        <p v-if="errors.title" class="text-red-500 text-sm mt-1">
-          {{ errors.title }}
+        <p class="text-gray-500 mt-2">
+          Dodajte novu vijest ili blog objavu
         </p>
       </div>
 
-      <!-- Sadržaj -->
-      <div class="mb-4">
-        <label class="block mb-2 font-medium">
-          Sadržaj<span class="text-red-500">*</span>
-        </label>
-
-        <textarea
-          rows="8"
-          class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-        ></textarea>
-
-        <p v-if="errors.content" class="text-red-500 text-sm mt-1">
-          {{ errors.content }}
-        </p>
-      </div>
-
-      <!-- Slika -->
-      <div class="mb-6">
-        <label class="block mb-2 font-medium"> URL slike </label>
-
-        <input
-          v-model="form.image_url"
-          type="text"
-          class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-        />
-      </div>
-      <h2 class="text-xl font-bold text-gray-900 mb-8 mt-10">
-        Povezani sadržaj
-      </h2>
-      <div class="mb-6">
-        <label class="block mb-2 font-medium"> Povezani profili </label>
-
-        <Multiselect
-          v-model="form.role_model_ids"
-          mode="tags"
-          :options="profileOptions"
-          valueProp="id"
-          label="full_name"
-          trackBy="full_name"
-          :searchable="true"
-          placeholder="Pretraži i odaberi profile"
-          class="multiselect-violet"
-        />
-      </div>
-
-      <div class="mb-6">
-        <label class="block mb-2 font-medium">Kategorije</label>
-        <div class="flex flex-wrap gap-2">
-          <button
-            v-for="category in categories"
-            :key="category.id"
-            @click="toggleCategory(category.id)"
-            :class="
-              form.category_ids.includes(category.id)
-                ? 'bg-violet-600 text-white'
-                : 'bg-violet-100 text-violet-700'
-            "
-            class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
-          >
-            {{ category.name }}
-          </button>
+      <div class="bg-white rounded-3xl shadow-xl p-10 border border-gray-100">
+        <!-- Error -->
+        <div v-if="serverError" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+          {{ serverError }}
         </div>
-      </div>
 
-      <!-- Dugme -->
-      <button
-        @click="handleSubmit"
-        class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition"
-      >
-        Kreiraj objavu
-      </button>
+        <!-- Success -->
+        <div v-if="successMessage" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+          {{ successMessage }}
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-900 mb-8">Osnovne informacije</h2>
+        <!-- Naslov -->
+        <div class="mb-4">
+          <label class="block mb-2 font-medium">
+            Naslov<span class="text-red-500">*</span>
+          </label>
+
+          <input
+            v-model="form.title"
+            type="text"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            :class="{ 'border-red-500': errors.title }"
+          />
+
+          <p v-if="errors.title" class="text-red-500 text-sm mt-1">
+            {{ errors.title }}
+          </p>
+        </div>
+
+        <!-- Sadržaj -->
+        <div class="mb-4">
+          <label class="block mb-2 font-medium">
+            Sadržaj<span class="text-red-500">*</span>
+          </label>
+
+          <textarea
+            v-model="form.content"
+            rows="8"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          ></textarea>
+
+          <p v-if="errors.content" class="text-red-500 text-sm mt-1">
+            {{ errors.content }}
+          </p>
+        </div>
+
+        <!-- Slika -->
+        <div class="mb-6">
+          <label class="block mb-2 font-medium"> URL slike </label>
+
+          <input
+            v-model="form.image_url"
+            type="text"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+          />
+        </div>
+
+        <h2 class="text-xl font-bold text-gray-900 mb-8 mt-10">
+          Povezani sadržaj
+        </h2>
+
+        <div class="mb-6">
+          <label class="block mb-2 font-medium"> Povezani profili </label>
+
+          <Multiselect
+            v-model="form.role_model_ids"
+            mode="tags"
+            :options="profileOptions"
+            :searchable="true"
+            placeholder="Pretraži i odaberi profile"
+            class="multiselect-violet"
+          />
+        </div>
+
+        <div class="mb-6">
+          <label class="block mb-2 font-medium">Kategorije</label>
+          <div class="flex flex-wrap gap-2">
+            <button
+              v-for="category in categories"
+              :key="category.id"
+              @click="toggleCategory(category.id)"
+              :class="
+                form.category_ids.includes(category.id)
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-violet-100 text-violet-700'
+              "
+              class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
+            >
+              {{ category.name }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Dugme -->
+        <button
+          @click.once="handleSubmit"
+          :disabled="isLoading"
+          class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Kreiraj objavu
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -143,25 +146,26 @@ const successMessage = ref("");
 
 const serverError = ref("");
 
+let isSubmitting = false
+const isLoading = ref(false)
+
 const router = useRouter();
 
-const roleModels = ref([]);
+
 
 const categories = ref([]);
 
-import { computed } from "vue";
+const profileOptions = ref([])
 
-const profileOptions = computed(() =>
-  roleModels.value.map((model) => ({
-    id: model.id,
-    full_name: `${model.first_name} ${model.last_name}`,
-  })),
-);
 onMounted(async () => {
-  roleModels.value = await getRoleModels();
-  const cats = await getCategories();
-  categories.value = Array.isArray(cats) ? cats : [];
-});
+  const roleModels = await getRoleModels()
+  profileOptions.value = roleModels.map(m => ({
+    value: m.id,
+    label: `${m.first_name} ${m.last_name}`
+  }))
+  const cats = await getCategories()
+  categories.value = Array.isArray(cats) ? cats : []
+})
 
 function validate() {
   const e = {};
@@ -188,11 +192,16 @@ function toggleCategory(id) {
 }
 
 async function handleSubmit() {
+  if (isSubmitting) return
+  isSubmitting = true
+  isLoading.value = true
   serverError.value = "";
-
   successMessage.value = "";
-
-  if (!validate()) return;
+  if (!validate()) {
+    isSubmitting = false
+    isLoading.value = false
+    return;
+  }
 
   try {
     const token = localStorage.getItem("token");
@@ -209,8 +218,12 @@ async function handleSubmit() {
     }
   } catch {
     serverError.value = "Greška pri komunikaciji sa serverom";
+  } finally {
+    isSubmitting = false
+    isLoading.value = false
   }
 }
+
 </script>
 
 <style scoped>
