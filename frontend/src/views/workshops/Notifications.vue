@@ -18,7 +18,8 @@ export default {
         const token = localStorage.getItem('token'); 
         if (!token) return;
 
-        const response = await fetch('http://127.0.0.1:8000/workshops/unread-notifications', {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/workshops/unread-notifications`, {
+
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${token}`,
