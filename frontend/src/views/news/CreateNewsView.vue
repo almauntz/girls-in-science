@@ -107,8 +107,9 @@
 
       <!-- Dugme -->
       <button
-        @click="handleSubmit"
-        class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition"
+        @click.once="handleSubmit"
+        :disabled="isLoading"
+        class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Kreiraj objavu
       </button>
@@ -143,6 +144,9 @@ const errors = ref({});
 const successMessage = ref("");
 
 const serverError = ref("");
+
+let isSubmitting = false
+const isLoading = ref(false)
 
 const router = useRouter();
 
@@ -189,11 +193,16 @@ function toggleCategory(id) {
 }
 
 async function handleSubmit() {
+  if (isSubmitting) return
+  isSubmitting = true
+  isLoading.value = true
   serverError.value = "";
-
   successMessage.value = "";
-
-  if (!validate()) return;
+  if (!validate()) {
+    isSubmitting = false
+    isLoading.value = false
+    return;
+  }
 
   try {
     const token = localStorage.getItem("token");
@@ -210,8 +219,12 @@ async function handleSubmit() {
     }
   } catch {
     serverError.value = "Greška pri komunikaciji sa serverom";
+  } finally {
+    isSubmitting = false
+    isLoading.value = false
   }
 }
+
 </script>
 
 <style scoped>
