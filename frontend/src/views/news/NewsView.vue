@@ -1,7 +1,9 @@
 <template>
   <div class="max-w-4xl mx-auto px-6 py-10">
     <div
-      class="bg-gradient-to-r from-violet-600 to-purple-600 rounded-3xl p-10 text-center text-white mb-10 shadow-lg"
+      class="bg-gradient-to-r from-primary to-secondary
+rounded-3xl
+shadow-lg rounded-3xl p-10 text-center text-white mb-10 shadow-lg"
     >
       <h1 class="text-4xl font-bold mb-3">Blog i vijesti</h1>
 
@@ -12,7 +14,8 @@
     <div class="flex justify-center mb-10" v-if="isAdmin">
       <router-link
         to="/news/create"
-        class="bg-violet-600 hover:bg-violet-700 text-white font-medium px-6 py-3 rounded-xl transition shadow-md hover:shadow-lg"
+             class="bg-primary hover:bg-secondary text-white font-medium px-6 py-3 rounded-xl transition"
+
       >
         Kreiraj objavu
       </router-link>
@@ -22,11 +25,12 @@
       <input
         v-model="newCategory"
         placeholder="Nova kategorija..."
-        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+        class="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
       />
       <button
         @click="addCategory"
-        class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm transition"
+        class="bg-primary hover:bg-secondary text-white font-medium px-3
+         py-2 rounded-xl transition"
       >
         Dodaj kategoriju
       </button>
@@ -37,8 +41,8 @@
         @click="selectedCategory = null"
         :class="
           selectedCategory === null
-            ? 'bg-violet-600 text-white'
-            : 'bg-gray-100 text-gray-700'
+            ? 'bg-primary text-white'
+            : 'bg-secondary text-white'
         "
         class="px-4 py-2 rounded-full text-sm font-medium transition"
       >
@@ -50,8 +54,8 @@
         @click="selectedCategory = category.name"
         :class="
           selectedCategory === category.name
-            ? 'bg-violet-600 text-white'
-            : 'bg-violet-100 text-violet-700'
+            ? 'bg-primary text-white'
+            : 'bg-secondary text-white'
         "
         class="px-4 py-2 rounded-full text-sm font-medium transition"
       >
