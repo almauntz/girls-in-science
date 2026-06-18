@@ -277,6 +277,19 @@ const goToApply = () => router.push({ name: 'mentor-registration' })
 const goToStudentApply = () => router.push('/student/apply')
 
 onMounted(async () => {
+  // Provjeri ulogu iz tokena
+  const token = localStorage.getItem('token')
+  if (token) {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]))
+      if (payload.role === 'mentor') {
+        router.push('/mentoring/my-applications')
+        return
+      }
+    } catch {}
+  }
+
+  // Normalan tok za member/admin
   try {
     const response = await getMentors()
     mentors.value = response.data
