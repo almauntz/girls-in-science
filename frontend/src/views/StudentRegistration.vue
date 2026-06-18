@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-violet-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8">
+  <div class="min-h-screen bg-gradient-to-br from-violet-50 to-purple-50 py-12 px-4 sm:px-6 lg:px-8" style="background: linear-gradient(to right, #d0c8f9, #F9DBE7);">
     <div class="max-w-3xl mx-auto">
       <!-- Zaglavlje -->
       <div class="text-center mb-8">
