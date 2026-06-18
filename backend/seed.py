@@ -6,7 +6,8 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from app.database import SessionLocal, engine
+from sqlmodel import Session
+from app.database import engine
 from app.models.user import User, UserRole
 from app.models.mentor import Mentor
 from app.models.mentorship_request import MentorshipRequest, RequestStatus  # POPRAVLJENO: ispravan import
@@ -16,7 +17,7 @@ from app.database import Base
 # Kreiraj sve tablice
 Base.metadata.create_all(bind=engine)
 
-db = SessionLocal()
+db = Session(engine)
 
 # --- Admin korisnik ---
 existing_admin = db.query(User).filter(User.email == "admin@test.com").first()
