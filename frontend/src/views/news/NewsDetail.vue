@@ -36,9 +36,11 @@
         />
 
         <div class="mb-6">
-          <h1 class="text-4xl font-bold text-gray-900 mb-2">
-            {{ newsPost.title }}
-          </h1>
+          <h1
+  class="text-4xl font-bold text-gray-900 mb-2 break-all"
+>
+  {{ newsPost.title }}
+</h1>
           <p class="text-gray-500">
             {{ formatDate(newsPost.created_at) }}
           </p>
@@ -46,12 +48,26 @@
             Autor: {{ newsPost.author }}
           </p>
         </div>
+        <div
+  v-if="newsPost.categories?.length"
+  class="flex flex-wrap gap-2 mt-4"
+>
+  <span
+    v-for="category in newsPost.categories"
+    :key="category.id"
+    class="px-3 py-1 rounded-full bg-primary text-white text-sm font-medium"
+  >
+    {{ category.name }}
+  </span>
+</div>
 
-        <div class="border border-gray-100 rounded-2xl p-6 mb-6">
+        <div class="border border-gray-100 rounded-2xl p-6 mb-6 mt-4">
           <h2 class="text-xl font-bold text-gray-900 mb-4">Sadržaj</h2>
-          <p class="text-gray-700 whitespace-pre-line leading-relaxed">
-            {{ newsPost.content }}
-          </p>
+       <p
+  class="text-gray-700 whitespace-pre-line leading-relaxed break-words"
+>
+  {{ newsPost.content }}
+</p>
         </div>
 
         <div v-if="newsPost.role_models && newsPost.role_models.length > 0">
