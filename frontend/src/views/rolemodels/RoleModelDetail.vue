@@ -4,41 +4,16 @@
     <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>
     <div v-else-if="roleModel">
       <div class="bg-white rounded-3xl shadow-lg p-8 mb-8">
-        <router-link
-          to="/role-models"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition mb-8"
-        >
-          ← Nazad na direktorij
-        </router-link>
 
-        <div class="flex items-start justify-between gap-12">
-          <div class="flex items-center gap-8 mb-8">
-            <img
-              v-if="roleModel.image_url"
-              :src="`http://localhost:8000${roleModel.image_url}`"
-              class="w-28 h-28 rounded-full object-cover"
-            />
+        <div class="flex items-center justify-between mb-8">
+          <router-link
+            to="/role-models"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition"
+          >
+            ← Nazad na direktorij
+          </router-link>
 
-            <div
-              v-else
-              class="w-28 h-28 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold"
-            >
-              {{ getInitials(roleModel.first_name, roleModel.last_name) }}
-            </div>
-            <div>
-              <h1 class="text-4xl font-bold text-gray-900">
-                {{ roleModel.first_name }} {{ roleModel.last_name }}
-              </h1>
-              <p class="text-primary font-medium mt-2">
-                {{ roleModel.stem_field }}
-              </p>
-              <p class="text-gray-500 mt-2">
-                {{ roleModel.institution }} • {{ roleModel.position }}
-              </p>
-            </div>
-          </div>
-
-          <div class="flex gap-3 mt-5" v-if="isAdmin">
+          <div v-if="isAdmin" class="flex gap-3">
             <router-link
               :to="`/role-models/${roleModel.id}/edit`"
               class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-xl font-medium transition"
@@ -47,40 +22,50 @@
             </router-link>
             <button
               @click="handleDelete"
-              class="bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 rounded-xl font-medium transition"
+              class="bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 rounded-xl transition"
             >
               Obriši
             </button>
           </div>
+
           <button
-            v-if="isLoggedIn"
+            v-if="isLoggedIn && !isAdmin"
             @click="toggleBookmark"
-            class="mt-4 flex items-center gap-2 px-4 py-2 rounded-xl border transition"
-            :class="
-              isBookmarked
-                ? 'bg-violet-600 text-white border-violet-600'
-                : 'bg-white text-violet-600 border-violet-600'
-            "
+            class="flex items-center gap-2 px-4 py-2 rounded-xl border transition"
+            :class="isBookmarked ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-violet-600 border-violet-600'"
           >
             {{ isBookmarked ? "♥ Ukloni iz favorita" : "♡ Dodaj u favorite" }}
           </button>
         </div>
 
-        <div
-          class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-sm transition mt-8"
-        >
-          <h2 class="text-xl font-bold text-gray-900 mb-4">Biografija</h2>
-
-          <p class="text-gray-700 leading-relaxed whitespace-pre-line">
-            {{ roleModel.biography }}
-          </p>
+        <div class="flex items-center gap-8 mb-8">
+          <img
+            v-if="roleModel.image_url"
+            :src="`http://localhost:8000${roleModel.image_url}`"
+            class="w-28 h-28 rounded-full object-cover"
+          />
+          <div
+            v-else
+            class="w-28 h-28 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold"
+          >
+            {{ getInitials(roleModel.first_name, roleModel.last_name) }}
+          </div>
+          <div>
+            <h1 class="text-4xl font-bold text-gray-900">
+              {{ roleModel.first_name }} {{ roleModel.last_name }}
+            </h1>
+            <p class="text-primary font-medium mt-2">{{ roleModel.stem_field }}</p>
+            <p class="text-gray-500 mt-2">{{ roleModel.institution }} • {{ roleModel.position }}</p>
+          </div>
         </div>
 
-        <div
-          class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-sm transition mt-6"
-        >
-          <h2 class="text-xl font-bold text-gray-900 mb-4">Postignuća</h2>
+        <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-sm transition mt-8">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Biografija</h2>
+          <p class="text-gray-700 leading-relaxed whitespace-pre-line">{{ roleModel.biography }}</p>
+        </div>
 
+        <div class="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-sm transition mt-6">
+          <h2 class="text-xl font-bold text-gray-900 mb-4">Postignuća</h2>
           <ul class="space-y-2">
             <li
               v-for="(achievement, index) in achievements"
@@ -91,6 +76,7 @@
             </li>
           </ul>
         </div>
+
       </div>
     </div>
   </div>
