@@ -8,7 +8,7 @@
         <div class="flex items-center justify-between mb-8">
           <router-link
             to="/news"
-            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-violet-700 rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition"
           >
             ← Nazad na novosti
           </router-link>
@@ -16,7 +16,7 @@
           <div v-if="isAdmin" class="flex gap-3">
             <router-link
               :to="`/news/${newsPost.id}/edit`"
-              class="bg-violet-600 hover:bg-violet-700 text-white px-5 py-2 rounded-xl font-medium transition"
+              class="bg-primary hover:bg-secondary text-white px-5 py-2 rounded-xl font-medium transition"
             >
               Uredi
             </router-link>
@@ -73,7 +73,7 @@
                 />
                 <div
                   v-else
-                  class="w-12 h-12 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold"
+                  class="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center font-bold"
                 >
                   {{ getInitials(model.first_name, model.last_name) }}
                 </div>
@@ -82,7 +82,7 @@
                 <p class="font-semibold text-gray-900">
                   {{ model.first_name }} {{ model.last_name }}
                 </p>
-                <p class="text-sm text-violet-600 font-medium">
+                <p class="text-sm text-primary font-medium">
                   {{ model.stem_field }}
                 </p>
               </div>
