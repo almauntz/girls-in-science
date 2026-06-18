@@ -1,6 +1,7 @@
 import enum
 from sqlalchemy import Column, Integer, String, Boolean, Enum, Text
 from app.database import Base
+from app.models.profile import Profile
 
 
 class ApplicationStatus(str, enum.Enum):
