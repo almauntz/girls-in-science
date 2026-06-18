@@ -1,7 +1,6 @@
 <template>
   <div id="app">
     <NavBar />
-
     <!-- Rejected mentor notification banner -->
     <div
       v-if="showRejectedBanner"
@@ -19,10 +18,9 @@
         >
           Pošalji ponovo
         </router-link>
-        <button @click="showRejectedBanner = false" class="text-red-400 hover:text-red-600 text-lg leading-none">×</button>
+        <button @click="dismissRejectedBanner" class="text-red-400 hover:text-red-600 text-lg leading-none">×</button>
       </div>
     </div>
-
     <!-- Approved mentor notification banner -->
     <div
       v-if="showApprovedBanner"
@@ -32,9 +30,8 @@
         <span>✅</span>
         <span>Čestitamo! Vaša prijava za mentoricu je <strong>prihvaćena</strong>. Sada ste aktivna mentorica na platformi.</span>
       </div>
-      <button @click="showApprovedBanner = false" class="text-green-400 hover:text-green-600 text-lg leading-none">×</button>
+      <button @click="dismissApprovedBanner" class="text-green-400 hover:text-green-600 text-lg leading-none">×</button>
     </div>
-
     <main class="main-content">
       <router-view />
     </main>
@@ -61,17 +58,14 @@ export default {
   async mounted() {
     await this.checkMentorStatus()
   },
-  watch: {
-    $route() {
-      this.resetBanners()
-      this.checkMentorStatus()
-    }
-  },
   methods: {
-    resetBanners() {
-      this.showRejectedBanner = false
+    dismissApprovedBanner() {
       this.showApprovedBanner = false
-      this.rejectionReason = null
+      localStorage.setItem('approved_banner_dismissed', 'true')
+    },
+    dismissRejectedBanner() {
+      this.showRejectedBanner = false
+      localStorage.setItem('rejected_banner_dismissed', 'true')
     },
     async checkMentorStatus() {
       const token = localStorage.getItem('token')
@@ -83,10 +77,10 @@ export default {
         })
         if (res.ok) {
           const data = await res.json()
-          if (data.status === 'REJECTED') {
+          if (data.status === 'REJECTED' && !localStorage.getItem('rejected_banner_dismissed')) {
             this.rejectionReason = data.rejection_reason || null
             this.showRejectedBanner = true
-          } else if (data.status === 'APPROVED') {
+          } else if (data.status === 'APPROVED' && !localStorage.getItem('approved_banner_dismissed')) {
             this.showApprovedBanner = true
           }
         }
@@ -102,19 +96,16 @@ export default {
   padding: 0;
   box-sizing: border-box;
 }
-
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   background-color: #f9f9f9;
   color: #333;
 }
-
 .main-content {
   /* max-width: 1200px; */
   margin: 0 auto;
- padding: 2rem; 
+  /*padding: 2rem; */
 }
-
 .main-content:has(.profile-page) {
   max-width: 100%;
   margin: 0;

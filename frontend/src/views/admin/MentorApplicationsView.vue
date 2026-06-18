@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8 px-4">
+<div class="min-h-screen bg-gradient-to-br from-purple-200 via-pink-100 to-pink-200 py-8 px-4">
     <div class="max-w-5xl mx-auto">
 
       <div class="flex items-center justify-between mb-6">
