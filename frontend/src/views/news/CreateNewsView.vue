@@ -2,27 +2,33 @@
   <div class="min-h-screen bg-gray-50 py-10 px-4">
     <div class="max-w-2xl mx-auto">
       <div class="text-center mb-8">
-        <div class="text-5xl mb-3">📰</div>
+        <div class="text-4xl mb-3">📰</div>
 
         <h1 class="text-3xl font-bold text-gray-900">Kreiraj objavu</h1>
 
-        <p class="text-gray-500 mt-2">
-          Dodajte novu vijest ili blog objavu
-        </p>
+        <p class="text-gray-500 mt-2">Dodajte novu vijest ili blog objavu</p>
       </div>
 
       <div class="bg-white rounded-3xl shadow-xl p-10 border border-gray-100">
         <!-- Error -->
-        <div v-if="serverError" class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+        <div
+          v-if="serverError"
+          class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"
+        >
           {{ serverError }}
         </div>
 
         <!-- Success -->
-        <div v-if="successMessage" class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+        <div
+          v-if="successMessage"
+          class="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm"
+        >
           {{ successMessage }}
         </div>
 
-        <h2 class="text-xl font-bold text-gray-900 mb-8">Osnovne informacije</h2>
+        <h2 class="text-xl font-bold text-gray-900 mb-8">
+          Osnovne informacije
+        </h2>
         <!-- Naslov -->
         <div class="mb-4">
           <label class="block mb-2 font-medium">
@@ -51,7 +57,7 @@
           <textarea
             v-model="form.content"
             rows="8"
-            maxlength="3000" 
+            maxlength="3000"
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
           ></textarea>
 
@@ -91,7 +97,7 @@
                   ? 'bg-violet-600 text-white'
                   : 'bg-violet-100 text-violet-700'
               "
-                class="px-3 py-1 rounded-full text-sm font-medium transition"
+              class="px-3 py-1 rounded-full text-sm font-medium transition"
             >
               {{ category.name }}
             </button>
@@ -113,7 +119,12 @@
             >
               📷
             </div>
-            <input type="file" accept="image/*" class="hidden" @change="handleImageChange" />
+            <input
+              type="file"
+              accept="image/*"
+              class="hidden"
+              @change="handleImageChange"
+            />
           </label>
         </div>
 
@@ -122,13 +133,13 @@
             :key="submitKey"
             @click.once="handleSubmit"
             :disabled="isLoading"
-            class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            class="bg-gradient-to-r from-primary to-secondary text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition disabled:opacity-50"
           >
-            Kreiraj objavu
+            ➕ Kreiraj objavu
           </button>
           <button
             @click="$router.push('/news')"
-            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-6 py-2 rounded-lg text-sm transition"
+            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-6 py-3 rounded-xl transition"
           >
             ↩ Otkaži
           </button>
@@ -167,29 +178,27 @@ const successMessage = ref("");
 
 const serverError = ref("");
 
-const submitKey = ref(0)
+const submitKey = ref(0);
 
-const isLoading = ref(false)
+const isLoading = ref(false);
 
 const router = useRouter();
 
-
-
 const categories = ref([]);
-const selectedImage = ref(null)
-const imagePreview = ref(null)
+const selectedImage = ref(null);
+const imagePreview = ref(null);
 
-const profileOptions = ref([])
+const profileOptions = ref([]);
 
 onMounted(async () => {
-  const roleModels = await getRoleModels()
-  profileOptions.value = roleModels.map(m => ({
+  const roleModels = await getRoleModels();
+  profileOptions.value = roleModels.map((m) => ({
     value: m.id,
-    label: `${m.first_name} ${m.last_name}`
-  }))
-  const cats = await getCategories()
-  categories.value = Array.isArray(cats) ? cats : []
-})
+    label: `${m.first_name} ${m.last_name}`,
+  }));
+  const cats = await getCategories();
+  categories.value = Array.isArray(cats) ? cats : [];
+});
 
 function validate() {
   const e = {};
@@ -211,10 +220,10 @@ function validate() {
 }
 
 function handleImageChange(event) {
-  const file = event.target.files[0]
-  if (!file) return
-  selectedImage.value = file
-  imagePreview.value = URL.createObjectURL(file)
+  const file = event.target.files[0];
+  if (!file) return;
+  selectedImage.value = file;
+  imagePreview.value = URL.createObjectURL(file);
 }
 
 function toggleCategory(id) {
@@ -226,25 +235,25 @@ function toggleCategory(id) {
 }
 
 async function handleSubmit() {
-  if (isLoading.value) return
- 
-  isLoading.value = true
+  if (isLoading.value) return;
+
+  isLoading.value = true;
   serverError.value = "";
   successMessage.value = "";
   if (!validate()) {
-    isLoading.value = false
-    submitKey.value++
+    isLoading.value = false;
+    submitKey.value++;
     return;
   }
 
-try {
+  try {
     const token = localStorage.getItem("token");
 
     if (selectedImage.value) {
-      const formData = new FormData()
-      formData.append("file", selectedImage.value)
-      const uploadResponse = await uploadNewsImage(formData)
-      form.value.image_url = uploadResponse.image_url
+      const formData = new FormData();
+      formData.append("file", selectedImage.value);
+      const uploadResponse = await uploadNewsImage(formData);
+      form.value.image_url = uploadResponse.image_url;
     }
 
     const result = await createNewsPost(form.value, token);
@@ -260,10 +269,9 @@ try {
   } catch {
     serverError.value = "Greška pri komunikaciji sa serverom";
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
 }
-
 </script>
 
 <style scoped>
