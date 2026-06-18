@@ -4,7 +4,6 @@
     <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>
     <div v-else-if="newsPost">
       <div class="bg-white rounded-3xl shadow-lg p-8">
-
         <div class="flex items-center justify-between mb-8">
           <router-link
             to="/news"
@@ -36,11 +35,9 @@
         />
 
         <div class="mb-6">
-          <h1
-  class="text-4xl font-bold text-gray-900 mb-2 break-all"
->
-  {{ newsPost.title }}
-</h1>
+          <h1 class="text-4xl font-bold text-gray-900 mb-2 break-all">
+            {{ newsPost.title }}
+          </h1>
           <p class="text-gray-500">
             {{ formatDate(newsPost.created_at) }}
           </p>
@@ -49,25 +46,25 @@
           </p>
         </div>
         <div
-  v-if="newsPost.categories?.length"
-  class="flex flex-wrap gap-2 mt-4"
->
-  <span
-    v-for="category in newsPost.categories"
-    :key="category.id"
-    class="px-3 py-1 rounded-full bg-primary text-white text-sm font-medium"
-  >
-    {{ category.name }}
-  </span>
-</div>
+          v-if="newsPost.categories?.length"
+          class="flex flex-wrap gap-2 mt-4"
+        >
+          <span
+            v-for="category in newsPost.categories"
+            :key="category.id"
+            class="px-3 py-1 rounded-full bg-primary text-white text-sm font-medium"
+          >
+            {{ category.name }}
+          </span>
+        </div>
 
         <div class="border border-gray-100 rounded-2xl p-6 mb-6 mt-4">
-          <h2 class="text-xl font-bold text-gray-900 mb-4">Sadržaj</h2>
-       <p
-  class="text-gray-700 whitespace-pre-line leading-relaxed break-words"
->
-  {{ newsPost.content }}
-</p>
+          <h2 class="text-l font-bold text-gray-900 mb-4">Sadržaj</h2>
+          <p
+            class="text-gray-700 whitespace-pre-line leading-relaxed break-words"
+          >
+            {{ newsPost.content }}
+          </p>
         </div>
 
         <div v-if="newsPost.role_models && newsPost.role_models.length > 0">
@@ -105,7 +102,6 @@
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -115,7 +111,7 @@
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getNewsPost, deleteNewsPost, getMe } from "../../services/api.js";
-import Swal from 'sweetalert2'
+import Swal from "sweetalert2";
 
 const route = useRoute();
 const router = useRouter();
@@ -139,15 +135,15 @@ function formatDate(dateStr) {
 
 async function handleDelete() {
   const result = await Swal.fire({
-    title: 'Obriši objavu',
-    text: 'Da li ste sigurni da želite obrisati ovu objavu?',
-    icon: 'warning',
+    title: "Obriši objavu",
+    text: "Da li ste sigurni da želite obrisati ovu objavu?",
+    icon: "warning",
     showCancelButton: true,
-    confirmButtonColor: '#7c3aed',
-    cancelButtonColor: '#6b7280',
-    confirmButtonText: 'Obriši',
-    cancelButtonText: 'Odustani'
-  })
+    confirmButtonColor: "#7c3aed",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Obriši",
+    cancelButtonText: "Odustani",
+  });
   if (!result.isConfirmed) return;
   const token = localStorage.getItem("token");
   const deleteResult = await deleteNewsPost(newsPost.value.id, token);
