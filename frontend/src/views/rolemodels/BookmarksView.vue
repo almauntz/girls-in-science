@@ -1,15 +1,24 @@
 <template>
   <div class="max-w-4xl mx-auto px-6 py-10">
-
     <router-link
       to="/role-models"
       class="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition mb-8"
     >
       ← Nazad na direktorij
     </router-link>
+<div
+  
+  class="bg-gradient-to-r from-primary to-secondary rounded-3xl p-10 text-center text-white mb-10 shadow-lg"
+>
+  <h1 class="text-4xl font-bold mb-3">
+    Moji favoriti
+  </h1>
 
-    <h1 class="text-3xl font-bold text-gray-900 mb-1">Moji favoriti</h1>
-    <p class="text-gray-500 mb-6">Profili koje ste sačuvali</p>
+  <p class="text-lg text-white/80 max-w-2xl mx-auto">
+    Profili koje ste sačuvali za kasnije pregledavanje.
+  </p>
+</div>
+  
 
     <div v-if="loading" class="text-center text-gray-500">
       Učitavanje...
