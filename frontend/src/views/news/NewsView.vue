@@ -1,9 +1,7 @@
 <template>
   <div class="max-w-4xl mx-auto px-6 py-10">
     <div
-      class="bg-gradient-to-r from-primary to-secondary
-rounded-3xl
-shadow-lg rounded-3xl p-10 text-center text-white mb-10 shadow-lg"
+      class="bg-gradient-to-r from-primary to-secondary rounded-3xl shadow-lg rounded-3xl p-10 text-center text-white mb-10 shadow-lg"
     >
       <h1 class="text-4xl font-bold mb-3">Blog i vijesti</h1>
 
@@ -14,8 +12,7 @@ shadow-lg rounded-3xl p-10 text-center text-white mb-10 shadow-lg"
     <div class="flex justify-center mb-10" v-if="isAdmin">
       <router-link
         to="/news/create"
-             class="bg-primary hover:bg-secondary text-white font-medium px-6 py-3 rounded-xl transition"
-
+        class="bg-primary hover:bg-secondary text-white font-medium px-6 py-3 rounded-xl transition"
       >
         Kreiraj objavu
       </router-link>
@@ -29,8 +26,7 @@ shadow-lg rounded-3xl p-10 text-center text-white mb-10 shadow-lg"
       />
       <button
         @click="addCategory"
-        class="bg-primary hover:bg-secondary text-white font-medium px-3
-         py-2 rounded-xl transition"
+        class="bg-primary hover:bg-secondary text-white font-medium px-3 py-2 rounded-xl transition"
       >
         Dodaj kategoriju
       </button>

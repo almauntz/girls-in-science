@@ -196,13 +196,13 @@
         <!-- Dugmad -->
         <div class="flex gap-4">
           <button
-          :key="submitKey"
-          @click.once="handleSubmit"
-          :disabled="isLoading"
-          class="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-medium px-6 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ isLoading ? "Kreiranje..." : "➕ Kreiraj profil" }}
-        </button>
+            :key="submitKey"
+            @click.once="handleSubmit"
+            :disabled="isLoading"
+            class="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-medium px-6 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ isLoading ? "Kreiranje..." : "➕ Kreiraj profil" }}
+          </button>
           <button
             @click="$router.push('/role-models')"
             class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-6 py-2 rounded-lg text-sm transition"
@@ -238,7 +238,7 @@ const successMessage = ref("");
 const isLoading = ref(false);
 const selectedImage = ref(null);
 const imagePreview = ref(null);
-const submitKey = ref(0)
+const submitKey = ref(0);
 
 function handleImageChange(event) {
   const file = event.target.files[0];
@@ -251,7 +251,7 @@ function handleImageChange(event) {
 
 function validate() {
   const e = {};
-  
+
   if (!form.value.first_name.trim()) {
     e.first_name = "Ime je obavezno";
   } else if (form.value.first_name.trim().length < 2) {
@@ -296,7 +296,12 @@ function validate() {
     e.achievements = "Postignuća su obavezna";
   } else if (form.value.achievements.trim().length < 10) {
     e.achievements = "Postignuća moraju imati najmanje 10 karaktera";
-  } else if (form.value.achievements.trim().split("\n").filter(a => a.trim()).length < 1) {
+  } else if (
+    form.value.achievements
+      .trim()
+      .split("\n")
+      .filter((a) => a.trim()).length < 1
+  ) {
     e.achievements = "Unesite najmanje jedno postignuće";
   }
 
@@ -305,16 +310,16 @@ function validate() {
 }
 
 async function handleSubmit() {
-  if (isLoading.value) return
-  isLoading.value = true
+  if (isLoading.value) return;
+  isLoading.value = true;
   serverError.value = "";
   successMessage.value = "";
 
   if (!validate()) {
-  isLoading.value = false;
-  submitKey.value++
-  return;
-}
+    isLoading.value = false;
+    submitKey.value++;
+    return;
+  }
   try {
     const token = localStorage.getItem("token");
     if (selectedImage.value) {
@@ -328,7 +333,8 @@ async function handleSubmit() {
       successMessage.value = "Profil je uspješno dodan u direktorij!";
       setTimeout(() => router.push("/role-models"), 1500);
     } else {
-      serverError.value = result.detail || "Došlo je do greške. Pokušajte ponovo.";
+      serverError.value =
+        result.detail || "Došlo je do greške. Pokušajte ponovo.";
     }
   } catch (err) {
     serverError.value = "Greška pri komunikaciji sa serverom.";

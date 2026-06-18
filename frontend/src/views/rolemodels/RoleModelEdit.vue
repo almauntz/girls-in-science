@@ -248,7 +248,7 @@ const successMessage = ref("");
 const isLoading = ref(false);
 const selectedImage = ref(null);
 const imagePreview = ref(null);
-const submitKey = ref(0)
+const submitKey = ref(0);
 
 function handleImageChange(event) {
   const file = event.target.files[0];
@@ -291,7 +291,7 @@ onMounted(async () => {
 
 function validate() {
   const e = {};
-  
+
   if (!form.value.first_name.trim()) {
     e.first_name = "Ime je obavezno";
   } else if (form.value.first_name.trim().length < 2) {
@@ -336,7 +336,12 @@ function validate() {
     e.achievements = "Postignuća su obavezna";
   } else if (form.value.achievements.trim().length < 10) {
     e.achievements = "Postignuća moraju imati najmanje 10 karaktera";
-  } else if (form.value.achievements.trim().split("\n").filter(a => a.trim()).length < 1) {
+  } else if (
+    form.value.achievements
+      .trim()
+      .split("\n")
+      .filter((a) => a.trim()).length < 1
+  ) {
     e.achievements = "Unesite najmanje jedno postignuće";
   }
 
@@ -345,13 +350,13 @@ function validate() {
 }
 
 async function handleSubmit() {
-  if (isLoading.value) return
-  isLoading.value = true
+  if (isLoading.value) return;
+  isLoading.value = true;
   serverError.value = "";
   successMessage.value = "";
   if (!validate()) {
     isLoading.value = false;
-    submitKey.value++
+    submitKey.value++;
     return;
   }
   try {
@@ -366,7 +371,8 @@ async function handleSubmit() {
       successMessage.value = "Profil je uspješno ažuriran!";
       setTimeout(() => router.push(`/role-models/${route.params.id}`), 1500);
     } else {
-      serverError.value = result.detail || "Došlo je do greške. Pokušajte ponovo.";
+      serverError.value =
+        result.detail || "Došlo je do greške. Pokušajte ponovo.";
     }
   } catch {
     serverError.value = "Greška pri komunikaciji sa serverom.";
