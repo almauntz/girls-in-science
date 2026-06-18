@@ -77,7 +77,7 @@ function resetFilter() {
     <div v-if="isAdmin" class="flex justify-center mb-10">
       <button
         @click="router.push('/role-models/add')"
-        class="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-3 rounded-xl transition"
+        class="bg-primary hover:bg-secondary text-white font-medium px-6 py-3 rounded-xl transition"
       >
         Dodaj novi profil
       </button>
@@ -86,7 +86,7 @@ function resetFilter() {
     <div v-if="isLoggedIn && !isAdmin" class="flex justify-center mb-10">
       <button
         @click="router.push('/bookmarks')"
-        class="bg-violet-100 hover:bg-violet-200 text-violet-700 font-medium px-6 py-3 rounded-xl transition"
+        class="bg-primary hover:bg-secondary text-white font-medium px-6 py-3 rounded-xl transition"
       >
         Moji favoriti ♥
       </button>

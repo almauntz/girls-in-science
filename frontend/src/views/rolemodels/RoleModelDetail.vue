@@ -16,7 +16,7 @@
           <div v-if="isAdmin" class="flex gap-3">
             <router-link
               :to="`/role-models/${roleModel.id}/edit`"
-              class="bg-primary hover:bg-primary/90 text-white px-5 py-2 rounded-xl font-medium transition"
+              class="bg-primary hover:bg-secondary text-white px-5 py-2 rounded-xl font-medium transition"
             >
               Uredi
             </router-link>
@@ -31,8 +31,8 @@
           <button
             v-if="isLoggedIn && !isAdmin"
             @click="toggleBookmark"
-            class="flex items-center gap-2 px-4 py-2 rounded-xl border transition"
-            :class="isBookmarked ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-violet-600 border-violet-600'"
+            class="flex items-center gap-2 px-4 py-2 rounded-xl border hover:shadow-lg transition disabled:opacity-50"
+            :class="isBookmarked ? 'bg-primary text-white border-violet-600' : 'bg-white text-secondary border-violet-600'"
           >
             {{ isBookmarked ? "♥ Ukloni iz favorita" : "♡ Dodaj u favorite" }}
           </button>
@@ -42,20 +42,21 @@
           <img
             v-if="roleModel.image_url"
             :src="`http://localhost:8000${roleModel.image_url}`"
-            class="w-28 h-28 rounded-full object-cover"
+            class="w-24 h-24 rounded-full object-cover"
           />
           <div
             v-else
-            class="w-28 h-28 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold"
+            class="w-24 h-24 rounded-full bg-primary text-white flex items-center justify-center text-2xl font-bold"
           >
             {{ getInitials(roleModel.first_name, roleModel.last_name) }}
           </div>
           <div>
-            <h1 class="text-4xl font-bold text-gray-900">
+            <h1 class="text-2xl font-bold text-gray-900">
               {{ roleModel.first_name }} {{ roleModel.last_name }}
             </h1>
             <p class="text-primary font-medium mt-2">{{ roleModel.stem_field }}</p>
-            <p class="text-gray-500 mt-2">{{ roleModel.institution }} • {{ roleModel.position }}</p>
+            <p class="text-500 mt-2">{{ roleModel.institution }} </p>
+               <p class="text-500 mt-2">{{ roleModel.position }}</p>
           </div>
         </div>
 
