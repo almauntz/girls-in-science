@@ -35,18 +35,6 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/workshops/admin/proposals',
-    name: 'proposals-admin',
-    component: () => import('../views/workshops/ProposalAdminView.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/workshops/admin/registrations',
-    name: 'registrations-admin',
-    component: () => import('../views/workshops/UsersListOnWorkshop.vue'),
-    meta: { requiresAuth: true }
-  },
-  {
     path: '/workshops/my-proposals',
     name: 'my-proposals',
     component: () => import('../views/workshops/MyProposalsView.vue'),

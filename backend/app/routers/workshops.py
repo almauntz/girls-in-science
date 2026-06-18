@@ -7,11 +7,31 @@ from app.core.security import get_current_user
 from app.models.user import User, UserRole
 from app.models.workshops_models import (RegistrationRead, Workshop,RegistrationCreate,Registration, WorkshopStatus, WorkshopCreate,
                                           WorkshopUpdate, WorkshopRead, WorkshopList,WorkshopDetailRead, WorkshopProposal,
-                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList, UserNotification,WorkshopRating, RatingCreate, RatingRead)
+                                            ProposalCreate, ProposalRead, ProposalUserRead, ProposalApprove, ProposalReject, ProposalStatus,WaitingList, UserNotification,WorkshopRating, RatingCreate, RatingRead, WorkshopFilter)
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/workshops", tags=["workshops"])
+
+@router.get("/waiting-list/me")
+def get_my_waiting_list(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    entries = db.execute(
+        select(WaitingList).where(
+            WaitingList.user_id == current_user.id
+        )
+    ).scalars().all()
+
+    return [
+        {
+            "workshop_id": e.workshop_id
+        }
+        for e in entries
+    ]
+
+
 
 
 @router.get("/my-promotion")
@@ -107,9 +127,57 @@ def cancel_registration(
         "promoted_user_id": promoted_user_id
     }
 
+
+#Filtiranje radionica
+@router.get("/search", response_model=list[WorkshopList])
+def search_workshops(
+    db: Session = Depends(get_db),
+    filters: WorkshopFilter = Depends(),
+):
+    from datetime import timedelta
+    statement = select(Workshop)
+
+    if filters.title:
+        statement = statement.where(Workshop.title.ilike(f"%{filters.title}%"))
+
+    if filters.location:
+        statement = statement.where(Workshop.location.ilike(f"%{filters.location}%"))
+
+    if filters.date_from and filters.date_to:
+        date_to_end = filters.date_to.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        statement = statement.where(
+            Workshop.date >= filters.date_from,
+            Workshop.date < date_to_end
+        )
+    elif filters.date_from:
+        dan_pocetak = filters.date_from.replace(hour=0, minute=0, second=0, microsecond=0)
+        dan_kraj = dan_pocetak + timedelta(days=1)
+        statement = statement.where(
+            Workshop.date >= dan_pocetak,
+            Workshop.date < dan_kraj
+        )
+    elif filters.date_to:
+        date_to_end = filters.date_to.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        statement = statement.where(Workshop.date < date_to_end)
+
+    workshops = db.execute(statement).scalars().all()
+
+    result = []
+    for w in workshops:
+        broj_prijava = db.execute(
+            select(func.count(Registration.id)).where(
+                Registration.workshop_id == w.ID_workshop
+            )
+        ).scalar() or 0
+        workshop_dict = w.model_dump()
+        workshop_dict["free_spots"] = w.capacity - broj_prijava
+        result.append(workshop_dict)
+
+    return result
+
+
 @router.get("/active", response_model=list[WorkshopList])
 def get_active_workshops(db: Session = Depends(get_db)):
-    #izmjena na prikazu radionica - dodan upit za radionice koje su upcoming  i completed
     statement = select(Workshop).where(    
         Workshop.status.in_([WorkshopStatus.upcoming, WorkshopStatus.completed])
     )
@@ -123,6 +191,7 @@ def get_active_workshops(db: Session = Depends(get_db)):
         workshop_dict["free_spots"] = w.capacity - broj_prijava
         result.append(workshop_dict)
     return result
+
 # Za  automatsko ažuriranje statusa radionica nakon isteka vremena
 @router.post("/auto-complete", status_code=200)
 def auto_complete_workshops(db: Session = Depends(get_db)):
@@ -337,7 +406,9 @@ def approve_proposal(
             "location": data.location,
             "date": data.date,
             "end_time": data.end_time,
-            "capacity": data.capacity
+            "capacity": data.capacity,
+            "organizer_name": data.organizer_name,
+            "organizer_email": data.organizer_email
         }.items() if v is None]
         if missing:
             raise HTTPException(
@@ -353,6 +424,9 @@ def approve_proposal(
             capacity=data.capacity,
             created_by_id=admin.id,
             status=WorkshopStatus.upcoming,
+            organizer_name=data.organizer_name,
+            organizer_email=data.organizer_email,
+            organizer_phone=data.organizer_phone
         )
         db.add(workshop)
 
@@ -653,16 +727,11 @@ def create_rating(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    # 1. Postoji li radionica?
     workshop = db.get(Workshop, workshop_id)
     if not workshop:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
-
-    # 2. Je li radionica završena?
     if workshop.status != WorkshopStatus.completed:
         raise HTTPException(status_code=400, detail="Radionica još nije završena.")
-
-    # 3. Je li korisnica bila registrovana?
     registration = db.execute(
         select(Registration).where(
             Registration.workshop_id == workshop_id,
@@ -672,8 +741,6 @@ def create_rating(
 
     if not registration:
         raise HTTPException(status_code=403, detail="Niste bili prijavljeni na ovu radionicu.")
-
-    # 4. Je li već ostavila ocjenu?
     existing = db.execute(
         select(WorkshopRating).where(
             WorkshopRating.registration_id == registration.id
@@ -702,11 +769,19 @@ def get_ratings(workshop_id: int, db: Session = Depends(get_db)):
     if not workshop:
         raise HTTPException(status_code=404, detail="Radionica nije pronađena.")
 
-    return db.execute(
+    ratings = db.execute(
         select(WorkshopRating).where(WorkshopRating.workshop_id == workshop_id)
         .order_by(WorkshopRating.created_at.desc())
     ).scalars().all()
 
+    result = []
+    for rating in ratings:
+        user = db.get(User, rating.user_id)
+        rating_data = RatingRead.model_validate(rating)
+        rating_data.user_name = user.full_name if user else "Nepoznat"
+        result.append(rating_data)
+
+    return result
 
 @router.get("/{workshop_id}/ratings/average")
 def get_ratings_average(workshop_id: int, db: Session = Depends(get_db)):
@@ -723,3 +798,33 @@ def get_ratings_average(workshop_id: int, db: Session = Depends(get_db)):
     count = int(row[1]) if row and row[1] is not None else 0
 
     return {"average": round(avg, 2), "count": count}
+
+
+
+@router.delete("/waiting-list/{workshop_id}")
+def leave_waiting_list(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    # nađi entry u waiting listi
+    statement = select(WaitingList).where(
+        WaitingList.workshop_id == workshop_id,
+        WaitingList.user_id == current_user.id
+    )
+
+    waiting_entry = db.execute(statement).scalars().first()
+
+    if not waiting_entry:
+        raise HTTPException(
+            status_code=404,
+            detail="Niste na listi čekanja za ovu radionicu."
+        )
+
+    db.delete(waiting_entry)
+    db.commit()
+
+    return {
+        "message": "Uspješno ste napustili listu čekanja."
+    }
+
