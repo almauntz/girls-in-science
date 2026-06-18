@@ -12,8 +12,6 @@ from app.models.student import Student
 
 
 
-
-
 router = APIRouter(
     prefix="/mentoring/requests",
     tags=["requests"],
@@ -59,7 +57,7 @@ async def create_request(
             detail="Fajl ne smije biti veći od 5MB."
         )
 
-    # generisanje jedinstvenog imena fajla kako bi se izbjeglo prepisivanje postojećih fajlova
+    # generisanje jedinstvenog imena fajla 
     unique_filename = str(uuid.uuid4()) + "_" + cv.filename
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 

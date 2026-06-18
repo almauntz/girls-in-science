@@ -133,13 +133,13 @@ const error = ref(null)
 const requestSent = ref(false) 
 const isStudent = ref(false)
 
-// Dijeli field_of_expertise po zarezu u više tagova
+
 const expertiseTags = computed(() => {
   if (!mentor.value?.field_of_expertise) return []
   return mentor.value.field_of_expertise.split(',').map(t => t.trim())
 })
 
-// Je li mentor potpuno popunjen
+
 const isFull = computed(() => {
   if (!mentor.value) return false
   return mentor.value.current_applications_count >= mentor.value.max_mentees
@@ -164,7 +164,7 @@ async function fetchMentor() {
 onMounted(async () => {
   await fetchMentor()
   try {
-    // Provjeri da li je korisnik studentica
+    
     const token = localStorage.getItem('token')
     if (token) {
       const me = await fetch('http://127.0.0.1:8000/me', {
@@ -179,7 +179,7 @@ onMounted(async () => {
       isStudent.value = students.some(s => s.email === meData.email)
     }
   } catch (err) {
-    // ignore student check errors silently
+    
   }
 })
 </script>
