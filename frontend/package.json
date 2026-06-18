@@ -2,8 +2,7 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
-  "type": "module",
-  "scripts": {
+  "type": "module",  "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
@@ -11,10 +10,6 @@
   "dependencies": {
     "@motionone/vue": "^10.16.4",
     "@vueform/multiselect": "^2.6.11",
-<<<<<<< HEAD
-    "axios": "^1.16.1",
-=======
->>>>>>> d6159414cc0a0126e90edae34c092287a4750e8a
     "axios": "^1.18.0",
     "canvas-confetti": "^1.9.4",
     "sweetalert2": "^11.26.25",
