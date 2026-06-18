@@ -171,15 +171,124 @@
 
     </div>
 
+    <div v-if="showDetailsModal && selectedApplication" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg max-w-2xl w-full p-8 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold text-gray-800">Profil studentice</h2>
+          <button @click="closeDetails" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">✕</button>
+        </div>
+
+        <div class="space-y-5">
+          <div class="flex justify-center">
+            <div class="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center">
+              <span class="text-purple-600 font-semibold text-xl">{{ getInitials(selectedApplication.student_name) }}</span>
+            </div>
+          </div>
+
+          <div class="text-center border-b pb-4">
+            <h3 class="text-xl font-semibold text-gray-800">{{ selectedApplication.student_name }}</h3>
+            <p class="text-gray-600 text-sm">{{ selectedApplication.student_email }}</p>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Očekivanja:</label>
+            <div class="bg-gray-50 border border-gray-200 rounded p-3 text-gray-600 text-sm">
+              {{ selectedApplication.expectations || 'Nije navedeno' }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Vještine za poboljšanje:</label>
+            <div class="bg-gray-50 border border-gray-200 rounded p-3 text-gray-600 text-sm">
+              {{ selectedApplication.skills_to_improve || 'Nije navedeno' }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Motivacija/Poruka:</label>
+            <div class="bg-gray-50 border border-gray-200 rounded p-3 text-gray-600 text-sm">
+              {{ selectedApplication.message || 'Nije navedeno' }}
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">CV:</label>
+            <div v-if="selectedApplication.cv_file_path" class="flex items-center gap-2">
+              <a
+                :href="`http://localhost:8000/mentoring/cv/${selectedApplication.cv_file_path}`"
+                target="_blank"
+                class="text-purple-600 hover:underline flex items-center gap-2"
+              >
+                Preuzmi CV
+              </a>
+            </div>
+            <div v-else class="text-gray-400 text-sm">Nema priloženog CV-a</div>
+          </div>
+
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Primljena:</label>
+            <p class="text-gray-600">{{ formatDateFull(selectedApplication.created_at) }}</p>
+          </div>
+
+          <div class="flex gap-2 mt-6">
+            <button
+              @click="closeDetails"
+              class="w-full px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded hover:bg-gray-400 transition"
+            >
+              Zatvori
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
+
+    <div v-if="showRejectModal && appToReject" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-lg max-w-md w-full p-8 shadow-xl">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-semibold text-gray-800">Odbij zahtjev</h2>
+          <button @click="closeRejectModal" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">✕</button>
+        </div>
+
+        <div class="space-y-4">
+          <div>
+            <p class="text-gray-700 mb-4">
+              Odbijate zahtjev od <strong>{{ appToReject.student_name }}</strong>
+            </p>
+
+            <label class="block text-sm font-medium text-gray-700 mb-2">Razlog odbijanja (opciono):</label>
+            <textarea
+              v-model="rejectionReason"
+              placeholder="Objasnite zašto ste odbili zahtjev..."
+              class="w-full border-2 border-gray-200 rounded p-3 text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 bg-gray-50"
+            ></textarea>
+          </div>
+
+          <div class="flex gap-2">
+            <button
+              @click="closeRejectModal"
+              class="flex-1 px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded hover:bg-gray-400 transition"
+            >
+              Otkaži
+            </button>
+            <button
+              @click="confirmReject(appToReject.id)"
+              class="flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded hover:bg-red-700 transition"
+            >
+              Potvrdi odbijanje
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { getMentorApplications, updateApplicationStatus } from '../../services/mentoring.js'
 
-// Dodana varijabla za praćenje aktivnog taba
-const activeTab = ref('pending') // Početni tab je 'pending'
+const activeTab = ref('pending')
 
 const applications = ref([])
 const loading = ref(true)
@@ -202,8 +311,8 @@ const rejectedApplications = computed(() => {
   return applications.value.filter(app => app.status === 'REJECTED')
 })
 
-// OSTATAK TVOG SCRIPT SETUP KODA OSTANE POTPUNO ISTI...
 const getInitials = (name) => {
+  if (!name) return ''
   return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
 }
 
@@ -257,6 +366,7 @@ const closeRejectModal = () => {
 
 const approveApplication = async (applicationId, app) => {
   try {
+    // Popravljeno slanje: servisu proslijediti samo string statusa
     await updateApplicationStatus(applicationId, 'ACCEPTED')
     app.status = 'ACCEPTED'
     closeDetails()
