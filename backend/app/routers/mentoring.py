@@ -6,6 +6,7 @@ from app.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
 from app.models.mentor import Mentor
+from app.models.profile import Profile
 from app.models.mentorship_request import MentorshipRequest, RequestStatus
 from pydantic import BaseModel
 from datetime import datetime
@@ -34,6 +35,7 @@ class MentorOut(BaseModel):
     cv_url: Optional[str] = None
     position: Optional[str] = None
     institution: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -60,6 +62,14 @@ class MentorshipRequestOut(BaseModel):
 def mentoring_placeholder():
     return {"message": "Mentoring router is working — Team 2 builds here"}
 
+def get_avatar_url(mentor: Mentor, db: Session) -> str | None:
+    user = db.query(User).filter(User.email == mentor.email).first()
+    if not user:
+        return mentor.profile_img_url  # fallback na vlastitu sliku
+    profile = db.query(Profile).filter(Profile.user_id == user.id).first()
+    if not profile or not profile.avatar:
+        return mentor.profile_img_url  # fallback
+    return f"http://localhost:8000{profile.avatar}"
 
 @router.get("/mentors", response_model=list[MentorOut])
 def get_mentors(
@@ -88,7 +98,8 @@ def get_mentors(
             years_of_experience=mentor.years_of_experience,
             cv_url=mentor.cv_url,
             position=mentor.position,
-            institution=mentor.institution
+            institution=mentor.institution,
+            avatar_url=get_avatar_url(mentor, db)
         ))
     return result
 
@@ -179,7 +190,8 @@ def get_mentor_profile(id: int, db: Session = Depends(get_db)):
         years_of_experience=mentor.years_of_experience,
         cv_url=mentor.cv_url,
         position=mentor.position,
-        institution=mentor.institution
+        institution=mentor.institution,
+        avatar_url=get_avatar_url(mentor, db)
     )
 
 

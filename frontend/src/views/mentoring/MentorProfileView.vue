@@ -15,10 +15,8 @@
       <div class="border rounded-xl p-6 mb-4">
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-4">
-            <img
-              :src="mentor.profile_img_url || 'https://placehold.co/80x80'"
-              class="w-20 h-20 rounded-full object-cover"
-            />
+            <img :src="mentor.avatar_url || 'https://placehold.co/80x80'"
+              class="w-20 h-20 rounded-full object-cover" />
             <div>
               <h1 class="text-xl font-bold">{{ mentor.full_name }}</h1>
               <!-- Tagovi za oblast ekspertize -->

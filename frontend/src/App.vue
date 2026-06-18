@@ -35,9 +35,9 @@ body {
 }
 
 .main-content {
-  max-width: 1200px;
+  /* max-width: 1200px; */
   margin: 0 auto;
-  padding: 2rem;
+  /*padding: 2rem; */ 
 }
 
 .main-content:has(.profile-page) {
