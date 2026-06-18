@@ -54,6 +54,8 @@ def create_news_post(
         author=news_data.author,
         image_url=news_data.image_url
     )
+    db.add(news_post)   
+    db.flush()          
     if news_data.role_model_ids:
         role_models = []
         for role_model_id in news_data.role_model_ids:
@@ -69,7 +71,6 @@ def create_news_post(
                 categories.append(category)
         news_post.categories = categories
 
-    db.add(news_post)
     db.commit()
     db.refresh(news_post)
     _ = news_post.role_models

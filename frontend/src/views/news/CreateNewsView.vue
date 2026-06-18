@@ -32,6 +32,7 @@
           <input
             v-model="form.title"
             type="text"
+            maxlength="100"
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             :class="{ 'border-red-500': errors.title }"
           />
@@ -50,6 +51,7 @@
           <textarea
             v-model="form.content"
             rows="8"
+            maxlength="3000" 
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
           ></textarea>
 
@@ -117,6 +119,7 @@
 
         <div class="flex gap-4">
           <button
+            :key="submitKey"
             @click.once="handleSubmit"
             :disabled="isLoading"
             class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -164,7 +167,8 @@ const successMessage = ref("");
 
 const serverError = ref("");
 
-let isSubmitting = false
+const submitKey = ref(0)
+
 const isLoading = ref(false)
 
 const router = useRouter();
@@ -192,14 +196,17 @@ function validate() {
 
   if (!form.value.title.trim()) {
     e.title = "Naslov je obavezan";
+  } else if (form.value.title.trim().length < 5) {
+    e.title = "Naslov mora imati najmanje 5 karaktera";
   }
 
   if (!form.value.content.trim()) {
     e.content = "Sadržaj je obavezan";
+  } else if (form.value.content.trim().length < 20) {
+    e.content = "Sadržaj mora imati najmanje 20 karaktera";
   }
 
   errors.value = e;
-
   return Object.keys(e).length === 0;
 }
 
@@ -219,14 +226,14 @@ function toggleCategory(id) {
 }
 
 async function handleSubmit() {
-  if (isSubmitting) return
-  isSubmitting = true
+  if (isLoading.value) return
+ 
   isLoading.value = true
   serverError.value = "";
   successMessage.value = "";
   if (!validate()) {
-    isSubmitting = false
     isLoading.value = false
+    submitKey.value++
     return;
   }
 
@@ -253,7 +260,6 @@ try {
   } catch {
     serverError.value = "Greška pri komunikaciji sa serverom";
   } finally {
-    isSubmitting = false
     isLoading.value = false
   }
 }

@@ -4,32 +4,14 @@
     <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>
     <div v-else-if="newsPost">
       <div class="bg-white rounded-3xl shadow-lg p-8">
-        <router-link
-          to="/news"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-white text-violet-700 rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition mb-8"
-        >
-          ← Nazad na novosti
-        </router-link>
-        <img
-          v-if="newsPost.image_url"
-          :src="`http://localhost:8000${newsPost.image_url}`"
-          class="w-full rounded-2xl mb-8 object-cover max-h-[450px] shadow-md"
-        />
 
-        <div class="flex items-start justify-between gap-6 mb-6">
-          <div>
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">
-              {{ newsPost.title }}
-            </h1>
-
-            <p class="text-gray-500">
-              {{ formatDate(newsPost.created_at) }}
-            </p>
-
-            <p v-if="newsPost.author" class="text-gray-500 mt-1">
-              Autor: {{ newsPost.author }}
-            </p>
-          </div>
+        <div class="flex items-center justify-between mb-8">
+          <router-link
+            to="/news"
+            class="inline-flex items-center gap-2 px-4 py-2 bg-white text-violet-700 rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition"
+          >
+            ← Nazad na novosti
+          </router-link>
 
           <div v-if="isAdmin" class="flex gap-3">
             <router-link
@@ -38,19 +20,35 @@
             >
               Uredi
             </router-link>
-
             <button
               @click="handleDelete"
-              class="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl font-medium transition"
+              class="bg-red-600 hover:bg-red-700 text-white font-medium px-5 py-2 rounded-xl transition"
             >
               Obriši
             </button>
           </div>
         </div>
 
+        <img
+          v-if="newsPost.image_url"
+          :src="`http://localhost:8000${newsPost.image_url}`"
+          class="w-full rounded-2xl mb-8 object-cover max-h-[450px] shadow-md"
+        />
+
+        <div class="mb-6">
+          <h1 class="text-4xl font-bold text-gray-900 mb-2">
+            {{ newsPost.title }}
+          </h1>
+          <p class="text-gray-500">
+            {{ formatDate(newsPost.created_at) }}
+          </p>
+          <p v-if="newsPost.author" class="text-gray-500 mt-1">
+            Autor: {{ newsPost.author }}
+          </p>
+        </div>
+
         <div class="border border-gray-100 rounded-2xl p-6 mb-6">
           <h2 class="text-xl font-bold text-gray-900 mb-4">Sadržaj</h2>
-
           <p class="text-gray-700 whitespace-pre-line leading-relaxed">
             {{ newsPost.content }}
           </p>
@@ -73,7 +71,6 @@
                   :src="`http://localhost:8000${model.image_url}`"
                   class="w-12 h-12 rounded-full object-cover"
                 />
-
                 <div
                   v-else
                   class="w-12 h-12 rounded-full bg-violet-600 text-white flex items-center justify-center font-bold"
@@ -92,6 +89,7 @@
             </div>
           </div>
         </div>
+
       </div>
     </div>
   </div>

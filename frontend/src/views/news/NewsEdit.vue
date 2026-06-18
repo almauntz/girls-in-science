@@ -33,6 +33,7 @@
             v-model="form.title"
             type="text"
             placeholder="Unesite naslov"
+            maxlength="100" 
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
             :class="{ 'border-red-400': errors.title }"
           />
@@ -49,6 +50,7 @@
           <textarea
             v-model="form.content"
             placeholder="Unesite sadržaj"
+            maxlength="3000" 
             rows="6"
             class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
             :class="{ 'border-red-400': errors.content }"
@@ -126,6 +128,7 @@
         <!-- Dugmad -->
         <div class="flex gap-4">
           <button
+            :key="submitKey"
             @click.once="handleSubmit"
             :disabled="isLoading"
             class="bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition disabled:opacity-50"
@@ -172,12 +175,12 @@ const errors = ref({});
 const serverError = ref("");
 const successMessage = ref("");
 const isLoading = ref(false);
-let isSubmitting = false
 const allRoleModels = ref([]);
 const allCategories = ref([]);
 const roleModelOptions = ref([]);
 const selectedImage = ref(null)
 const imagePreview = ref(null)
+const submitKey = ref(0)
 
 onMounted(async () => {
   try {
@@ -215,8 +218,19 @@ onMounted(async () => {
 
 function validate() {
   const e = {};
-  if (!form.value.title.trim()) e.title = "Naslov je obavezan";
-  if (!form.value.content.trim()) e.content = "Sadržaj je obavezan";
+
+  if (!form.value.title.trim()) {
+    e.title = "Naslov je obavezan";
+  } else if (form.value.title.trim().length < 5) {
+    e.title = "Naslov mora imati najmanje 5 karaktera";
+  }
+
+  if (!form.value.content.trim()) {
+    e.content = "Sadržaj je obavezan";
+  } else if (form.value.content.trim().length < 20) {
+    e.content = "Sadržaj mora imati najmanje 20 karaktera";
+  }
+
   errors.value = e;
   return Object.keys(e).length === 0;
 }
@@ -243,15 +257,15 @@ function toggleCategory(id) {
 }
 
 async function handleSubmit() {
-  if (isSubmitting) return
-  isSubmitting = true
+  if (isLoading.value) return
+  isLoading.value = true
   serverError.value = "";
   successMessage.value = "";
   if (!validate()) {
-    isSubmitting = false
+    isLoading.value = false
+    submitKey.value++
     return;
   }
-  isLoading.value = true;
   try {
     if (selectedImage.value) {
       const formData = new FormData()
@@ -272,7 +286,6 @@ async function handleSubmit() {
     serverError.value = "Greška pri komunikaciji sa serverom.";
   } finally {
     isLoading.value = false;
-    isSubmitting = false
   }
 }
 </script>
