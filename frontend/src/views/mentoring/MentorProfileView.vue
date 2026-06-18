@@ -42,9 +42,9 @@
           </a>
         </div>
 
-        <!-- Popunjenost i format -->
-        <div class="flex gap-4 mt-4">
-          <div class="rounded-lg px-4 py-2 text-sm flex items-center gap-2 bg-white" style="border: 3px solid #d8b4fe;">
+            <!-- Popunjenost i format -->
+            <div class="flex gap-4 mt-4">
+              <div class="rounded-lg px-4 py-2 text-sm flex items-center gap-2 bg-white" style="border: 3px solid #d8b4fe;">
             <!-- Zeleni krug ako ima mjesta, crveni ako je puno -->
             <span
               :class="isFull ? 'bg-red-500' : 'bg-green-500'"
@@ -57,6 +57,7 @@
               {{ mentor.current_applications_count }}/{{ mentor.max_mentees }}
             </span>
           </div>
+          <button @click="fetchMentor" class="self-center text-sm text-gray-600 hover:text-gray-800 ml-2">Osvježi</button>
           <div class="rounded-lg px-4 py-2 text-sm bg-white" style="border: 3px solid #d8b4fe;">
             <span class="text-gray-500">Format sesije: </span>
             <span class="font-semibold">{{ mentor.preferred_session_format || 'Online' }}</span>
@@ -94,6 +95,9 @@
       </div>
 
     <div v-if="isStudent">
+      <div v-if="mentor && !mentor.is_available" class="w-full p-3 mb-3 rounded-xl bg-red-50 text-red-700 text-center font-semibold">
+        Mentorica je trenutno popunjena — molimo odaberite drugu mentoricu.
+      </div>
   <button
     :disabled="!mentor.is_available || requestSent"
     @click="router.push(`/mentoring/${mentor.id}/zahtjev`)"
@@ -106,7 +110,7 @@
     {{ requestSent ? 'Status: Na čekanju' : mentor.is_available ? 'Zatraži mentorstvo' : 'Nedostupno' }}
   </button>
 </div>
-<div v-else class="w-full border rounded-xl py-3 text-center text-gray-400 text-sm">
+<div v-else class="w-full border rounded-xl py-3 text-center text-gray-400 text-sm bg-gray-100">
   Samo registrovane studentice mogu zatražiti mentorstvo.
 </div>
 
@@ -140,8 +144,9 @@ const isFull = computed(() => {
   if (!mentor.value) return false
   return mentor.value.current_applications_count >= mentor.value.max_mentees
 })
-
-onMounted(async () => {
+async function fetchMentor() {
+  loading.value = true
+  error.value = null
   try {
     const mentorId = route.params.id
     const response = await fetch(`http://127.0.0.1:8000/mentoring/mentors/${mentorId}`)
@@ -149,7 +154,16 @@ onMounted(async () => {
       throw new Error('Mentor nije pronađen')
     }
     mentor.value = await response.json()
+  } catch (err) {
+    error.value = err.message || 'Greška pri učitavanju profila mentora'
+  } finally {
+    loading.value = false
+  }
+}
 
+onMounted(async () => {
+  await fetchMentor()
+  try {
     // Provjeri da li je korisnik studentica
     const token = localStorage.getItem('token')
     if (token) {
@@ -164,11 +178,8 @@ onMounted(async () => {
       const students = await studentCheck.json()
       isStudent.value = students.some(s => s.email === meData.email)
     }
-
   } catch (err) {
-    error.value = err.message || 'Greška pri učitavanju profila mentora'
-  } finally {
-    loading.value = false
+    // ignore student check errors silently
   }
 })
 </script>

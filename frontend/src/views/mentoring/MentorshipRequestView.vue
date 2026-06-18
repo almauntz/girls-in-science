@@ -32,8 +32,13 @@
     </div>
 
     <!-- Forma -->
-    
-    <div class="rounded-xl p-6 mb-4 bg-white" style="border: 3px solid #d8b4fe;">
+
+    <div v-if="mentor && !mentor.is_available" class="rounded-xl p-6 mb-4 bg-red-50" style="border: 3px solid #fca5a5;">
+      <p class="text-center text-red-700 font-semibold">Nažalost, mentorica je trenutno popunjena i ne prihvata nove zahtjeve.</p>
+      <p class="text-center text-sm text-gray-600 mt-2">Možete odabrati drugu mentoricu ili pokušati kasnije.</p>
+    </div>
+
+    <div v-else class="rounded-xl p-6 mb-4 bg-white" style="border: 3px solid #d8b4fe;">
 
       <div class="flex gap-4">
         <div class="flex gap-4">
@@ -154,6 +159,12 @@ function handleFileSelect(event) {
 
 // Funkcija 2: Slanje zahtjeva na server
 async function submitRequest() {
+  // Prevent sending if mentor became unavailable
+  if (mentor.value && !mentor.value.is_available) {
+    buttonState.value = 'error'
+    setTimeout(() => { buttonState.value = 'idle' }, 3000)
+    return
+  }
   buttonState.value = 'loading' // Postavljanje loading stanja
   try {
     const token = localStorage.getItem('token')
