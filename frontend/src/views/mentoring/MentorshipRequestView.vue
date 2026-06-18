@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen p-6" style="background: linear-gradient(to right, #d0c8f9, #F9DBE7); margin: 0;">
+  <div class="min-h-screen p-6" style="background: linear-gradient(to right, #d0c8f9, #F9DBE7); margin: -2rem; width: calc(100vw); position: relative; left: 50%; transform: translateX(-50%);">
   <div class="max-w-2xl mx-auto">
 
     <!-- Header -->
