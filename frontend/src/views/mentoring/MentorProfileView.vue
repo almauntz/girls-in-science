@@ -1,5 +1,6 @@
 <template>
-  <div class="max-w-2xl mx-auto p-4">
+  <div class="min-h-screen p-6" style="background: linear-gradient(to right, #d0c8f9, #F9DBE7); margin: -2rem; width: calc(100vw); position: relative; left: 50%; transform: translateX(-50%);">
+  <div class="max-w-2xl mx-auto">
 
     <!-- Dugme Nazad -->
     <button @click="router.back()" class="mb-4 text-sm text-blue-600 hover:underline">
@@ -12,7 +13,7 @@
     <div v-else-if="mentor">
 
       <!-- Header -->
-      <div class="border rounded-xl p-6 mb-4">
+      <div class="rounded-xl p-6 mb-4 bg-white" style="border: 3px solid #d8b4fe;">
         <div class="flex items-start justify-between">
           <div class="flex items-center gap-4">
             <img :src="mentor.avatar_url || 'https://placehold.co/80x80'"
@@ -39,9 +40,9 @@
           </a>
         </div>
 
-        <!-- Popunjenost i format -->
-        <div class="flex gap-4 mt-4">
-          <div class="border rounded-lg px-4 py-2 text-sm flex items-center gap-2">
+            <!-- Popunjenost i format -->
+            <div class="flex gap-4 mt-4">
+              <div class="rounded-lg px-4 py-2 text-sm flex items-center gap-2 bg-white" style="border: 3px solid #d8b4fe;">
             <!-- Zeleni krug ako ima mjesta, crveni ako je puno -->
             <span
               :class="isFull ? 'bg-red-500' : 'bg-green-500'"
@@ -54,7 +55,8 @@
               {{ mentor.current_applications_count }}/{{ mentor.max_mentees }}
             </span>
           </div>
-          <div class="border rounded-lg px-4 py-2 text-sm">
+          <button @click="fetchMentor" class="self-center text-sm text-gray-600 hover:text-gray-800 ml-2">Osvježi</button>
+          <div class="rounded-lg px-4 py-2 text-sm bg-white" style="border: 3px solid #d8b4fe;">
             <span class="text-gray-500">Format sesije: </span>
             <span class="font-semibold">{{ mentor.preferred_session_format || 'Online' }}</span>
           </div>
@@ -62,13 +64,13 @@
       </div>
 
       <!-- Biografija -->
-      <div class="border rounded-xl p-6 mb-4">
+      <div class="rounded-xl p-6 mb-4 bg-white" style="border: 3px solid #d8b4fe;">
         <h2 class="font-bold text-lg mb-2">Biografija</h2>
         <p class="text-gray-700">{{ mentor.bio || 'Nema biografije.' }}</p>
       </div>
 
       <!-- Timeline iskustva -->
-      <div class="border rounded-xl p-6 mb-6">
+      <div class="rounded-xl p-6 mb-6 bg-white" style="border: 3px solid #d8b4fe;">
         <div class="flex justify-between items-center mb-4">
           <h2 class="font-bold text-lg">Iskustvo</h2>
           <div class="flex items-center gap-2">
@@ -90,20 +92,30 @@
         </div>
       </div>
 
-      <button
-  :disabled="!mentor.is_available || requestSent"
-  @click="router.push(`/mentoring/${mentor.id}/zahtjev`)"
-  :class="requestSent
-    ? 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'
-    : mentor.is_available
-      ? 'w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition'
-      : 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'"
->
-  {{ requestSent ? 'Status: Na čekanju' : mentor.is_available ? 'Zatraži mentorstvo' : 'Nedostupno' }}
-</button>
+    <div v-if="isStudent">
+      <div v-if="mentor && !mentor.is_available" class="w-full p-3 mb-3 rounded-xl bg-red-50 text-red-700 text-center font-semibold">
+        Mentorica je trenutno popunjena — molimo odaberite drugu mentoricu.
+      </div>
+  <button
+    :disabled="!mentor.is_available || requestSent"
+    @click="router.push(`/mentoring/${mentor.id}/zahtjev`)"
+    :class="requestSent
+      ? 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'
+      : mentor.is_available
+        ? 'w-full bg-purple-600 text-white py-3 rounded-xl font-semibold hover:bg-purple-700 transition'
+        : 'w-full bg-gray-300 text-gray-500 py-3 rounded-xl font-semibold cursor-not-allowed'"
+  >
+    {{ requestSent ? 'Status: Na čekanju' : mentor.is_available ? 'Zatraži mentorstvo' : 'Nedostupno' }}
+  </button>
+</div>
+<div v-else class="w-full border rounded-xl py-3 text-center text-gray-400 text-sm bg-gray-100">
+  Samo registrovane studentice mogu zatražiti mentorstvo.
+</div>
 
     </div>
   </div>
+  </div>
+  
 </template>
 
 <script setup>
@@ -117,33 +129,55 @@ const mentor = ref(null)
 const loading = ref(true)
 const error = ref(null)
 const requestSent = ref(false) 
+const isStudent = ref(false)
 
-// Dijeli field_of_expertise po zarezu u više tagova
+
 const expertiseTags = computed(() => {
   if (!mentor.value?.field_of_expertise) return []
   return mentor.value.field_of_expertise.split(',').map(t => t.trim())
 })
 
-// Je li mentor potpuno popunjen
+
 const isFull = computed(() => {
   if (!mentor.value) return false
   return mentor.value.current_applications_count >= mentor.value.max_mentees
 })
-
-onMounted(async () => {
+async function fetchMentor() {
+  loading.value = true
+  error.value = null
   try {
     const mentorId = route.params.id
     const response = await fetch(`http://127.0.0.1:8000/mentoring/mentors/${mentorId}`)
-    
     if (!response.ok) {
       throw new Error('Mentor nije pronađen')
     }
-    
     mentor.value = await response.json()
   } catch (err) {
     error.value = err.message || 'Greška pri učitavanju profila mentora'
   } finally {
     loading.value = false
+  }
+}
+
+onMounted(async () => {
+  await fetchMentor()
+  try {
+    
+    const token = localStorage.getItem('token')
+    if (token) {
+      const me = await fetch('http://127.0.0.1:8000/me', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const meData = await me.json()
+
+      const studentCheck = await fetch('http://127.0.0.1:8000/api/v1/students/', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      const students = await studentCheck.json()
+      isStudent.value = students.some(s => s.email === meData.email)
+    }
+  } catch (err) {
+    
   }
 })
 </script>

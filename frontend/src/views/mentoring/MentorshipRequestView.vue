@@ -1,5 +1,6 @@
 <template>
-  <div class="max-w-2xl mx-auto p-4">
+  <div class="min-h-screen p-6" style="background: linear-gradient(to right, #d0c8f9, #F9DBE7); margin: -2rem; width: calc(100vw); position: relative; left: 50%; transform: translateX(-50%);">
+  <div class="max-w-2xl mx-auto">
 
     <!-- Header -->
   <button @click="router.back()" class="mb-4 text-sm text-blue-600 hover:underline">
@@ -7,7 +8,8 @@
   </button>
 
     <!-- Info o mentorici -->
-    <div class="border rounded-xl p-6 mb-4" v-if="mentor">
+   
+    <div class="rounded-xl p-6 mb-4 bg-white" style="border: 3px solid #d8b4fe;" v-if="mentor">
       <div class="flex items-center gap-4">
         <img
           :src="mentor.profile_img_url || 'https://placehold.co/80x80'"
@@ -30,7 +32,13 @@
     </div>
 
     <!-- Forma -->
-    <div class="border rounded-xl p-6 mb-4">
+
+    <div v-if="mentor && !mentor.is_available" class="rounded-xl p-6 mb-4 bg-red-50" style="border: 3px solid #fca5a5;">
+      <p class="text-center text-red-700 font-semibold">Nažalost, mentorica je trenutno popunjena i ne prihvata nove zahtjeve.</p>
+      <p class="text-center text-sm text-gray-600 mt-2">Možete odabrati drugu mentoricu ili pokušati kasnije.</p>
+    </div>
+
+    <div v-else class="rounded-xl p-6 mb-4 bg-white" style="border: 3px solid #d8b4fe;">
 
       <div class="flex gap-4">
         <div class="flex gap-4">
@@ -45,7 +53,7 @@
     <textarea
       v-model="skills"
       placeholder="Vještine - Koje vještine ili znanja želite unaprijediti?"
-      class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm resize-none h-24 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-gray-50 placeholder-gray-400"
+      class="w-full border-2 border-gray-200 rounded-xl p-3 text-sm resize-none h-24 mb-3 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-gray-50 placeholder-gray-400"
     ></textarea>
   </div>
         </div>
@@ -98,6 +106,7 @@
 
     </div>
   </div>
+  </div>
 </template>
 
 <script setup>
@@ -114,7 +123,7 @@ const cvFile = ref(null)
 const fileError = ref('')
 const agreed = ref(false)
 
-// 1. ZAHTJEV: Loading varijable (buttonState za dugme, isLoading za generalno učitavanje)
+
 const buttonState = ref('idle') 
 const isLoadingMentor = ref(false) 
 
@@ -130,9 +139,9 @@ const isFormValid = computed(() => {
     agreed.value
 })
 
-// 2. ZAHTJEV: Sve funkcije su potpuno zasebne i imenovane
 
-// Funkcija 1: Rukovanje fajlom
+
+
 function handleFileSelect(event) {
   const file = event.target.files[0]
   fileError.value = ''
@@ -148,9 +157,14 @@ function handleFileSelect(event) {
   cvFile.value = file
 }
 
-// Funkcija 2: Slanje zahtjeva na server
 async function submitRequest() {
-  buttonState.value = 'loading' // Postavljanje loading stanja
+  
+  if (mentor.value && !mentor.value.is_available) {
+    buttonState.value = 'error'
+    setTimeout(() => { buttonState.value = 'idle' }, 3000)
+    return
+  }
+  buttonState.value = 'loading' 
   try {
     const token = localStorage.getItem('token')
     console.log('Token:', token)
@@ -181,7 +195,7 @@ async function submitRequest() {
   }
 }
 
-// Funkcija 3: Preuzimanje podataka o mentoru (Sada je potpuno zasebna!)
+
 async function fetchMentorData() {
   isLoadingMentor.value = true
   try {
@@ -191,11 +205,11 @@ async function fetchMentorData() {
   } catch (e) {
     console.error('Greška pri učitavanju mentora')
   } finally {
-    isLoadingMentor.value = false // Gasi loading bez obzira da li je uspjelo ili puklo
+    isLoadingMentor.value = false 
   }
 }
 
-// Kada se komponenta učita, samo pozivamo našu zasebnu funkciju
+
 onMounted(() => {
   fetchMentorData()
 })
