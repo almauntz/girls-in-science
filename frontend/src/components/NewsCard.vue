@@ -12,7 +12,7 @@
         {{ category.name }}
       </span>
     </div>
-    <h2 class="font-semibold text-gray-900 mb-1">{{ newsPost.title }}</h2>
+    <h2 class="font-semibold text-gray-900 mb-1 break-words">{{ newsPost.title }}</h2>
     <p class="text-sm text-gray-500">{{ formatDate(newsPost.created_at) }}</p>
   </div>
 </template>
