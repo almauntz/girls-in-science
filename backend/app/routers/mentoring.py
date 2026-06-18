@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.core.security import get_current_user
+from app.models.mentor import Mentor, ApplicationStatus
 from app.models.user import User
 from app.models.mentor import Mentor
 from app.models.profile import Profile
@@ -195,6 +196,68 @@ def get_mentor_profile(id: int, db: Session = Depends(get_db)):
     )
 
 
+class MentorApplicationStatusOut(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    status: str
+    rejection_reason: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/my-application", response_model=MentorApplicationStatusOut)
+def get_my_mentor_application(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    mentor = db.query(Mentor).filter(Mentor.email == current_user.email).first()
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nemate prijavu za mentoricu."
+        )
+    status_value = mentor.status.value if hasattr(mentor.status, "value") else str(mentor.status)
+    return MentorApplicationStatusOut(
+        id=mentor.id,
+        first_name=mentor.first_name,
+        last_name=mentor.last_name,
+        status=status_value,
+        rejection_reason=mentor.rejection_reason
+    )
+
+
+@router.patch("/my-application/resubmit", response_model=MentorApplicationStatusOut)
+def resubmit_my_mentor_application(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    mentor = db.query(Mentor).filter(Mentor.email == current_user.email).first()
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nemate prijavu za mentoricu."
+        )
+    if mentor.status != ApplicationStatus.REJECTED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Samo odbijena prijava može biti ponovo poslana."
+        )
+    mentor.status = ApplicationStatus.PENDING
+    mentor.is_approved = False
+    mentor.rejection_reason = None
+    db.commit()
+    db.refresh(mentor)
+
+    status_value = mentor.status.value if hasattr(mentor.status, "value") else str(mentor.status)
+    return MentorApplicationStatusOut(
+        id=mentor.id,
+        first_name=mentor.first_name,
+        last_name=mentor.last_name,
+        status=status_value,
+        rejection_reason=mentor.rejection_reason
+    )
 
 @router.get("/my-applications", response_model=list[MentorshipRequestOut])
 def get_mentor_applications(

@@ -82,6 +82,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/mentoring/my-application-status',
+    name: 'my-mentor-application-status',
+    component: () => import('../views/mentoring/MyApplicationStatusView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/mentoring/:id',
     name: 'mentor-profil',
     component: () => import('../views/mentoring/MentorProfileView.vue')
@@ -160,25 +166,19 @@ const routes = [
     path: '/admin/users',
     name: 'admin-users',
     component: () => import('../views/profiles/AdminView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/admin/mentor-applications',
     name: 'admin-mentor-applications',
     component: () => import('../views/admin/MentorApplicationsView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/admin/mentor-applications/:id',
     name: 'admin-mentor-applications-detail',
     component: () => import('../views/admin/MentorApplicationDetailView.vue'),
-    meta: { requiresAuth: true }
-  },
-
-  {
-    path: '/unauthorized',
-    name: 'unauthorized',
-    component: () => import('../views/UnauthorizedView.vue')
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
 ]
 
@@ -197,6 +197,8 @@ router.beforeEach((to, from, next) => {
     next('/unauthorized')
   } else if (to.meta.guestOnly && isLoggedIn) {
     next('/')
+  } else if (to.path === '/mentoring' && userRole === 'admin') {
+    next('/admin/mentor-applications')
   } else {
     next()
   }
