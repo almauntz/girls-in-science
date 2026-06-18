@@ -35,18 +35,23 @@
 <script>
 export default {
   name: 'NavBar',
-  computed: {
-    isLoggedIn() {
-      return !!localStorage.getItem('token')
-    },
-    username() {
-      return localStorage.getItem('username') || 'Profil'
+  data() {
+    return {
+      isLoggedIn: !!localStorage.getItem('token'),
+      username: localStorage.getItem('username') || 'Profil'
+    }
+  },
+  watch: {
+    $route() {
+      this.isLoggedIn = !!localStorage.getItem('token')
+      this.username = localStorage.getItem('username') || 'Profil'
     }
   },
   methods: {
     logout() {
       localStorage.removeItem('token')
       localStorage.removeItem('username')
+      localStorage.removeItem('user_role')
       this.$router.push('/login')
     }
   }

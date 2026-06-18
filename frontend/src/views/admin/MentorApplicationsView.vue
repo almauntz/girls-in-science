@@ -2,85 +2,51 @@
   <div class="min-h-screen bg-gray-50 py-8 px-4">
     <div class="max-w-5xl mx-auto">
 
-      <!-- Header -->
-      <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold text-gray-800 tracking-tight">Admin Panel</h1>
         <span v-if="userRole === 'admin'" class="border border-black px-2 py-1 text-xs font-semibold rounded">ADMIN</span>
       </div>
 
-      <!-- Loading -->
       <div v-if="loading" class="text-center py-16 text-gray-400">
         Učitavanje...
       </div>
 
-      <!-- Error -->
       <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-600 rounded-lg px-4 py-3 mb-6">
         {{ error }}
       </div>
 
       <template v-else>
-        <!-- Zahtjevi na čekanju -->
-        <section class="mb-10">
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Zahtjevi na čekanju</h2>
-          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="bg-gray-100 text-gray-500 text-xs uppercase tracking-wider">
-                  <th class="text-left px-5 py-3">Ime</th>
-                  <th class="text-left px-5 py-3">Oblast</th>
-                  <th class="text-left px-5 py-3">Status</th>
-                  <th class="text-left px-5 py-3">Akcija</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="pending.length === 0">
-                  <td colspan="4" class="px-5 py-6 text-center text-gray-400">Nema zahtjeva na čekanju</td>
-                </tr>
-                <tr
-                  v-for="app in pending"
-                  :key="app.id"
-                  :class="['border-t border-gray-100 transition-all duration-500', rowFlash[app.id] || 'hover:bg-gray-50']"
-                >
-                  <td class="px-5 py-3 font-medium text-gray-800">{{ app.first_name }} {{ app.last_name }}</td>
-                  <td class="px-5 py-3 text-gray-600">{{ app.field_of_expertise }}</td>
-                  <td class="px-5 py-3">
-                    <span :class="['text-xs font-semibold px-2.5 py-0.5 rounded-full transition-all duration-500', statusBadgeClass(app.status)]">
-                      {{ statusLabel(app.status) }}
-                    </span>
-                  </td>
-                  <td class="px-5 py-3">
-                    <div class="flex items-center gap-2">
-                      <button
-                        @click="pregledajPrijavu(app.id)"
-                        class="flex items-center gap-1 text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-gray-600"
-                      >
-                        🔍 Pregledaj
-                      </button>
-                      <button
-                        @click="approveApplication(app.id)"
-                        :disabled="actionLoading === app.id || app.status !== 'PENDING'"
-                        class="text-xs px-3 py-1.5 bg-white border border-black text-black rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
-                      >
-                        ✓
-                      </button>
-                      <button
-                        @click="rejectApplication(app.id)"
-                        :disabled="actionLoading === app.id || app.status !== 'PENDING'"
-                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
 
-        <!-- Odobrene mentorice -->
-        <section class="mb-10">
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Odobrene mentorice</h2>
+        <div class="flex gap-1 mb-6 border-b border-gray-200">
+          <button
+            @click="mainTab = 'mentorice'"
+            :class="['px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors',
+                     mainTab === 'mentorice' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-gray-600']"
+          >
+            Mentorice
+          </button>
+          <button
+            @click="mainTab = 'studentice'"
+            :class="['px-5 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors',
+                     mainTab === 'studentice' ? 'border-black text-black' : 'border-transparent text-gray-400 hover:text-gray-600']"
+          >
+            Studentice
+          </button>
+        </div>
+
+        <div class="flex gap-2 mb-6">
+          <button
+            v-for="t in subTabs"
+            :key="t.key"
+            @click="setSubTab(t.key)"
+            :class="['text-xs font-semibold px-3 py-1.5 rounded-full transition-colors',
+                     activeSubTab === t.key ? 'bg-black text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200']"
+          >
+            {{ t.label }} ({{ countFor(t.key) }})
+          </button>
+        </div>
+
+        <section v-if="mainTab === 'mentorice'">
           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <table class="w-full text-sm">
               <thead>
@@ -92,11 +58,11 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="approved.length === 0">
-                  <td colspan="4" class="px-5 py-6 text-center text-gray-400">Nema odobrenih mentorica</td>
+                <tr v-if="currentMentorList.length === 0">
+                  <td colspan="4" class="px-5 py-6 text-center text-gray-400">{{ emptyMessage }}</td>
                 </tr>
                 <tr
-                  v-for="app in approved"
+                  v-for="app in currentMentorList"
                   :key="app.id"
                   class="border-t border-gray-100 hover:bg-gray-50 transition-colors"
                 >
@@ -115,12 +81,35 @@
                       >
                         🔍 Pregledaj
                       </button>
-                      <button
-                        @click="deleteApplication(app.id)"
-                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-                      >
-                        Obriši
-                      </button>
+
+                      <template v-if="mentorSubTab === 'PENDING'">
+                        <button
+                          @click="approveMentor(app.id)"
+                          :disabled="actionLoading === `mentor-${app.id}`"
+                          class="text-xs px-3 py-1.5 bg-white border border-black text-black rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        >✓</button>
+                        <button
+                          @click="rejectMentor(app.id)"
+                          :disabled="actionLoading === `mentor-${app.id}`"
+                          class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                        >✕</button>
+                      </template>
+
+                      <template v-else-if="mentorSubTab === 'DELETED'">
+                        <button
+                          @click="restoreMentor(app.id)"
+                          :disabled="actionLoading === `mentor-${app.id}`"
+                          class="text-xs px-3 py-1.5 bg-white border border-black text-black rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        >↺ Vrati</button>
+                      </template>
+
+                      <template v-else>
+                        <button
+                          @click="deleteMentor(app.id)"
+                          :disabled="actionLoading === `mentor-${app.id}`"
+                          class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                        >Obriši</button>
+                      </template>
                     </div>
                   </td>
                 </tr>
@@ -129,153 +118,28 @@
           </div>
         </section>
 
-        <!-- Odbijene mentorice -->
-        <section>
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Odbijene mentorice</h2>
+        <section v-else>
           <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
             <table class="w-full text-sm">
               <thead>
                 <tr class="bg-gray-100 text-gray-500 text-xs uppercase tracking-wider">
                   <th class="text-left px-5 py-3">Ime</th>
-                  <th class="text-left px-5 py-3">Oblast</th>
+                  <th class="text-left px-5 py-3">Email</th>
+                  <th class="text-left px-5 py-3">Fakultet</th>
                   <th class="text-left px-5 py-3">Status</th>
                   <th class="text-left px-5 py-3">Akcija</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="rejected.length === 0">
-                  <td colspan="4" class="px-5 py-6 text-center text-gray-400">Nema odbijenih mentorica</td>
+                <tr v-if="currentStudentList.length === 0">
+                  <td colspan="5" class="px-5 py-6 text-center text-gray-400">{{ emptyMessage }}</td>
                 </tr>
                 <tr
-                  v-for="app in rejected"
+                  v-for="app in currentStudentList"
                   :key="app.id"
                   class="border-t border-gray-100 hover:bg-gray-50 transition-colors"
                 >
                   <td class="px-5 py-3 font-medium text-gray-800">{{ app.first_name }} {{ app.last_name }}</td>
-                  <td class="px-5 py-3 text-gray-600">{{ app.field_of_expertise }}</td>
-                  <td class="px-5 py-3">
-                    <span :class="['text-xs font-semibold px-2.5 py-0.5 rounded-full', statusBadgeClass(app.status)]">
-                      {{ statusLabel(app.status) }}
-                    </span>
-                  </td>
-                  <td class="px-5 py-3">
-                    <div class="flex items-center gap-2">
-                      <button
-                        @click="pregledajPrijavu(app.id)"
-                        class="flex items-center gap-1 text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-gray-600"
-                      >
-                        🔍 Pregledaj
-                      </button>
-                      <button
-                        @click="deleteApplication(app.id)"
-                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors"
-                      >
-                        Obriši
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- ======================= -->
-        <!-- STUDENT APLIKACIJE       -->
-        <!-- ======================= -->
-
-        <!-- Student - Zahtjevi na čekanju -->
-        <section class="mb-10 mt-16 pt-8 border-t-2 border-gray-300">
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Studentice - Zahtjevi na čekanju</h2>
-          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="bg-gray-100 text-gray-500 text-xs uppercase tracking-wider">
-                  <th class="text-left px-5 py-3">Ime</th>
-                  <th class="text-left px-5 py-3">Email</th>
-                  <th class="text-left px-5 py-3">Fakultet</th>
-                  <th class="text-left px-5 py-3">Status</th>
-                  <th class="text-left px-5 py-3">Akcija</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="studentPending.length === 0">
-                  <td colspan="5" class="px-5 py-6 text-center text-gray-400">Nema zahtjeva na čekanju</td>
-                </tr>
-                <tr
-                  v-for="app in studentPending"
-                  :key="`student-${app.id}`"
-                  :class="['border-t border-gray-100 transition-all duration-500', studentRowFlash[app.id] || 'hover:bg-gray-50']"
-                >
-                  <td class="px-5 py-3 font-medium text-gray-800">{{ app.first_name }} {{ app.last_name }}</td>
-                  <td class="px-5 py-3 text-gray-600">{{ app.email }}</td>
-                  <td class="px-5 py-3 text-gray-600">{{ app.faculty }}</td>
-                  <td class="px-5 py-3">
-                    <span :class="['text-xs font-semibold px-2.5 py-0.5 rounded-full transition-all duration-500', statusBadgeClass(app.status)]">
-                      {{ statusLabel(app.status) }}
-                    </span>
-                  </td>
-                  <td class="px-5 py-3">
-                    <div class="flex items-center gap-2">
-                      <button
-                        @click="openDetailModal(app.id)"
-                        class="flex items-center gap-1 text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-gray-600"
-                      >
-                        🔍 Pregledaj
-                      </button>
-                      <button
-                        @click="approveStudent(app.id)"
-                        :disabled="actionLoading === `student-${app.id}`"
-                        class="text-xs px-3 py-1.5 bg-white border border-black text-black rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
-                      >
-                        ✓
-                      </button>
-                      <button
-                        @click="rejectStudent(app.id)"
-                        :disabled="actionLoading === `student-${app.id}`"
-                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
-                      >
-                        ✕
-                      </button>
-                      <button
-                        @click="openDeleteConfirm(app.id)"
-                        :disabled="actionLoading === `student-${app.id}`"
-                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
-                      >
-                        Obriši
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Student - Odobrene -->
-        <section class="mb-10">
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Studentice - Odobrene</h2>
-          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="bg-gray-100 text-gray-500 text-xs uppercase tracking-wider">
-                  <th class="text-left px-5 py-3">Ime</th>
-                  <th class="text-left px-5 py-3">Email</th>
-                  <th class="text-left px-5 py-3">Fakultet</th>
-                  <th class="text-left px-5 py-3">Status</th>
-                  <th class="text-left px-5 py-3">Akcija</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="studentApproved.length === 0">
-                  <td colspan="5" class="px-5 py-6 text-center text-gray-400">Nema odobrenih studentica</td>
-                </tr>
-                <tr
-                  v-for="app in studentApproved"
-                  :key="`student-${app.id}`"
-                  class="border-t border-gray-100 hover:bg-gray-50 transition-colors"
-                >
-                  <td class="px-5 py-3 font-medium text-gray-800">{{ app.first_name }} {{ app.last_name }}</td>
                   <td class="px-5 py-3 text-gray-600">{{ app.email }}</td>
                   <td class="px-5 py-3 text-gray-600">{{ app.faculty }}</td>
                   <td class="px-5 py-3">
@@ -291,67 +155,35 @@
                       >
                         🔍 Pregledaj
                       </button>
-                      <button
-                        @click="openDeleteConfirm(app.id)"
-                        :disabled="actionLoading === `student-${app.id}`"
-                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
-                      >
-                        Obriši
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
 
-        <!-- Student - Odbijene -->
-        <section class="mb-10">
-          <h2 class="text-xs font-semibold text-gray-400 uppercase tracking-widest mb-3">Studentice - Odbijene</h2>
-          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="bg-gray-100 text-gray-500 text-xs uppercase tracking-wider">
-                  <th class="text-left px-5 py-3">Ime</th>
-                  <th class="text-left px-5 py-3">Email</th>
-                  <th class="text-left px-5 py-3">Fakultet</th>
-                  <th class="text-left px-5 py-3">Status</th>
-                  <th class="text-left px-5 py-3">Akcija</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-if="studentRejected.length === 0">
-                  <td colspan="5" class="px-5 py-6 text-center text-gray-400">Nema odbijenih studentica</td>
-                </tr>
-                <tr
-                  v-for="app in studentRejected"
-                  :key="`student-${app.id}`"
-                  class="border-t border-gray-100 hover:bg-gray-50 transition-colors"
-                >
-                  <td class="px-5 py-3 font-medium text-gray-800">{{ app.first_name }} {{ app.last_name }}</td>
-                  <td class="px-5 py-3 text-gray-600">{{ app.email }}</td>
-                  <td class="px-5 py-3 text-gray-600">{{ app.faculty }}</td>
-                  <td class="px-5 py-3">
-                    <span :class="['text-xs font-semibold px-2.5 py-0.5 rounded-full', statusBadgeClass(app.status)]">
-                      {{ statusLabel(app.status) }}
-                    </span>
-                  </td>
-                  <td class="px-5 py-3">
-                    <div class="flex items-center gap-2">
-                      <button
-                        @click="openDetailModal(app.id)"
-                        class="flex items-center gap-1 text-xs px-3 py-1.5 border border-gray-300 rounded hover:bg-gray-50 transition-colors text-gray-600"
-                      >
-                        🔍 Pregledaj
-                      </button>
-                      <button
-                        @click="openDeleteConfirm(app.id)"
-                        :disabled="actionLoading === `student-${app.id}`"
-                        class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
-                      >
-                        Obriši
-                      </button>
+                      <template v-if="studentSubTab === 'PENDING'">
+                        <button
+                          @click="approveStudent(app.id)"
+                          :disabled="actionLoading === `student-${app.id}`"
+                          class="text-xs px-3 py-1.5 bg-white border border-black text-black rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        >✓</button>
+                        <button
+                          @click="rejectStudent(app.id)"
+                          :disabled="actionLoading === `student-${app.id}`"
+                          class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                        >✕</button>
+                      </template>
+
+                      <template v-else-if="studentSubTab === 'DELETED'">
+                        <button
+                          @click="restoreStudent(app.id)"
+                          :disabled="actionLoading === `student-${app.id}`"
+                          class="text-xs px-3 py-1.5 bg-white border border-black text-black rounded hover:bg-gray-50 transition-colors disabled:opacity-50"
+                        >↺ Vrati</button>
+                      </template>
+
+                      <template v-else>
+                        <button
+                          @click="deleteStudent(app.id)"
+                          :disabled="actionLoading === `student-${app.id}`"
+                          class="text-xs px-3 py-1.5 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50"
+                        >Obriši</button>
+                      </template>
                     </div>
                   </td>
                 </tr>
@@ -421,25 +253,6 @@
           </div>
         </div>
 
-        <!-- Delete Confirm Modal -->
-        <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div class="bg-white rounded-lg shadow-xl max-w-sm w-full">
-            <div class="px-6 py-4 border-b border-gray-200">
-              <h2 class="text-lg font-bold text-gray-800">Potvrdi brisanje</h2>
-            </div>
-            <div class="px-6 py-4">
-              <p class="text-gray-600">Jeste li sigurni da želite obrisati ovu studenticu? Ova akcija se ne može poništiti.</p>
-            </div>
-            <div class="border-t border-gray-200 px-6 py-4 flex justify-end gap-2">
-              <button @click="showDeleteConfirm = false" class="px-4 py-2 bg-gray-100 text-gray-800 rounded hover:bg-gray-200 transition-colors">
-                Poništi
-              </button>
-              <button @click="confirmDelete" :disabled="actionLoading" class="px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition-colors disabled:opacity-50">
-                Obriši
-              </button>
-            </div>
-          </div>
-        </div>
       </template>
     </div>
   </div>
@@ -452,57 +265,61 @@ import { useRouter } from 'vue-router'
 const BASE_URL = 'http://127.0.0.1:8000'
 
 const router = useRouter()
-const applications = ref([])
 const loading = ref(true)
 const error = ref(null)
 const actionLoading = ref(null)
-const rowFlash = ref({})
 
-const userRole = computed(() => {
-  const token = localStorage.getItem('token')
-  if (!token) return null
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
-    return payload.role
-  } catch {
-    return null
-  }
+const userRole = computed(() => localStorage.getItem('user_role'))
+
+const mainTab = ref('mentorice')
+const mentorSubTab = ref('PENDING')
+const studentSubTab = ref('PENDING')
+
+const subTabs = [
+  { key: 'PENDING', label: 'Na čekanju' },
+  { key: 'APPROVED', label: 'Prihvaćene' },
+  { key: 'REJECTED', label: 'Odbijene' },
+  { key: 'DELETED', label: 'Obrisane' },
+]
+
+const activeSubTab = computed(() =>
+  mainTab.value === 'mentorice' ? mentorSubTab.value : studentSubTab.value
+)
+
+function setSubTab(key) {
+  if (mainTab.value === 'mentorice') mentorSubTab.value = key
+  else studentSubTab.value = key
+}
+
+function countFor(key) {
+  const source = mainTab.value === 'mentorice' ? mentorsByStatus.value : studentsByStatus.value
+  return (source[key] || []).length
+}
+
+const emptyMessage = computed(() => {
+  const labels = { PENDING: 'na čekanju', APPROVED: 'prihvaćenih', REJECTED: 'odbijenih', DELETED: 'obrisanih' }
+  const subject = mainTab.value === 'mentorice' ? 'mentorica' : 'studentica'
+  return `Nema ${labels[activeSubTab.value]} ${subject}`
 })
 
-const pending = computed(() => applications.value.filter(a => a.status === 'PENDING'))
-const approved = computed(() => applications.value.filter(a => a.status === 'APPROVED'))
-const rejected = computed(() => applications.value.filter(a => a.status === 'REJECTED'))
+const mentorsByStatus = ref({ PENDING: [], APPROVED: [], REJECTED: [], DELETED: [] })
+const studentsByStatus = ref({ PENDING: [], APPROVED: [], REJECTED: [], DELETED: [] })
 
-// Student aplikacije
-const students = ref([])
-const studentPending = computed(() => students.value.filter(s => s.status === 'PENDING'))
-const studentApproved = computed(() => students.value.filter(s => s.status === 'APPROVED'))
-const studentRejected = computed(() => students.value.filter(s => s.status === 'REJECTED'))
-const studentRowFlash = ref({})
-
-// Modal state
-const showDetailModal = ref(false)
-const selectedStudent = ref(null)
-const showDeleteConfirm = ref(false)
-const deleteConfirmId = ref(null)
+const currentMentorList = computed(() => mentorsByStatus.value[mentorSubTab.value] || [])
+const currentStudentList = computed(() => studentsByStatus.value[studentSubTab.value] || [])
 
 function statusBadgeClass(status) {
   if (status === 'APPROVED') return 'bg-green-100 text-green-700'
   if (status === 'REJECTED') return 'bg-red-100 text-red-700'
+  if (status === 'DELETED') return 'bg-gray-200 text-gray-500'
   return 'bg-yellow-100 text-yellow-700'
 }
 
 function statusLabel(status) {
   if (status === 'APPROVED') return 'OK ✓'
   if (status === 'REJECTED') return 'Odbijena'
+  if (status === 'DELETED') return 'Obrisana'
   return 'Čeka'
-}
-
-function flashRow(id, type) {
-  rowFlash.value[id] = type === 'APPROVED' ? 'bg-green-50' : 'bg-red-50'
-  setTimeout(() => {
-    delete rowFlash.value[id]
-  }, 1000)
 }
 
 function getToken() {
@@ -516,62 +333,36 @@ function authHeaders() {
   }
 }
 
-async function fetchAllApplications() {
-  try {
-    const res = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications?limit=100`, {
-      headers: authHeaders()
-    })
-    if (res.status === 401) {
-      router.push('/unauthorized')
-      return
-    }
-    const pendingData = await res.json()
-    
-    // Učitaj sve mentore
-    const allRes = await fetch(`${BASE_URL}/mentoring/mentors?limit=100`)
-    const allMentors = await allRes.json()
-    
-    // Filtriraj mentore koji nisu već u pending-u
-    const pendingIds = new Set(pendingData.map(m => m.id))
-    const approvedMentors = allMentors.filter(m => !pendingIds.has(m.id)).map(m => {
-      const nameParts = (m.full_name || '').trim().split(/\s+/)
-      const firstName = nameParts[0] || ''
-      const lastName = nameParts.slice(1).join(' ') || ''
-      return {
-        ...m,
-        first_name: firstName,
-        last_name: lastName,
-        status: 'APPROVED',
-        is_approved: true
-      }
-    })
+async function fetchMentors() {
+  const statuses = ['PENDING', 'APPROVED', 'REJECTED', 'DELETED']
+  const results = await Promise.all(
+    statuses.map(s =>
+      fetch(`${BASE_URL}/api/v1/admin/mentor-applications?status=${s}&limit=100`, { headers: authHeaders() })
+        .then(res => (res.ok ? res.json() : []))
+    )
+  )
+  statuses.forEach((s, i) => { mentorsByStatus.value[s] = results[i] })
+}
 
-    applications.value = [...pendingData, ...approvedMentors]
-  } catch (e) {
-    error.value = 'Greška pri učitavanju podataka.'
-  } finally {
-    loading.value = false
+function replaceMentorInLists(updated) {
+  Object.keys(mentorsByStatus.value).forEach(key => {
+    mentorsByStatus.value[key] = mentorsByStatus.value[key].filter(m => m.id !== updated.id)
+  })
+  if (mentorsByStatus.value[updated.status]) {
+    mentorsByStatus.value[updated.status].push(updated)
   }
 }
 
-async function approveApplication(id) {
-  actionLoading.value = id
+async function approveMentor(id) {
+  actionLoading.value = `mentor-${id}`
   error.value = null
   try {
     const res = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${id}/approve`, {
       method: 'PATCH',
       headers: authHeaders()
     })
-    if (res.ok) {
-      const updated = await res.json()
-      const idx = applications.value.findIndex(a => a.id === id)
-      if (idx !== -1) {
-        applications.value[idx] = updated
-        flashRow(id, 'APPROVED')
-      }
-    } else {
-      error.value = 'Greška pri odobravanju — server nije vratio uspješan odgovor.'
-    }
+    if (res.ok) replaceMentorInLists(await res.json())
+    else error.value = 'Greška pri odobravanju mentorice.'
   } catch (e) {
     error.value = 'Greška pri odobravanju. Provjerite konekciju.'
   } finally {
@@ -579,27 +370,17 @@ async function approveApplication(id) {
   }
 }
 
-async function rejectApplication(id) {
-  actionLoading.value = id
+async function rejectMentor(id) {
+  actionLoading.value = `mentor-${id}`
   error.value = null
   try {
     const res = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${id}/reject`, {
       method: 'PATCH',
       headers: authHeaders(),
-      body: JSON.stringify({
-        rejection_reason: 'Aplikacija je odbijena'
-      })
+      body: JSON.stringify({ rejection_reason: 'Aplikacija je odbijena' })
     })
-    if (res.ok) {
-      const updated = await res.json()
-      const idx = applications.value.findIndex(a => a.id === id)
-      if (idx !== -1) {
-        applications.value[idx] = updated
-        flashRow(id, 'REJECTED')
-      }
-    } else {
-      error.value = 'Greška pri odbijanju — server nije vratio uspješan odgovor.'
-    }
+    if (res.ok) replaceMentorInLists(await res.json())
+    else error.value = 'Greška pri odbijanju mentorice.'
   } catch (e) {
     error.value = 'Greška pri odbijanju. Provjerite konekciju.'
   } finally {
@@ -607,22 +388,38 @@ async function rejectApplication(id) {
   }
 }
 
-async function deleteApplication(id) {
-  if (!confirm('Jeste li sigurni da želite obrisati ovu mentoricu?')) return
+async function deleteMentor(id) {
+  actionLoading.value = `mentor-${id}`
+  error.value = null
   try {
     const res = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${id}`, {
       method: 'DELETE',
       headers: authHeaders()
     })
-    if (res.ok) {
-      applications.value = applications.value.filter(a => a.id !== id)
-    } else if (res.status === 401) {
-      router.push('/unauthorized')
-    } else {
-      error.value = 'Greška pri brisanju — server nije vratio uspješan odgovor.'
-    }
+    if (res.ok) replaceMentorInLists(await res.json())
+    else if (res.status === 401) router.push('/unauthorized')
+    else error.value = 'Greška pri brisanju mentorice.'
   } catch (e) {
     error.value = 'Greška pri brisanju. Provjerite konekciju.'
+  } finally {
+    actionLoading.value = null
+  }
+}
+
+async function restoreMentor(id) {
+  actionLoading.value = `mentor-${id}`
+  error.value = null
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/admin/mentor-applications/${id}/resubmit`, {
+      method: 'PATCH',
+      headers: authHeaders()
+    })
+    if (res.ok) replaceMentorInLists(await res.json())
+    else error.value = 'Greška pri vraćanju mentorice.'
+  } catch (e) {
+    error.value = 'Greška pri vraćanju. Provjerite konekciju.'
+  } finally {
+    actionLoading.value = null
   }
 }
 
@@ -630,35 +427,29 @@ function pregledajPrijavu(id) {
   router.push(`/admin/mentor-applications/${id}`)
 }
 
-// ========================================
-// STUDENT FUNKCIJE
-// ========================================
+async function fetchStudents() {
+  const endpointByStatus = {
+    PENDING: 'student-applications',
+    APPROVED: 'student-applications-approved',
+    REJECTED: 'student-applications-rejected',
+    DELETED: 'student-applications-deleted',
+  }
+  const statuses = Object.keys(endpointByStatus)
+  const results = await Promise.all(
+    statuses.map(s =>
+      fetch(`${BASE_URL}/api/v1/admin/${endpointByStatus[s]}?limit=100`, { headers: authHeaders() })
+        .then(res => (res.ok ? res.json() : []))
+    )
+  )
+  statuses.forEach((s, i) => { studentsByStatus.value[s] = results[i] })
+}
 
-async function fetchStudentApplications() {
-  try {
-    // Pending student aplikacije
-    const pendingRes = await fetch(`${BASE_URL}/api/v1/admin/student-applications?limit=100`, {
-      headers: authHeaders()
-    })
-    if (pendingRes.ok) {
-      const pendingData = await pendingRes.json()
-      
-      // Approved student aplikacije
-      const approvedRes = await fetch(`${BASE_URL}/api/v1/admin/student-applications-approved?limit=100`, {
-        headers: authHeaders()
-      })
-      const approvedData = approvedRes.ok ? await approvedRes.json() : []
-      
-      // Rejected student aplikacije
-      const rejectedRes = await fetch(`${BASE_URL}/api/v1/admin/student-applications-rejected?limit=100`, {
-        headers: authHeaders()
-      })
-      const rejectedData = rejectedRes.ok ? await rejectedRes.json() : []
-      
-      students.value = [...pendingData, ...approvedData, ...rejectedData]
-    }
-  } catch (e) {
-    console.error('Greška pri učitavanju student aplikacija:', e)
+function replaceStudentInLists(updated) {
+  Object.keys(studentsByStatus.value).forEach(key => {
+    studentsByStatus.value[key] = studentsByStatus.value[key].filter(s => s.id !== updated.id)
+  })
+  if (studentsByStatus.value[updated.status]) {
+    studentsByStatus.value[updated.status].push(updated)
   }
 }
 
@@ -670,19 +461,8 @@ async function approveStudent(id) {
       method: 'PATCH',
       headers: authHeaders()
     })
-    if (res.ok) {
-      const updated = await res.json()
-      const idx = students.value.findIndex(s => s.id === id)
-      if (idx !== -1) {
-        students.value[idx] = updated
-        studentRowFlash.value[id] = 'bg-green-50'
-        setTimeout(() => {
-          delete studentRowFlash.value[id]
-        }, 1000)
-      }
-    } else {
-      error.value = 'Greška pri odobravanju studentice — server nije vratio uspješan odgovor.'
-    }
+    if (res.ok) replaceStudentInLists(await res.json())
+    else error.value = 'Greška pri odobravanju studentice.'
   } catch (e) {
     error.value = 'Greška pri odobravanju. Provjerite konekciju.'
   } finally {
@@ -698,25 +478,51 @@ async function rejectStudent(id) {
       method: 'PATCH',
       headers: authHeaders()
     })
-    if (res.ok) {
-      const updated = await res.json()
-      const idx = students.value.findIndex(s => s.id === id)
-      if (idx !== -1) {
-        students.value[idx] = updated
-        studentRowFlash.value[id] = 'bg-red-50'
-        setTimeout(() => {
-          delete studentRowFlash.value[id]
-        }, 1000)
-      }
-    } else {
-      error.value = 'Greška pri odbijanju studentice — server nije vratio uspješan odgovor.'
-    }
+    if (res.ok) replaceStudentInLists(await res.json())
+    else error.value = 'Greška pri odbijanju studentice.'
   } catch (e) {
     error.value = 'Greška pri odbijanju. Provjerite konekciju.'
   } finally {
     actionLoading.value = null
   }
 }
+
+async function restoreStudent(id) {
+  actionLoading.value = `student-${id}`
+  error.value = null
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/admin/student-applications/${id}/restore`, {
+      method: 'PATCH',
+      headers: authHeaders()
+    })
+    if (res.ok) replaceStudentInLists(await res.json())
+    else error.value = 'Greška pri vraćanju studentice.'
+  } catch (e) {
+    error.value = 'Greška pri vraćanju. Provjerite konekciju.'
+  } finally {
+    actionLoading.value = null
+  }
+}
+
+async function deleteStudent(id) {
+  actionLoading.value = `student-${id}`
+  error.value = null
+  try {
+    const res = await fetch(`${BASE_URL}/api/v1/admin/student-applications/${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    })
+    if (res.ok) replaceStudentInLists(await res.json())
+    else error.value = 'Greška pri brisanju studentice.'
+  } catch (e) {
+    error.value = 'Greška pri brisanju. Provjerite konekciju.'
+  } finally {
+    actionLoading.value = null
+  }
+}
+
+const showDetailModal = ref(false)
+const selectedStudent = ref(null)
 
 async function openDetailModal(id) {
   try {
@@ -734,42 +540,18 @@ async function openDetailModal(id) {
   }
 }
 
-function openDeleteConfirm(id) {
-  deleteConfirmId.value = id
-  showDeleteConfirm.value = true
-}
-
-async function confirmDelete() {
-  if (!deleteConfirmId.value) return
-  
-  actionLoading.value = `student-${deleteConfirmId.value}`
-  error.value = null
-  try {
-    const res = await fetch(`${BASE_URL}/api/v1/admin/student-applications/${deleteConfirmId.value}`, {
-      method: 'DELETE',
-      headers: authHeaders()
-    })
-    if (res.ok) {
-      students.value = students.value.filter(s => s.id !== deleteConfirmId.value)
-      showDeleteConfirm.value = false
-      deleteConfirmId.value = null
-    } else {
-      error.value = 'Greška pri brisanju studentice — server nije vratio uspješan odgovor.'
-    }
-  } catch (e) {
-    error.value = 'Greška pri brisanju. Provjerite konekciju.'
-  } finally {
-    actionLoading.value = null
-  }
-}
-
-onMounted(() => {
+onMounted(async () => {
   const token = getToken()
   if (!token) {
     router.push('/login')
     return
   }
-  fetchAllApplications()
-  fetchStudentApplications()
+  try {
+    await Promise.all([fetchMentors(), fetchStudents()])
+  } catch (e) {
+    error.value = 'Greška pri učitavanju podataka.'
+  } finally {
+    loading.value = false
+  }
 })
 </script>
