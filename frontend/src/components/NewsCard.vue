@@ -7,12 +7,12 @@
       <span
         v-for="category in newsPost.categories"
         :key="category.id"
-        class="bg-violet-100 text-violet-700 text-xs px-2 py-1 rounded-full"
+        class="bg-primary text-white text-xs px-2 py-1 rounded-full"
       >
         {{ category.name }}
       </span>
     </div>
-    <h2 class="font-semibold text-gray-900 mb-1">{{ newsPost.title }}</h2>
+    <h2 class="font-semibold text-gray-900 mb-1 break-words">{{ newsPost.title }}</h2>
     <p class="text-sm text-gray-500">{{ formatDate(newsPost.created_at) }}</p>
   </div>
 </template>
