@@ -2,9 +2,9 @@
   <div class="min-h-screen bg-gray-50 py-10 px-4">
     <div class="max-w-2xl mx-auto">
       <div class="text-center mb-10">
-        <div class="text-5xl mb-4">✏️</div>
+        <div class="text-4xl mb-4">✏️</div>
 
-        <h1 class="text-4xl font-bold text-gray-900 mb-2">Uredi objavu</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Uredi objavu</h1>
 
         <p class="text-gray-500 text-lg">Ažuriraj informacije o objavi</p>
       </div>
@@ -34,7 +34,7 @@
             type="text"
             placeholder="Unesite naslov"
             maxlength="100" 
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             :class="{ 'border-red-400': errors.title }"
           />
           <p v-if="errors.title" class="text-red-500 text-xs mt-1">
@@ -52,7 +52,7 @@
             placeholder="Unesite sadržaj"
             maxlength="3000" 
             rows="6"
-            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 resize-y"
+            class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
             :class="{ 'border-red-400': errors.content }"
           ></textarea>
           <p v-if="errors.content" class="text-red-500 text-xs mt-1">
@@ -115,8 +115,8 @@
               @click="toggleCategory(category.id)"
               :class="
                 form.category_ids.includes(category.id)
-                  ? 'bg-violet-600 text-white'
-                  : 'bg-violet-100 text-violet-700'
+                  ? 'bg-primary text-white'
+                  : 'bg-secondary text-white'
               "
               class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
             >
@@ -131,7 +131,7 @@
             :key="submitKey"
             @click.once="handleSubmit"
             :disabled="isLoading"
-            class="bg-gradient-to-r from-violet-600 to-purple-600 text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition disabled:opacity-50"
+            class="bg-gradient-to-r from-primary to-secondary text-white font-medium px-8 py-3 rounded-xl hover:shadow-lg transition disabled:opacity-50"
           >
             {{ isLoading ? "Čuvanje..." : "Sačuvaj izmjene" }}
           </button>
@@ -292,17 +292,17 @@ async function handleSubmit() {
 
 <style scoped>
 :deep(.multiselect-violet) {
-  --ms-ring-color: rgb(139 92 246);
+  --ms-ring-color: #7c3aed;
   --ms-border-color: #d1d5db;
 
-  --ms-tag-bg: rgb(139 92 246);
+  --ms-tag-bg: #7c3aed;
   --ms-tag-color: white;
 
-  --ms-option-bg-selected: rgb(139 92 246);
+  --ms-option-bg-selected: #7c3aed
   --ms-option-color-selected: white;
 
-  --ms-option-bg-pointed: rgb(237 233 254);
-  --ms-option-color-pointed: rgb(109 40 217);
+  --ms-option-bg-pointed: #ede9fe;
+  --ms-option-color-pointed: #7c3aed;
 }
 
 :deep(.multiselect-violet .multiselect) {
@@ -311,7 +311,7 @@ async function handleSubmit() {
 }
 
 :deep(.multiselect-violet .multiselect:hover) {
-  border-color: rgb(139 92 246);
+  border-color: #a78bfa;
 }
 
 :deep(.multiselect-violet .multiselect.is-active) {
