@@ -7,7 +7,7 @@
       <span
         v-for="category in newsPost.categories"
         :key="category.id"
-        class="bg-violet-100 text-violet-700 text-xs px-2 py-1 rounded-full"
+        class="bg-primary text-white text-xs px-2 py-1 rounded-full"
       >
         {{ category.name }}
       </span>

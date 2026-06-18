@@ -118,7 +118,7 @@
                   ? 'bg-primary text-white'
                   : 'bg-secondary text-white'
               "
-              class="px-3 py-1 rounded-full text-sm font-medium transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5"
+              class="px-3 py-1 rounded-full text-sm font-medium "
             >
               {{ category.name }}
             </button>
