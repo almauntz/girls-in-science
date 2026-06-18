@@ -1,5 +1,13 @@
 <template>
   <div class="max-w-4xl mx-auto px-6 py-10">
+
+    <router-link
+      to="/role-models"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition mb-8"
+    >
+      ← Nazad na direktorij
+    </router-link>
+
     <h1 class="text-3xl font-bold text-gray-900 mb-1">Moji favoriti</h1>
     <p class="text-gray-500 mb-6">Profili koje ste sačuvali</p>
 
