@@ -115,14 +115,21 @@
           </label>
         </div>
 
-        <!-- Dugme -->
-        <button
-          @click.once="handleSubmit"
-          :disabled="isLoading"
-          class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Kreiraj objavu
-        </button>
+        <div class="flex gap-4">
+          <button
+            @click.once="handleSubmit"
+            :disabled="isLoading"
+            class="bg-violet-600 hover:bg-violet-700 text-white px-6 py-2 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Kreiraj objavu
+          </button>
+          <button
+            @click="$router.push('/news')"
+            class="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium px-6 py-2 rounded-lg text-sm transition"
+          >
+            ↩ Otkaži
+          </button>
+        </div>
       </div>
     </div>
   </div>
