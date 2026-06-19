@@ -645,16 +645,29 @@ const fetchWaitingList = async () => {
 
 const checkMyPromotion = async () => {
   try {
-    const res = await fetch(`${BASE_URL}/workshops/my-promotion`, { headers: { ...getAuthHeaders() } })
+    const res = await fetch(`${BASE_URL}/workshops/my-promotion`, {
+      headers: { ...getAuthHeaders() }
+    })
+
     const data = await res.json()
     const promotion = data?.promotion
+
     if (!promotion?.is_promoted) return
-    const alreadyNotified = localStorage.getItem(`promotion_notified_${promotion.workshop_id}`)
-    if (alreadyNotified) return
-    await Swal.fire('🎉 Automatska prijava!', `Prebačen si na radionicu: ${promotion.workshop_title}`, 'success')
-    localStorage.setItem(`promotion_notified_${promotion.workshop_id}`, 'true')
+
+    await Swal.fire(
+      '🎉 Automatska prijava!',
+      `Prebačen si na radionicu: ${promotion.workshop_title}`,
+      'success'
+    )
+
+    //refresh UI nakon promocije
+    await refreshWorkshops()
+    await fetchWaitingList()
+
   } catch (err) {
-    if (err.message !== 'NO_TOKEN') Swal.fire('Greška', err.message || 'Server greška.', 'error')
+    if (err.message !== 'NO_TOKEN') {
+      Swal.fire('Greška', err.message || 'Server greška.', 'error')
+    }
   }
 }
 
