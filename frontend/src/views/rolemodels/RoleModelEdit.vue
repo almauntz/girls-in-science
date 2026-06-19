@@ -2,9 +2,9 @@
   <div class="min-h-screen bg-gray-50 py-10 px-4">
     <div class="max-w-2xl mx-auto">
       <div class="text-center mb-10">
-        <div class="text-5xl mb-4">✏️</div>
+        <div class="text-4xl mb-4">✏️</div>
 
-        <h1 class="text-4xl font-bold text-gray-900 mb-2">Uredi profil</h1>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Uredi profil</h1>
 
         <p class="text-gray-500 text-lg">Ažuriraj informacije o uzoru</p>
       </div>

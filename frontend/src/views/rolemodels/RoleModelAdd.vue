@@ -2,7 +2,7 @@
   <div class="min-h-screen bg-gray-50 py-10 px-4">
     <div class="max-w-2xl mx-auto">
       <div class="text-center mb-8">
-        <div class="text-5xl mb-3">👩‍💻</div>
+        <div class="text-4xl mb-3">👩‍💻</div>
 
         <h1 class="text-3xl font-bold text-gray-900">Dodaj novi profil</h1>
 
