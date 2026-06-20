@@ -552,8 +552,7 @@ def cancel_registration(
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
-    # Tražimo prijavu na osnovu ID-a radionice i email-a ulogovanog korisnika
-    # Pošto tvoj Registration model ima 'email', ovo će raditi!
+    # 
     statement = select(Registration).where(
         Registration.workshop_id == workshop_id,
         Registration.email == current_user.email
