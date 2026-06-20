@@ -135,19 +135,197 @@ Kompozitni indeks koji ubrzava upite po radionici i statusu, te omogućava obrad
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 //maida
 
+# Modul: Pregled, pretraga i ocjenjivanje radionica
+
+## Svrha modula
+
+Ovaj dio backend-a omogućava javni pregled i pretragu radionica (filteri po nazivu, lokaciji i datumu), prikaz detalja radionice sa informacijom o slobodnim mjestima, automatsko ažuriranje statusa radionice nakon isteka vremena održavanja, te ocjenjivanje radionice od strane korisnica koje su na njoj bile prijavljene.
+
+## Pregled implementiranih funkcionalnosti
+
+- Pretraga i filtriranje radionica po nazivu, lokaciji i rasponu datuma
+- Pregled svih aktivnih (nadolazećih i završenih) radionica
+- Prikaz detalja jedne radionice, uključujući broj slobodnih mjesta
+- Automatsko ažuriranje statusa radionice u "completed" nakon isteka vremena održavanja
+- Ostavljanje ocjene (1–5) za radionicu nakon njenog završetka, sa provjerom da je korisnica bila prijavljena i da nije već ocijenila
+- Pregled svih ocjena za radionicu, sa imenom korisnice
+- Prikaz prosječne ocjene i broja ocjena za radionicu
+
+---
+
+## Opis baze podataka — entitet `Workshop`
+
+| Kolona | Tip | Opis |
+|---|---|---|
+| `ID_workshop` | Integer, PK | Jedinstveni identifikator radionice |
+| `title` | String | Naziv radionice |
+| `description` | String | Opis radionice |
+| `location` | String | Lokacija održavanja |
+| `date` | DateTime | Datum i vrijeme početka |
+| `end_time` | DateTime | Datum i vrijeme završetka |
+| `capacity` | Integer | Maksimalan broj mjesta |
+| `status` | Enum (`upcoming`, `cancelled`, `completed`) | Status radionice, default `upcoming` |
+| `created_by_id` | Integer, nullable | ID admina koji je kreirao radionicu |
+| `created_at` | DateTime | Vrijeme kreiranja |
+| `organizer_name` | String, nullable | Ime organizatora |
+| `organizer_email` | String, nullable | Email organizatora |
+| `organizer_phone` | String, nullable | Telefon organizatora |
+
+**Relacije:**
+- `Workshop.ID_workshop` ← referenciran iz `Registration.workshop_id`, `WaitingList.workshop_id` i `WorkshopRating.workshop_id`
+
+---
+
+## Opis baze podataka — entitet `WorkshopRating`
+
+| Kolona | Tip | Opis |
+|---|---|---|
+| `id` | Integer, PK | Jedinstveni identifikator ocjene |
+| `registration_id` | Integer, FK → `registration.id`, UNIQUE | Prijava na koju se ocjena odnosi (jedna ocjena po prijavi) |
+| `user_id` | Integer, FK → `users.id` | Korisnica koja je ostavila ocjenu |
+| `workshop_id` | Integer | Radionica koja se ocjenjuje (referenca na `Workshop`) |
+| `score` | Integer | Ocjena, 1–5 |
+| `comment` | String, nullable | Opcioni komentar |
+| `created_at` | DateTime | Vrijeme kreiranja ocjene |
+
+**Relacije:**
+- `WorkshopRating.registration_id` → `Registration`
+- `WorkshopRating.user_id` → `User`
+- `WorkshopRating.workshop_id` → `Workshop`
+
+---
+
+## Endpoint 1 — Pretraga radionica
+
+**`GET /workshops/search`**
+
+**Namjena:** Pretraga/filtriranje radionica po nazivu, lokaciji i rasponu datuma.
+
+**Autentifikacija:** Nije potrebna
+
+**Query parametri** (svi opcionalni): `title`, `location`, `date_from`, `date_to`
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Uspješna pretraga | `[{"ID_workshop": 5, "title": "Uvod u Python", "date": "2026-07-10T17:00:00", "location": "Sarajevo", "free_spots": 12, "status": "upcoming"}]` |
+
+---
+
+## Endpoint 2 — Aktivne radionice
+
+**`GET /workshops/active`**
+
+**Namjena:** Lista radionica sa statusom `upcoming` ili `completed`.
+
+**Autentifikacija:** Nije potrebna
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Lista aktivnih radionica | Isti format kao `/search` |
+
+---
+
+## Endpoint 3 — Detalji radionice
+
+**`GET /workshops/{workshop_id}`**
+
+**Namjena:** Detalji jedne radionice — datum, lokacija, opis, kapacitet, slobodna mjesta.
+
+**Autentifikacija:** Nije potrebna
+
+**Path parametar:** `workshop_id` (int)
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Radionica pronađena | `{"ID_workshop": 5, "title": "Uvod u Python", "capacity": 20, "free_spots": 12, "status": "upcoming"}` |
+| `404 Not Found` | Radionica ne postoji | `{"detail": "Radionica nije pronađena."}` |
+
+---
+
+## Endpoint 4 — Automatsko ažuriranje statusa
+
+**`POST /workshops/auto-complete`**
+
+**Namjena:** Automatski mijenja status radionica čiji je `end_time` prošao u `completed`.
+
+**Autentifikacija:** Nije potrebna.
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Uspješno izvršeno | `{"message": "3 radionica označeno kao završeno."}` |
+
+---
+
+## Endpoint 5 — Ocjenjivanje radionice
+
+**`POST /workshops/{workshop_id}/ratings`**
+
+**Namjena:** Korisnica ostavlja ocjenu nakon završene radionice.
+
+**Autentifikacija:** Obavezna (mora biti bila prijavljena na tu radionicu)
+
+**Path parametar:** `workshop_id` (int)
+
+**Request body:**
+```json
+{ "score": 5, "comment": "Odlična radionica, puno sam naučila!" }
+```
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `201 Created` | Uspješno ocjenjeno | `{"id": 12, "score": 5, "comment": "...", "user_name": null}` |
+| `404 Not Found` | Radionica ne postoji | `{"detail": "Radionica nije pronađena."}` |
+| `400 Bad Request` | Radionica još nije završena | `{"detail": "Radionica još nije završena."}` |
+| `403 Forbidden` | Korisnica nije bila prijavljena | `{"detail": "Niste bili prijavljeni na ovu radionicu."}` |
+| `409 Conflict` | Već ocjenjeno | `{"detail": "Već ste ocjenili ovu radionicu."}` |
+
+---
+
+## Endpoint 6 — Pregled ocjena
+
+**`GET /workshops/{workshop_id}/ratings`**
+
+**Namjena:** Lista svih ocjena za radionicu, najnovije prve, sa imenom korisnice.
+
+**Autentifikacija:** Nije potrebna
+
+**Path parametar:** `workshop_id` (int)
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Lista ocjena | `[{"id": 12, "score": 5, "comment": "Odlična radionica!", "user_name": "Maida Kamenčić"}]` |
+
+---
+
+## Endpoint 7 — Prosječna ocjena
+
+**`GET /workshops/{workshop_id}/ratings/average`**
+
+**Namjena:** Prosječna ocjena i broj ocjena za radionicu.
+
+**Autentifikacija:** Nije potrebna
+
+**Path parametar:** `workshop_id` (int)
+
+**Mogući responses:**
+
+| Status | Primjer body-ja |
+|---|---|
+| `200 OK` | `{"average": 4.67, "count": 3}` |
 
 
 
