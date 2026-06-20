@@ -287,13 +287,6 @@ export default {
   }
 },
 
-    levelToPercent(level) {
-      const map = {
-        'Maternji': 100, 'C2': 95, 'C1': 85,
-        'B2': 70, 'B1': 55, 'A2': 35, 'A1': 20
-      }
-      return map[level] || 50
-    }
   }
 }
 </script>
