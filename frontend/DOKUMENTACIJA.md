@@ -58,7 +58,6 @@ Pristup uređivanju profila organiziran je kroz roditeljsko-dijete (parent-child
 
 - Prikaz javnog profila druge korisnice na osnovu `user_id` iz rute, uz poštovanje polja vidljivosti koje je postavila vlasnica profila.
 - Administratorski nalozi se ne prikazuju kroz javni profil (preusmjeravanje, odnosno poruka da profil nije dostupan).
-- Pomoćna funkcija `levelToPercent` koja pretvara nivo poznavanja jezika (npr. `B2`, `C1`, `Maternji`) u procentualnu vrijednost za vizuelni prikaz.
 
 ---
 
