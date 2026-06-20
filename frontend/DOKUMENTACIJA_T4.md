@@ -93,8 +93,6 @@ Pristup podacima i upravljanje stanjem organizovano je kroz **roditeljsko-dijete
 
 Navigacija unutar `ProfilesView.vue` ostvarena je putem internog stanja `activeTab` (npr. `'dashboard'`, `'info'`, itd.), a ne kroz odvojene rute — `ProfileSidebar` emituje događaj `tab-change` koji mijenja aktivni prikaz bez ponovnog učitavanja stranice.
 
-Zaštita ruta i programsko preusmjeravanje ($router.push): Pored standardne navigacije kroz tabove, unutar rute /profiles ugrađeno je programsko preusmjeravanje u slučaju sigurnosnih promjena. Ako tokom rada na Admin Panelu ili Dashboardu sistem detektuje istek sesije ili okine alarm DEAKTIVIRAN_NALOG, komponenta automatski koristi this.$router.push('/login') kako bi korisnicu trenutno izbacila iz zaštićenog dijela aplikacije.
-
 ---
 
 ## 5. Komunikacija sa backendom
