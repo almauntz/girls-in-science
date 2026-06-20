@@ -294,3 +294,22 @@ Backend endpoint (`GET /unread-notifications`) markira notifikacije kao pročita
 | Upozorenja za nadolazeće radionice | `Calendar.vue` | ✅ Gotovo |
 | Toast notifikacije (polling) | `Notifications.vue` | ✅ Gotovo |
 | Odjava sa radionice (dugme "✕ Odustani" + potvrda) | `WorkshopDetail.vue` | ✅ Implementirano (vidi sekciju iznad) |
+
+
+
+
+
+
+//maida
+
+
+
+
+
+
+
+
+
+
+
+//mahir
