@@ -11,7 +11,7 @@ Dokumentacija obuhvata komponente: `RegistrationForm.vue`, `Calendar.vue`, `Noti
 ## 1. RegistrationForm.vue
 
 ### Svrha
-Forma za prijavu korisnika na radionicu. Prikazuje se kao modal preko `WorkshopDetail.vue` stranice.
+Forma za prijavu korisnika na radionicu. Prikazuje se kao forma preko `WorkshopDetail.vue` stranice.
 
 ### Props / Emits
 - **Emits:**
@@ -31,7 +31,7 @@ Forma za prijavu korisnika na radionicu. Prikazuje se kao modal preko `WorkshopD
 
 Polja Ime, Prezime, Email i Telefon se **automatski popunjavaju** pri otvaranju forme (`fillUserData()`), pozivom `getMe(token)`, na osnovu podataka ulogovanog korisnika.
 
-### Validacija prije slanja (frontend-only, ne ide do backend-a)
+### Validacija prije slanja
 
 | Provjera | Poruka korisniku |
 |---|---|
@@ -55,7 +55,7 @@ await Swal.fire({
 emit('success')
 ```
 - Prikazuje se confetti animacija (`triggerConfetti()`)
-- ⚠️ Napomena: backend vraća i `message` i `free_spots_left` u body-ju, ali frontend ih **ne koristi** — prikazuje samo fiksni tekst.
+
 
 **Neuspješna prijava (400 / 404):**
 ```js
@@ -80,7 +80,7 @@ Swal.fire('Greška', message, 'error')
 ```html
 <button type="button" @click="$emit('cancel')">Odustani</button>
 ```
-Samo zatvara modal/formu (`showForm.value = false` u parent komponenti). **Ne poziva nikakav backend endpoint** — nije vezano za odjavu sa radionice, već za odustajanje od popunjavanja forme.
+Samo zatvara formu (`showForm.value = false` u parent komponenti). — nije vezano za odjavu, već za odustajanje od popunjavanja forme.
 
 ---
 
@@ -155,102 +155,10 @@ const handleSuccess = () => {
 
 ### Odjava sa radionice — dugme "✕ Odustani"
 
-⚠️ Ovo **nije** isto dugme "Odustani" iz `RegistrationForm.vue` (ono samo zatvara formu i ostaje nepromijenjeno). Ovo je novo dugme koje se prikazuje **kad je korisnik već prijavljen** i poziva backend da ga odjavi.
+Ovo nije isto dugme "Odustani" iz `RegistrationForm.vue` (ono samo zatvara formu i ostaje nepromijenjeno). Ovo je novo dugme koje se prikazuje **kad je korisnik već prijavljen** i poziva backend da ga odjavi.
 
-#### Izmjena u `<template>`
 
-**Prije:**
-```html
-<button
-  @click="handleRegistrationClick"
-  :disabled="wasRegistered"
-  class="flex-1 py-2.5 text-white rounded-xl font-bold text-sm transition"
-  :style="wasRegistered
-    ? 'background:#d1d5db; cursor:not-allowed;'
-    : 'background: linear-gradient(135deg, #7c3aed, #a855f7);'"
-  :class="!wasRegistered ? 'hover:opacity-90' : ''">
-  {{ wasRegistered ? '✓ Prijavljeni' : '🎟 Prijavi se' }}
-</button>
-```
-
-**Poslije:**
-```html
-<button
-  @click="wasRegistered ? handleCancellation() : handleRegistrationClick()"
-  class="flex-1 py-2.5 text-white rounded-xl font-bold text-sm transition hover:opacity-90"
-  :style="wasRegistered
-    ? 'background:#ef4444;'
-    : 'background: linear-gradient(135deg, #7c3aed, #a855f7);'"
->
-  {{ wasRegistered ? '✕ Odustani' : '🎟 Prijavi se' }}
-</button>
-```
-
-| Stanje | Tekst dugmeta | Boja | Klik poziva |
-|---|---|---|---|
-| `wasRegistered === false` | "🎟 Prijavi se" | ljubičasta | `handleRegistrationClick()` |
-| `wasRegistered === true` | "✕ Odustani" | crvena | `handleCancellation()` |
-
-#### Nova funkcija u `<script>` (unutar `setup()`)
-
-```js
-const handleCancellation = () => {
-  Swal.fire({
-    title: 'Da li ste sigurni?',
-    text: 'Ako odustanete, izgubićete svoje mjesto na ovoj radionici.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonColor: '#ef4444',
-    cancelButtonColor: '#6b7280',
-    confirmButtonText: 'Da, odustani',
-    cancelButtonText: 'Ne, ostani prijavljen'
-  }).then(async (result) => {
-    if (!result.isConfirmed) return
-
-    const token = localStorage.getItem('token')
-
-    try {
-      const res = await fetch(`${BASE_URL}/workshops/cancellation/${route.params.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      })
-
-      if (!res.ok) {
-        const err = await res.json()
-        throw new Error(err.detail || 'Greška pri odjavi.')
-      }
-
-      const data = await res.json()
-
-      await Swal.fire({
-        title: 'Odjavljeni ste',
-        text: data.message || 'Uspješno ste odustali od radionice.',
-        icon: 'success',
-        confirmButtonColor: '#9333ea'
-      })
-
-      wasRegistered.value = false
-      fetchWorkshop()
-    } catch (e) {
-      Swal.fire('Greška', e.message || 'Došlo je do greške.', 'error')
-    }
-  })
-}
-```
-
-#### Dodati u `return { ... }` na kraju `setup()`
-
-```js
-return {
-  workshop, loading, error, showForm, showRatingModal,
-  ratings, ratingsAverage, alreadyRated, wasRegistered,
-  ratingForm, ratingSubmitting, ratingError, isLoggedIn,
-  handleSuccess, formatDate, handleRegistrationClick, submitRating,
-  handleCancellation   // ← novo
-}
-```
-
-#### Tok korisničke akcije (UX flow)
+#### Tok korisničke akcije 
 
 1. Korisnik je prijavljen na radionicu → vidi dugme **"✕ Odustani"**
 2. Klik → SweetAlert2 popup: *"Da li ste sigurni?"* sa opcijama "Da, odustani" / "Ne, ostani prijavljen"
@@ -258,24 +166,6 @@ return {
 4. Ako klikne "Da" → poziva se `DELETE /workshops/cancellation/{workshop_id}`
 5. **Uspjeh** → popup "Odjavljeni ste", dugme se vraća na "🎟 Prijavi se", podaci o radionici se refetch-uju (ažurira `free_spots`)
 6. **Greška** → popup "Greška" sa porukom iz backend-a (`err.detail`)
-
-#### Mogući backend odgovori
-
-⚠️ **Napomena:** Backend ruta `DELETE /workshops/cancellation/{workshop_id}` je trenutno **duplirana** u `workshops.py` (dvije funkcije na istoj ruti). Frontend kod gore radi ispravno u oba slučaja, jer koristi samo `data.message`, ali bi duplikat na backend-u trebalo riješiti.
-
-| Status | Slučaj | Body | Šta korisnik vidi |
-|---|---|---|---|
-| `200 OK` | Uspješna odjava (verzija sa promocijom) | `{"message": "Uspješno ste odustali od radionice.", "promoted_user_id": null ili broj}` | "Odjavljeni ste" / "Uspješno ste odustali od radionice." |
-| `200 OK` | Uspješna odjava (verzija bez promocije) | `{"message": "Uspješno ste odustali od radionice."}` | "Odjavljeni ste" / "Uspješno ste odustali od radionice." |
-| `404 Not Found` | Korisnik nema prijavu za tu radionicu | `{"detail": "Nije pronađena vaša prijava za ovu radionicu."}` | "Greška" / "Nije pronađena vaša prijava za ovu radionicu." |
-
-#### TODO / otvoreno pitanje
-
-- [ ] Riješiti duplikat `cancel_registration()` funkcije u backend-u (`workshops.py`) — odlučiti koja verzija ostaje
-- [ ] Testirati flow nakon implementacije (prijava → odjava → provjera da li se `Registration` zapis stvarno briše)
-- [ ] Provjeriti da li treba i obavijestiti promovisanog korisnika sa waiting liste (ako se koristi verzija sa `promoted_user_id`) — trenutno frontend to ne prikazuje nikome
-
----
 
 ## 3. Calendar.vue
 
@@ -390,7 +280,7 @@ Backend endpoint (`GET /unread-notifications`) markira notifikacije kao pročita
 
 ---
 
-## Sažetak — koje su komponente urađene, šta nedostaje
+## Sažetak — koje su komponente urađene,
 
 | Funkcionalnost | Komponenta | Status |
 |---|---|---|
