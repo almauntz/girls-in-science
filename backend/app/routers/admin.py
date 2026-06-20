@@ -56,7 +56,6 @@ def approve_mentor_application(
     mentor.status = ApplicationStatus.APPROVED
     mentor.rejection_reason = None
 
-    # Automatski promijeni rolu u users tabeli
     user = db.query(User).filter(User.email == mentor.email).first()
     if user:
         user.role = UserRole.mentor
@@ -83,7 +82,6 @@ def reject_mentor_application(
     mentor.status = ApplicationStatus.REJECTED
     mentor.rejection_reason = body.rejection_reason if body else None
 
-    # Vrati rolu na member u users tabeli
     user = db.query(User).filter(User.email == mentor.email).first()
     if user:
         user.role = UserRole.member
@@ -113,7 +111,7 @@ def resubmit_mentor_application(
     return mentor
 
 
-@router.delete("/mentor-applications/{id}", status_code=status.HTTP_200_OK)
+@router.delete("/mentor-applications/{id}", response_model=MentorApplicationOut)
 def delete_mentor_application(
     id: int,
     db: Session = Depends(get_db),
@@ -125,9 +123,17 @@ def delete_mentor_application(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Mentor application with id {id} not found"
         )
-    db.delete(mentor)
+    # Soft delete - ne brišemo iz baze, samo mijenjamo status
+    mentor.status = ApplicationStatus.DELETED
+    mentor.is_approved = False
+
+    user = db.query(User).filter(User.email == mentor.email).first()
+    if user:
+        user.role = UserRole.member
+
     db.commit()
-    return {"message": f"Mentor application {id} successfully deleted"}
+    db.refresh(mentor)
+    return mentor
 
 
 @router.get("/mentor-applications/{id}", response_model=MentorApplicationOut)
@@ -169,7 +175,7 @@ class StudentApplicationOut(BaseModel):
 @router.get("/student-applications", response_model=List[StudentApplicationOut])
 def get_pending_student_applications(
     skip: int = 0,
-    limit: int = 10,
+    limit: int = 100,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
@@ -235,7 +241,25 @@ def reject_student_application(
     return student
 
 
-@router.delete("/student-applications/{id}")
+@router.patch("/student-applications/{id}/restore", response_model=StudentApplicationOut)
+def restore_student_application(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    student = db.query(Student).filter(Student.id == id).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Student aplikacija sa ID-em {id} nije pronađena."
+        )
+    student.status = ApplicationStatus.PENDING
+    db.commit()
+    db.refresh(student)
+    return student
+
+
+@router.delete("/student-applications/{id}", response_model=StudentApplicationOut)
 def delete_student_application(
     id: int,
     db: Session = Depends(get_db),
@@ -247,15 +271,17 @@ def delete_student_application(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Student aplikacija sa ID-em {id} nije pronađena."
         )
-    db.delete(student)
+    # Soft delete - ne brišemo iz baze, samo mijenjamo status
+    student.status = ApplicationStatus.DELETED
     db.commit()
-    return {"message": f"Student aplikacija sa ID-em {id} je obrisana."}
+    db.refresh(student)
+    return student
 
 
 @router.get("/student-applications-approved", response_model=List[StudentApplicationOut])
 def get_approved_student_applications(
     skip: int = 0,
-    limit: int = 10,
+    limit: int = 100,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
@@ -273,13 +299,31 @@ def get_approved_student_applications(
 @router.get("/student-applications-rejected", response_model=List[StudentApplicationOut])
 def get_rejected_student_applications(
     skip: int = 0,
-    limit: int = 10,
+    limit: int = 100,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_admin)
 ):
     applications = (
         db.query(Student)
         .filter(Student.status == ApplicationStatus.REJECTED)
+        .order_by(Student.created_at.desc())
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    return applications
+
+
+@router.get("/student-applications-deleted", response_model=List[StudentApplicationOut])
+def get_deleted_student_applications(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
+):
+    applications = (
+        db.query(Student)
+        .filter(Student.status == ApplicationStatus.DELETED)
         .order_by(Student.created_at.desc())
         .offset(skip)
         .limit(limit)

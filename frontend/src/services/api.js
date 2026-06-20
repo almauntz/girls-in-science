@@ -147,6 +147,15 @@ export const getWorkshopRatingsAverage = async (workshopId) => {
 export const autoCompleteWorkshops = async () => {
   return apiRequest('/workshops/auto-complete', { method: 'POST' })
 }
+export const searchWorkshops = async (params = {}) => {
+  const query = new URLSearchParams()
+  if (params.title) query.append('title', params.title)
+  if (params.location) query.append('location', params.location)
+  if (params.date_from) query.append('date_from', params.date_from)
+  if (params.date_to) query.append('date_to', params.date_to)
+  return apiRequest(`/workshops/search?${query.toString()}`, { method: 'GET' })
+}
+
 
 /* =========================================================
    PROFILES

@@ -3,8 +3,8 @@
 
     <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
       <img
-        v-if="mentor.profile_img_url"
-        :src="mentor.profile_img_url"
+        v-if="mentor.avatar_url"
+        :src="mentor.avatar_url"
         :alt="mentor.full_name"
         class="w-full h-full object-cover"
       />
