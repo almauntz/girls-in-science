@@ -80,6 +80,8 @@ Kompozitni indeks koji ubrzava upite po radionici i statusu, te omogućava obrad
 
 **Mogući responses:**
 
+**Mogući responses:**
+
 | Status | Slučaj | Primjer body-ja |
 |---|---|---|
 | `201 Created` | Uspješna prijava | `{"message": "Uspješna prijava!", "free_spots_left": 4}` |
@@ -102,10 +104,12 @@ Kompozitni indeks koji ubrzava upite po radionici i statusu, te omogućava obrad
 
 **Mogući responses:**
 
+
 | Status | Slučaj | Primjer body-ja |
 |---|---|---|
-| `200 OK` | Uspješna odjava | `{"message": "Uspješno ste odustali od radionice."}` |
-| `404 Not Found` | Prijava ne postoji za tog korisnika/radionicu | `{"detail": "Nije pronađena vaša prijava za ovu radionicu."}` |
+| `200 OK` | Uspješna odjava, niko na waiting listi | `{"message": "Uspješno ste odustali od radionice.", "promoted_user_id": null}` |
+| `200 OK` | Uspješna odjava, korisnik sa waiting liste promovisan | `{"message": "Uspješno ste odustali od radionice.", "promoted_user_id": 7}` |
+| `404 Not Found` | Korisnik nema prijavu za tu radionicu | `{"detail": "Nije pronađena vaša prijava za ovu radionicu."}` |
 
 ---
 
