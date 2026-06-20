@@ -136,7 +136,7 @@ backend/
 | Dinamička reaktivacija       | Vraća reactivatable: true samo ako je korisnica sama ugasila nalog, a false ako ju je blokirao admin. |
 | Tabelarni admin pregled      | Spajanje users i profiles tabele za prikaz svih korisnica sa stvarnim statusom aktivnosti.            |
 | Admin upravljanje statusom   | Endpoint za administrativno paljenje/gašenje računa uz bilježenje deactivated_by = "admin".           |
-| Menadžment uloga             | PUT endpoint koji validira i mijenja ulogu korisnice iz user u admin ili mentor i obrnuto.            |
+| Menadžment uloga             | PUT endpoint koji validira i mijenja ulogu korisnice iz user u admin ili mentor.            |
 
 
 ---
@@ -609,11 +609,9 @@ Authorization: Bearer <jwt_token>
 
 ```json
 {
-  {
   "message": "Uloga korisnice Amina Hodžić je uspješno promijenjena.",
   "user_id": 5,
   "role": "mentor"
-}
 }
 ```
 

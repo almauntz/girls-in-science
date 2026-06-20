@@ -78,7 +78,7 @@ Pristup podacima i upravljanje stanjem organizovano je kroz **roditeljsko-dijete
 - Kreirana potpuno samostalna, višekratno iskoristiva (reusable) komponenta za vizuelni prikaz i promjenu statusa naloga (Aktivna / Deaktivirana).
 - Implementirano reaktivno praćenje stanja koristeći defineProps ({ modelValue }) i defineEmits (['update:modelValue', 'change']), što omogućava prirodno korištenje v-model sintakse u roditeljskim komponentama.
 
-### 3.6 Roditeljski omotač i Navigacija (ProfilesView.vue & ProfileSidebar.vue)
+### 3.6 Roditeljski omotač i Navigacija (ProfilesView & ProfileSidebar)
 - Dinamički prikaz na osnovu uloga: Podešena reaktivna activeTab logika. Za ulogu admin, Moj profil i Aktivnosti se sakrivaju, a otvara se pristup tabu Upravljanje korisnicama unutar bočne navigacije. Za uloge korisnice i mentorice, tabovi su isti: Moj profil, Dashboard i Aktivnosti.
 - Komunikacija i reaktivnost Dashboard-a: DashboardTab.vue prepoznaje ulogu korisnice i usmjerava prikaz. Kada studentica klikne "Prijavi se", ili mentorica klikne "Prihvati/Odbij", komponenta ne vrši direktne API pozive, već emituje događaje @register, @accept-request i @reject-request nazad u ProfilesView.vue. Roditeljska komponenta hvata ove događaje, izvršava axios zahtjeve prema backendu i automatski osvježava liste (fetchDashboardData, fetchMentorData), osiguravajući reaktivnost bez osvježavanja stranice.
 
