@@ -10,7 +10,10 @@ backend/
 │ ├── main.py (ulazna tačka aplikacije, registracija routera)
 │ ├── auth.py (JWT autentifikacija, kreiranje i dekodiranje tokena)
 │ ├── database.py (konfiguracija baze podataka i sesije)
+│ ├── core/
+│   └── security.py (Autentifikacija, enkripcija lozinki i centralni Auth Guard)
 │ ├── routers/
+│   ├── admin_users.py (Upravljanje korisnicama, statusima i ulogama)
 │ │ └── profiles.py (endpointi za upravljanje profilima)
 │ └── models/
 │   └── profile.py (SQLModel modeli i Pydantic sheme)
@@ -23,6 +26,17 @@ backend/
 ## 2. Opis Baze Podataka
 
 ### 2.1 Entiteti i ključne tabele
+
+#### Tabela: `users`
+
+| Kolona           | Tip                     | Opis                                        |
+| ---------------- | ----------------------- | ------------------------------------------- |
+| `id`             | INTEGER (PK)            | Jedinstveni identifikator profila           |
+| `full_name`      | VARCHAR                 | Puno ime i prezime korisnice                |
+| `email`          | VARCHAR (Unique)        | Elektronska pošta (koristi se za prijavu)   |
+| `password_hash`  | VARCHAR                 | Hashirana vrijednost lozinke                |
+| `role`           | VARCHAR (Enum)          | Uloga u sistemu (user, mentor, admin)       |
+| `created_at`     | DATETIME                | Vrijeme kreiranja zapisa                    |
 
 #### Tabela: `profiles`
 
@@ -50,6 +64,7 @@ backend/
 ### 2.2 Relacije
 
 - **users ↔ profiles:** Jedan-na-jedan (1:1). Svaki korisnik ima tačno jedan profil. Veza je ostvarena putem `user_id` stranog ključa u tabeli `profiles`.
+- **users ↔ workshops:** Više-na-više (M:N). Relacija implementirana preko spojne tabele WorkshopRegistration, omogućavajući praćenje prijava korisnica na radionice.
 - **JSON polja:** Kolone `languages`, `experience`, `education` i `skills` pohranjuju strukturirane podatke kao JSON stringove u bazi, a pri čitanju se parsiraju u Python objekte.
 
 ### 2.3 JSON struktura složenih polja
@@ -102,19 +117,27 @@ backend/
 
 ## 3. Pregled Implementiranih Funkcionalnosti
 
-| Funkcionalnost               | Opis                                                                                       |
-| ---------------------------- | ------------------------------------------------------------------------------------------ |
-| Automatsko kreiranje profila | Profil se automatski kreira pri prvom pristupu ako ne postoji (`get_or_create_profile`)    |
-| Čitanje vlastitog profila    | Autentifikovani korisnik može dohvatiti sve podatke svog profila                           |
-| Ažuriranje profila           | Parcijalno ažuriranje – mijenjaju se samo proslijeđena polja                               |
-| Upload avatara               | Podržani formati JPG/JPEG/PNG, max 2MB, UUID naziv fajla                                   |
-| Privacy podešavanja          | `show_biography`, `show_field`, `show_location` kontrolišu vidljivost na javnom profilu    |
-| Deaktivacija naloga          | Korisnik može sam deaktivirati nalog; `deactivated_by` bilježi ko je deaktivirao           |
-| Reaktivacija naloga          | Korisnik može reaktivirati nalog putem login provjere s lozinkom                           |
-| Login provjera               | Provjera kredencijala uz detekciju deaktiviranog naloga i ponudu reaktivacije              |
-| Javni profil                 | Javni prikaz profila uz poštovanje privacy polja; email vidljiv samo logovanim korisnicima |
-| JWT autentifikacija          | Bearer token autentifikacija na zaštićenim endpointima                                     |
-| Validacija unosa             | Prazno ime i biografija duža od 500 znakova se odbijaju                                    |
+| Funkcionalnost               | Opis                                                                                                  |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Automatsko kreiranje profila | Profil se automatski kreira pri prvom pristupu ako ne postoji (`get_or_create_profile`)               |
+| Čitanje vlastitog profila    | Autentifikovani korisnik može dohvatiti sve podatke svog profila                                      |
+| Ažuriranje profila           | Parcijalno ažuriranje – mijenjaju se samo proslijeđena polja                                          |
+| Upload avatara               | Podržani formati JPG/JPEG/PNG, max 2MB, UUID naziv fajla                                              |
+| Brisanje avatara             | Fizičko brisanje slike sa diska unutar try-except bloka i reset polja u bazi na None.                 |
+| Validacija fajlova           | Ograničenje uvoza slika isključivo na JPG/JPEG/PNG formate i veličinu do maksimalno 2MB.              |
+| Privacy podešavanja          | `show_biography`, `show_field`, `show_location` kontrolišu vidljivost na javnom profilu               |
+| Deaktivacija naloga          | Korisnik može sam deaktivirati nalog; `deactivated_by` bilježi ko je deaktivirao                      |
+| Reaktivacija naloga          | Korisnik može reaktivirati nalog putem login provjere s lozinkom                                      |
+| Login provjera               | Provjera kredencijala uz detekciju deaktiviranog naloga i ponudu reaktivacije                         |
+| Javni profil                 | Javni prikaz profila uz poštovanje privacy polja; email vidljiv samo logovanim korisnicima            |
+| JWT autentifikacija          | Bearer token autentifikacija na zaštićenim endpointima                                                |
+| Validacija unosa             | Prazno ime i biografija duža od 500 znakova se odbijaju                                               |
+| Sigurnosni Auth Guard        | Centralni presretač (get_current_user) koji provjerava token i blokira deaktivirane korisnice (403).  |
+| Dinamička reaktivacija       | Vraća reactivatable: true samo ako je korisnica sama ugasila nalog, a false ako ju je blokirao admin. |
+| Tabelarni admin pregled      | Spajanje users i profiles tabele za prikaz svih korisnica sa stvarnim statusom aktivnosti.            |
+| Admin upravljanje statusom   | Endpoint za administrativno paljenje/gašenje računa uz bilježenje deactivated_by = "admin".           |
+| Menadžment uloga             | PUT endpoint koji validira i mijenja ulogu korisnice iz user u admin ili mentor i obrnuto.            |
+
 
 ---
 
@@ -405,6 +428,206 @@ Authorization: Bearer <jwt_token>   ← opcionalno
   "twitter_url": null
 }
 ```
+---
+
+### 4.8 `GET /profiles/dashboard`
+
+**Svrha:** Generiše i vraća personalizovane podatke za dashboard u zavisnosti od uloge trenutno autentifikovane korisnice (user, mentor, admin).
+
+**Autentifikacija:** Bearer JWT token (obavezan)
+
+**Request:**
+
+```http
+GET /profiles/dashboard
+Authorization: Bearer <jwt_token>
+```
+
+**Mogući odgovori:**
+
+| HTTP status              | Opis                                                                      |
+| ------------------------ | ------------------------------------------------------------------------- |
+| 200 OK                   | Podaci za ulogovanu ulogu (Korisnica/Mentorica/Admin) uspješno generisani |
+| 401 Unauthorized         | Token nije proslijeđen ili je nevažeći                                    |
+
+**Napomena:** Struktura odgovora se dinamički mijenja u zavisnosti od uloge u tokenu.
+
+---
+
+### 4.9 `POST /profiles/dashboard/register`
+
+**Svrha:** Prijava na radionicu preko query parametra workshop_id. Ova akcija je strogo rezervisana samo za ulogu "user", dok mentorice i admini nemaju pravo prijave kao polaznici.
+
+**Autentifikacija:** Bearer JWT token (obavezan)
+
+**Request:**
+
+```http
+POST /profiles/dashboard/register?workshop_id=1
+Authorization: Bearer <jwt_token>
+```
+**Validacijska pravila:**
+
+Radionica mora postojati u bazi podataka.
+Ulogovana osoba mora imati ulogu user (u suprotnom sistem baca 403).
+Datum održavanja radionice ne smije biti u prošlosti.
+Korisnica ne smije biti već prijavljena na istu radionicu.
+Broj trenutno prijavljenih korisnica mora biti manji od maksimalnog kapaciteta radionice.
+
+**Mogući odgovori:**
+
+| HTTP status              | Opis                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------ |
+| 201 Created              | Prijava na radionicu uspješno kreirana                                               |
+| 400 Bad Request          | Radionica je prošla, popunjen je kapacitet ili je korisnica već prijavljena          |      
+| 401 Unauthorized         | Token nije proslijeđen ili je nevažeći                                               |                
+| 403 Forbidden            | Pristup odbijen (Mentorice i admini se ne mogu prijaviti na radionice kao polaznici) |
+| 404 Not Found            | Radionica sa proslijeđenim ID-em ne postoji                                          |            
+
+---
+
+### 4.10 `DELETE /profiles/me/avatar`
+
+**Svrha:** Sigurno i trajno brisanje profilne slike sa servera i iz baze podataka. Metoda provjerava postojanje fajla na disku unutar zaštićenog bloka, vrši fizičko brisanje i resetuje polje avatar na null.
+
+**Autentifikacija:** Bearer JWT token (obavezan)
+
+**Request:**
+
+```http
+DELETE /profiles/me/avatar
+Authorization: Bearer <jwt_token>
+```
+
+**Uspješan odgovor (200 OK):** Vraća očišćeni ProfileResponse objekat gdje je polje avatar postavljeno na null.
+
+```json
+{
+  "id": 1,
+  "user_id": 5,
+  "full_name": "Amina Hodžić",
+  "email": "amina@example.com",
+  "biography": "Full-stack developer s 3 godine iskustva.",
+  "field": "Software Engineering",
+  "avatar": null,
+  "role": "user"
+}
+```
+
+**Mogući odgovori:**
+
+| HTTP status              | Opis                                              |
+| ------------------------ | ------------------------------------------------- |
+| 200 OK                   | Avatar uspješno obrisan sa diska i baze podataka  |
+| 401 Unauthorized         | Token nije proslijeđen ili je nevažeći            |                
+
+---
+
+### 4.11 `GET /admin/users`
+
+**Svrha:** Administratorski pregled svih registrovanih korisnica. Sistem spaja bazične podatke iz tabele User sa stanjem aktivnosti računa iz tabele Profile.
+
+**Autentifikacija:** Bearer JWT token + Uloga ADMIN (obavezno)
+
+**Request:**
+
+```http
+GET /admin/users
+Authorization: Bearer <jwt_token>
+```
+
+**Uspješan odgovor (200 OK):** 
+
+```json
+{
+    "id": 5,
+    "full_name": "Amina Hodžić",
+    "email": "amina@example.com",
+    "role": "user",
+    "is_active": true
+}
+```
+
+**Mogući odgovori:**
+
+| HTTP status              | Opis                                                               |
+| ------------------------ | ------------------------------------------------------------------ |
+| 200 OK                   | Lista korisnica sa proširenim profilnim podacima uspješno vraćena  |
+| 401 Unauthorized         | Token nije proslijeđen ili je nevažeći                             |   
+| 403 Forbidden            | Pristup odbijen (Ulogovana korisnica nema ulogu administratora)    |             
+
+---
+
+### 4.12 `PUT /admin/{user_id}/status`
+
+**Svrha:** Omogućava administratoru da ručno aktivira ili deaktivira račun bilo koje korisnice preko query parametra is_active. Ukoliko admin ugasi nalog, polje deactivated_by se postavlja na 'admin'.
+
+**Autentifikacija:** Bearer JWT token + Uloga ADMIN (obavezno)
+
+**Request:**
+
+```http
+PUT /admin/5/status?is_active=false
+Authorization: Bearer <jwt_token>
+```
+
+**Uspješan odgovor (200 OK):** 
+
+```json
+{
+  "message": "Status korisnice je uspješno promijenjen na: deaktivirana.",
+  "user_id": 5,
+  "is_active": false
+}
+```
+
+**Mogući odgovori:**
+
+| HTTP status              | Opis                                                |
+| ------------------------ | --------------------------------------------------- |
+| 200 OK                   | Status aktivnosti korisnice uspješno izmijenjen     |
+| 401 Unauthorized         | Token nije proslijeđen ili je nevažeći              |   
+| 403 Forbidden            | Samo administratori mogu mijenjati status korisnika |             
+
+---
+
+### 4.13 `PUT /admin/{user_id}/role`
+
+**Svrha:** Administrativna promjena sistemske uloge korisnice na osnovu proslijeđenog tijela zahtjeva (UpdateRoleRequest). Admin može dodijeliti ulogu user, mentor ili admin.
+
+**Autentifikacija:** Bearer JWT token + Uloga ADMIN (obavezno)
+
+**Request:**
+
+```json
+{
+  "role": "mentor"
+}
+```
+
+**Uspješan odgovor (200 OK):** 
+
+```json
+{
+  {
+  "message": "Uloga korisnice Amina Hodžić je uspješno promijenjena.",
+  "user_id": 5,
+  "role": "mentor"
+}
+}
+```
+
+**Mogući odgovori:**
+
+| HTTP status              | Opis                                                               |
+| ------------------------ | ------------------------------------------------------------------ |
+| 200 OK                   | Uloga uspješno ažurirana i pohranjena u bazu  |
+| 401 Unauthorized         | Token nije proslijeđen ili je nevažeći                             |   
+| 403 Forbidden            | Samo administrator ima dozvolu za mijenjanje uloga                 |    
+| 404 Not Found            | Korisnica sa proslijeđenim ID-em nije pronađena                    |
+| 422 Unprocessable Entity | Proslijeđena nepostojeća ili nevalidna uloga u body-u              |
+
+---
 
 > **Napomena:** Polja `field`, `biography` i `location` vraćaju `null` ako korisnik ima isključena odgovarajuća privacy podešavanja (npr. `show_biography: false`).
 
@@ -478,7 +701,15 @@ Vraća se pri `GET /profiles/{user_id}`. Email je vidljiv samo uz autentifikacij
 | `languages` / `experience` / `education` / `skills` | `Optional[List]` | Uvijek vidljivo (ako postoji)               |
 | `linkedin_url` / `github_url` / `twitter_url`       | `Optional[str]`  | Uvijek vidljivo (ako postoji)               |
 
-### 5.4 Pomoćni modeli
+### 5.4 `UpdateRoleRequest` – Zahtjev za promjenu uloge korisnice
+
+Koristi se kao Request Body pri administrativnoj izmjeni uloge na endpointu PUT /admin/{user_id}/role.
+
+| Polje                                               | Tip              | Napomena                                               |
+| --------------------------------------------------- | ---------------- | ------------------------------------------------------ |
+| `role`                                              | UserRole (Enum)  | Prima samo vrijednosti: "user", "mentor" ili "admin".  |
+
+### 5.5 Pomoćni modeli
 
 | Model             | Polja                                                                        | Opis               |
 | ----------------- | ---------------------------------------------------------------------------- | ------------------ |
@@ -498,12 +729,18 @@ API koristi JWT (JSON Web Token) autentifikaciju. Token se dobija pri uspješnom
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
-| Endpoint                        | Autentifikacija                         |
-| ------------------------------- | --------------------------------------- |
-| `GET /profiles/me`              | Obavezna                                |
-| `PUT /profiles/me`              | Obavezna                                |
-| `POST /profiles/me/avatar`      | Obavezna                                |
-| `PATCH /profiles/me/deactivate` | Obavezna                                |
-| `POST /profiles/login-check`    | Nije potrebna                           |
-| `POST /profiles/reactivate`     | Nije potrebna                           |
-| `GET /profiles/{user_id}`       | Opcionalna (utiče na vidljivost emaila) |
+| Endpoint                            | Autentifikacija                         |
+| ----------------------------------- | --------------------------------------- |
+| `GET /profiles/me`                  | Obavezna                                |
+| `PUT /profiles/me`                  | Obavezna                                |
+| `POST /profiles/me/avatar`          | Obavezna                                |
+| `PATCH /profiles/me/deactivate`     | Obavezna                                |
+| `POST /profiles/login-check`        | Nije potrebna                           |
+| `POST /profiles/reactivate`         | Nije potrebna                           |
+| `GET /profiles/{user_id}`           | Opcionalna (utiče na vidljivost emaila) |
+| `GET /profiles/dashboard`           | Obavezna                                |
+| `POST /profiles/dashboard/register` | Obavezna (samo za ulogu "user")         |
+| `DELETE /profiles/me/avatar`        | Obavezna                                |
+| `GET /admin/users`                  | Obavezna (samo za ulogu "admin")        |
+| `PUT /admin/{user_id}/status`       | Obavezna (samo za ulogu "admin")        |
+| `PUT /admin/{user_id}/role`         | Obavezna (samo za ulogu "admin")        |
