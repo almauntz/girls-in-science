@@ -468,11 +468,11 @@ Authorization: Bearer <jwt_token>
 ```
 **Validacijska pravila:**
 
-Radionica mora postojati u bazi podataka.
-Ulogovana osoba mora imati ulogu user (u suprotnom sistem baca 403).
-Datum održavanja radionice ne smije biti u prošlosti.
-Korisnica ne smije biti već prijavljena na istu radionicu.
-Broj trenutno prijavljenih korisnica mora biti manji od maksimalnog kapaciteta radionice.
+- Radionica mora postojati u bazi podataka.
+- Ulogovana osoba mora imati ulogu user (u suprotnom sistem baca 403).
+- Datum održavanja radionice ne smije biti u prošlosti.
+- Korisnica ne smije biti već prijavljena na istu radionicu.
+- Broj trenutno prijavljenih korisnica mora biti manji od maksimalnog kapaciteta radionice.
 
 **Mogući odgovori:**
 
