@@ -191,11 +191,10 @@ class Registration(Base):
     previous_experience = Column(String, nullable=True)
     github_profile = Column(String, nullable=True)
 
-    #  NOVO - Mahir
+    #Mahir
     status = Column(String, nullable=False, default="registered")
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     was_promoted = Column(Boolean, nullable=False, default=False)
-# indeks za FIFO + brze upite
 Index(
     "idx_workshop_status_created",
     Registration.workshop_id,
