@@ -8,6 +8,8 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.mentorship_request import MentorshipRequest, RequestStatus
 
+from app.models.student import Student
+
 
 
 router = APIRouter(
@@ -30,6 +32,14 @@ async def create_request(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    from app.models.student import Student
+
+    student = db.query(Student).filter(Student.email == current_user.email).first()
+    if not student:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Samo registrovane studentice mogu slati zahtjeve za mentorstvo."
+        )
     #validacija fajla
     if cv.content_type != "application/pdf":
         raise HTTPException(
@@ -47,7 +57,7 @@ async def create_request(
             detail="Fajl ne smije biti veći od 5MB."
         )
 
-    # generisanje jedinstvenog imena fajla kako bi se izbjeglo prepisivanje postojećih fajlova
+    # generisanje jedinstvenog imena fajla 
     unique_filename = str(uuid.uuid4()) + "_" + cv.filename
     file_path = os.path.join(UPLOAD_DIR, unique_filename)
 

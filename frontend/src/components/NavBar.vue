@@ -16,7 +16,6 @@
       <div class="flex items-center gap-4">
         <template v-if="isLoggedIn">
 
-          <!-- Notification bell -->
           <div class="relative" ref="bellRef">
             <button @click="toggleNotifications" class="relative p-1.5 text-gray-500 hover:text-primary transition">
               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -29,7 +28,6 @@
               </span>
             </button>
 
-            <!-- Dropdown -->
             <div v-if="showDropdown"
               class="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
               <div class="px-4 py-3 border-b border-gray-100">
@@ -78,25 +76,22 @@ import axios from 'axios'
 
 export default {
   name: 'NavBar',
-
   data() {
     return {
+      isLoggedIn: !!localStorage.getItem('token'),
+      username: localStorage.getItem('username') || 'Profil',
       notifCount: 0,
       notifications: [],
       showDropdown: false,
       pollInterval: null,
     }
   },
-
-  computed: {
-    isLoggedIn() {
-      return !!localStorage.getItem('token')
-    },
-    username() {
-      return localStorage.getItem('username') || 'Profil'
+  watch: {
+    $route() {
+      this.isLoggedIn = !!localStorage.getItem('token')
+      this.username = localStorage.getItem('username') || 'Profil'
     }
   },
-
   mounted() {
     if (this.isLoggedIn) {
       this.fetchCount()
@@ -104,25 +99,21 @@ export default {
     }
     document.addEventListener('click', this.handleOutsideClick)
   },
-
   beforeUnmount() {
     clearInterval(this.pollInterval)
     document.removeEventListener('click', this.handleOutsideClick)
   },
-
   methods: {
     getAuthHeaders() {
       const token = localStorage.getItem('token')
       return { headers: { Authorization: `Bearer ${token}` } }
     },
-
     async fetchCount() {
       try {
         const res = await axios.get('http://localhost:8000/profiles/notifications/count', this.getAuthHeaders())
         this.notifCount = res.data.count
       } catch {}
     },
-
     async toggleNotifications() {
       if (this.showDropdown) {
         this.showDropdown = false
@@ -137,13 +128,11 @@ export default {
       }
       this.showDropdown = true
     },
-
     handleOutsideClick(e) {
       if (this.$refs.bellRef && !this.$refs.bellRef.contains(e.target)) {
         this.showDropdown = false
       }
     },
-
     async clearNotifications() {
       try {
         await axios.delete('http://localhost:8000/profiles/notifications', this.getAuthHeaders())
@@ -152,17 +141,16 @@ export default {
       this.notifCount = 0
       this.showDropdown = false
     },
-
     formatDate(dateString) {
       if (!dateString) return ''
       const d = new Date(dateString)
       return d.toLocaleDateString('bs-BA', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     },
-
     logout() {
       clearInterval(this.pollInterval)
       localStorage.removeItem('token')
       localStorage.removeItem('username')
+      localStorage.removeItem('user_role')
       this.$router.push('/login')
     }
   }

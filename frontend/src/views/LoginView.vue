@@ -102,7 +102,12 @@ export default {
           const user = await getMe()
           localStorage.setItem('username', user.full_name)
           localStorage.setItem('user_role', user.role)
-          this.$router.push('/profiles')
+
+          if (user.role === 'admin') {
+            this.$router.push('/admin/mentor-applications')
+          } else {
+            this.$router.push('/profiles')
+          }
         }
       } catch (err) {
         this.error = err.data?.detail || err.message || 'Pogrešan email ili lozinka.'
