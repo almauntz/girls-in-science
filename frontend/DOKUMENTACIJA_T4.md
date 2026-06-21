@@ -24,9 +24,10 @@ frontend/
     │       └── AdminView.vue            (Admin panel za upravljanje ulogama i statusima računa)
     ├── components/
     │   ├── SideBar.vue          (ProfileSidebar — bočna navigacija prilagođena ulogama)
+    │   ├── NavBar.vue           (Navigacijska traka — sistem notifikacija, zvono i badge)
     │   ├── ProfileForm.vue      (forma za uređivanje profila, lozinke, avatara)
     │   ├── DashboardTab.vue     (Pametna komponenta koja dinamički renderuje dashboard shodno ulozi)
-    │   └── ActivityHistory.vue
+    │   └── ActivityHistory.vue  (Prikaz historije pohađanih radionica)
     │   └── StatusToggle.vue     (Reusable prekidač sa dvosmjernim v-model vezivanjem stanja)
     ├── services/
     │   └── api.js               (centralizovani API pozivi)
@@ -48,7 +49,7 @@ Pristup podacima i upravljanje stanjem organizovano je kroz **roditeljsko-dijete
 - Detekcija deaktiviranog naloga prilikom prijave (`isDeactivated` stanje na `LoginView`).
 - Reaktivacija naloga — korisnica unosi email i lozinku, backend ponovo aktivira nalog i odmah se izvrši prijava.
 - Deaktivacija naloga iz profila, uz modalnu potvrdu (`showDeactivateModal`), nakon čega se token briše i korisnica se preusmjerava na prijavu.
-- Promjena lozinke (`staraNovaPotvrda`) sa validacijom (minimalno 8 karaktera, poklapanje nove i potvrđene lozinke).
+- Promjena lozinke (`staraNovaPotvrda`) sa validacijom (minimalno 8 karaktera, poklapanje nove i potvrđene lozinke). Forma se nalazi u zasebnom tabu "Sigurnost i Lozinka" unutar `ProfileForm.vue` i šalje `PATCH` zahtjev sa JWT tokenom u zaglavlju; greške sa backenda (npr. netačna stara lozinka) ispisuju se direktno ispod forme.
 
 ### 3.2 Lični profil (`ProfilesView` + `ProfileForm`)
 
@@ -82,9 +83,25 @@ Pristup podacima i upravljanje stanjem organizovano je kroz **roditeljsko-dijete
 - Dinamički prikaz na osnovu uloga: Podešena reaktivna activeTab logika. Za ulogu admin, Moj profil i Aktivnosti se sakrivaju, a otvara se pristup tabu Upravljanje korisnicama unutar bočne navigacije. Za uloge korisnice i mentorice, tabovi su isti: Moj profil, Dashboard i Aktivnosti.
 - Komunikacija i reaktivnost Dashboard-a: DashboardTab.vue prepoznaje ulogu korisnice i usmjerava prikaz. Kada studentica klikne "Prijavi se", ili mentorica klikne "Prihvati/Odbij", komponenta ne vrši direktne API pozive, već emituje događaje @register, @accept-request i @reject-request nazad u ProfilesView.vue. Roditeljska komponenta hvata ove događaje, izvršava axios zahtjeve prema backendu i automatski osvježava liste (fetchDashboardData, fetchMentorData), osiguravajući reaktivnost bez osvježavanja stranice.
 
----
+### 3.7 Sistem notifikacija (`NavBar.vue`)
 
-## 4. Pregled ruta i navigacije
+- Notifikacije se prikazuju u navigacijskoj traci putem ikonice zvona sa brojevnim badge-om; klik na zvono otvara dropdown sa detaljima nepročitanih notifikacija.
+- Stanje komponente: `notifCount` (broj za badge), `notifications` (lista za dropdown), `showDropdown` (vidljivost dropdowna), `pollInterval` (referenca na `setInterval`).
+- Automatsko osvježavanje: broj notifikacija se dohvata pri mountovanju komponente (`fetchCount`), a zatim se osvježava periodično svakih 60 sekundi putem `setInterval`.
+- Otvaranje dropdowna: klik na zvono poziva `toggleNotifications()`, koja dohvata listu notifikacija sa backenda i prikazuje dropdown. Za svaku notifikaciju prikazuje se naziv radionice (`workshop.title`), datum (formatiran u lokalnom formatu) i broj slobodnih mjesta.
+- Zatvaranje dropdowna klikom van komponente: implementirano preko `handleOutsideClick`, koji provjerava da li je klik izvan referenciranog elementa zvona (`$refs.bellRef`) i, ako jeste, zatvara dropdown. Listener se registruje na `document` prilikom mountovanja.
+- Brisanje notifikacija: dugme "Obriši sve" na dnu dropdowna šalje zahtjev backendu, nakon čega se lokalno čisti lista notifikacija i badge se resetuje na 0.
+- Cleanup: u `beforeUnmount()` hook-u se uklanja `setInterval` i `click` event listener kako bi se spriječilo curenje memorije (memory leak).
+
+### 3.8 Historija aktivnosti (`ActivityHistory.vue`)
+
+- Samostalna (standalone) Vue komponenta koja se prikazuje kada korisnica klikne na tab "Aktivnosti" unutar profila.
+- Loading stanje dok se podaci o pohađanim radionicama učitavaju sa backenda.
+- Poruka "Nemate evidentiranih radionica" prikazuje se ukoliko je lista praznih rezultata.
+- Lista kartica sa nazivom, datumom i opisom svake završene radionice, uz badge "Završena" na svakoj kartici.
+- Podaci se dohvataju asinhrono pri mountovanju komponente (`fetchHistory`), uz slanje JWT tokena iz `localStorage` u `Authorization` zaglavlju.
+
+---
 
 | Putanja              | Naziv rute       | Opis / komponenta                                                                                           |
 | -------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -120,6 +137,10 @@ Backend je razvijen u FastAPI + SQLModel (SQLite baza). Komunikacija sa frontend
 | `PATCH`     | `/profiles/me/deactivate`            | Deaktivacija naloga                                                    |
 | `GET`       | `/profiles/dashboard`                | Podaci za dashboard (moje, nove i dostupne radionice)                  |
 | `POST`      | `/profiles/dashboard/register`       | Prijava na radionicu (query parametar `workshop_id`)                   |
+| `GET`       | `/profiles/notifications/count`      | Dohvat broja nepročitanih notifikacija (`fetchCount`, za badge)        |
+| `GET`       | `/profiles/notifications`            | Dohvat liste nepročitanih notifikacija sa podacima o radionici         |
+| `DELETE`    | `/profiles/notifications`            | Markiranje svih notifikacija kao pročitane (dugme "Obriši sve")        |
+| `GET`       | `/profiles/me/history`               | Dohvat historije pohađanih (završenih) radionica (`fetchHistory`)      |
 | `GET`       | `/mentoring/my-applications`         | Dohvat svih mentorskih zahtjeva (filtrirano na `ACCEPTED` / `PENDING`) |
 | `PUT`       | `/mentoring/applications/:id/status` | Promjena statusa zahtjeva (`ACCEPTED` / `REJECTED`)                    |
 | `GET `      | `/admin/users`                       | Dohvat liste svih korisnica i statistike za Admin Panel                |
