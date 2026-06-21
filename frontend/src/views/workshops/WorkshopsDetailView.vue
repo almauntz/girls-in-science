@@ -115,15 +115,24 @@
               class="flex-1 py-2.5 text-center border-2 border-gray-200 rounded-xl font-bold text-sm text-gray-600 hover:bg-gray-50 transition">
               ⬅ Nazad
             </router-link>
-            <button
+           <button
               @click="handleRegistrationClick"
-              :disabled="wasRegistered"
-              class="flex-1 py-2.5 text-white rounded-xl font-bold text-sm transition"
-              :style="wasRegistered
-                ? 'background:#d1d5db; cursor:not-allowed;'
-                : 'background: linear-gradient(135deg, #7c3aed, #a855f7);'"
-              :class="!wasRegistered ? 'hover:opacity-90' : ''">
-              {{ wasRegistered ? '✓ Prijavljeni' : '🎟 Prijavi se' }}
+              :disabled="wasRegistered || workshop.free_spots === 0"
+              class="flex-1 py-2.5 rounded-xl font-bold text-sm transition"
+              :class="(wasRegistered || workshop.free_spots === 0)
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'
+                : 'text-white hover:opacity-90'"
+              :style="!(wasRegistered || workshop.free_spots === 0)
+                ? 'background: linear-gradient(135deg, #7c3aed, #a855f7);'
+                : ''"
+              >
+               {{
+                  wasRegistered
+                  ? '✓ Prijavljeni'
+                 : workshop.free_spots === 0
+                  ? '⛔ Popunjeno'
+                  : '🎟 Prijavi se'
+               }}
             </button>
           </div>
         </div>

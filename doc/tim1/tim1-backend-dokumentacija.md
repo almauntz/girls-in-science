@@ -332,3 +332,133 @@ Ovaj dio backend-a omogućava javni pregled i pretragu radionica (filteri po naz
 
 
 //mahir
+
+# Modul: Upravljanje listom čekanja za radionice (waiting list)
+## Svrha modula
+
+Ovaj modul omogućava efikasno upravljanje prijavama na radionice u slučajevima kada je kapacitet popunjen. Kada radionica dostigne maksimalan broj učesnika, korisnici se automatski preusmjeravaju na listu čekanja. Modul prati redoslijed prijava i omogućava automatsko prebacivanje korisnika sa liste čekanja na radionicu kada se oslobodi mjesto.
+
+
+
+## Pregled implementiranih funkcionalnosti :
+
+Ograničavanje prijava na radionicu u skladu sa definisanim kapacitetom
+Dodavanje korisnika na listu čekanja kada je kapacitet popunjen, korisnik
+se sam mora prijaviti na listu čekanja.
+Prikaz trenutnog statusa prijave (prijavljen / lista čekanja)
+Automatsko prebacivanje korisnika sa liste čekanja na radionicu kada se oslobodi mjesto
+Slanje obavijesti korisniku prilikom prelaska sa liste čekanja na radionicu.
+
+
+---
+
+## Opis baze podataka — entitet `WaitingList`
+
+| Kolona | Tip | Opis |
+|---|---|---|
+| `id`| Integer, PK | Jedinstveni identifikator zapisa na listi čekanja |
+| `user_id` | Integer, FK     | ID korisnika koji se nalazi na listi čekanja |
+| `workshop_id` | Integer, FK | ID radionice za koju korisnik čeka slobodno mjesto |
+| `created_at`  | DateTime    | Vrijeme kada je korisnik dodat na listu čekanja    |
+
+**Relacije:**
+
+* `WaitingList.user_id` → referencira `users.id`
+* `WaitingList.workshop_id` → referencira `Workshop.ID_workshop`
+
+---
+
+## Endpoint 1 — Prijava na listu čekanja
+
+**`POST /workshops/waiting-list/join/{workshop_id}`**
+
+**Namjena:** Dodavanje autentifikovanog korisnika na listu čekanja za određenu radionicu ukoliko je radionica popunjena ili korisnik nije mogao ostvariti direktnu prijavu.
+
+**Autentifikacija:** Potrebna
+
+**Path parametri:** workshop_id
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK`| Uspješno dodavanje na listu čekanja | `{"message": "Uspješno ste dodani na listu čekanja.", "position": 3, "total_in_queue": 10}` |
+| `400 Bad Request`  | Korisnik je već prijavljen na radionicu | `{"detail": "Već ste prijavljeni na ovu radionicu."}`                        |
+| `400 Bad Request`  | Korisnik je već na listi čekanja        | `{"detail": "Već ste na listi čekanja."}`                                    |
+| `401 Unauthorized` | Korisnik nije autentifikovan            | `{"detail": "Not authenticated"}`                                            |
+
+
+## Endpoint 2 — Status liste čekanja za korisnika
+
+**GET /workshops/waiting-list/status/{workshop_id}**
+
+**Namjena:** Provjera da li je prijavljeni korisnik na listi čekanja za određenu radionicu i, ako jeste, prikaz njegove pozicije u redu.
+
+**Autentifikacija:** Potrebna
+
+**Path parametri:** workshop_id
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK`| Korisnik je na listi čekanja   | `{"on_waiting_list": true, "position": 2}` |
+| `200 OK`| Korisnik nije na listi čekanja | `{"on_waiting_list": false}`               |
+| `401 Unauthorized`| Korisnik nije autentifikovan   | `{"detail": "Not authenticated"}`|
+
+---
+
+## Endpoint 3 — Moja lista čekanja
+
+**GET /workshops/waiting-list/me**
+
+**Namjena:** Dohvatanje svih radionica na kojima se trenutno prijavljeni korisnik nalazi na listi čekanja.
+
+**Autentifikacija:** Potrebna
+
+**Query parametri:** Nema
+
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK`| Uspješan prikaz liste čekanja korisnika  | `[{"workshop_id": 5}, {"workshop_id": 8}]`|
+| `200 OK`| Korisnik nije ni na jednoj listi čekanja | `[]`|
+| `401 Unauthorized`| Korisnik nije autentifikovan   | `{"detail": "Not authenticated"} |
+
+---
+
+## Endpoint 4 — Status promocije na radionici
+
+**GET /workshops/my-promotion**
+
+**Namjena:** Provjera statusa prijave korisnika i informacija da li je korisnik promovisan sa liste čekanja na radionicu.
+
+**Autentifikacija:** Potrebna
+
+**Query parametri:** Nema
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+|`200 OK`| Korisnik ima aktivnu prijavu | `{"promotion": {"user_id": 1, "workshop_id": 5, "workshop_title": "Uvod u Python", "status": "registered", "is_promoted": true}}` |
+|`200 OK`| Korisnik nema prijavu        | `{"promotion": null}` |
+|`401 Unauthorized` | Korisnik nije autentifikovan | `{"detail": "Not authenticated"}` |
+
+---
+
+## Endpoint 5 — Napuštanje liste čekanja
+
+**DELETE /workshops/waiting-list/{workshop_id}**
+
+**Namjena:** Uklanjanje prijavljenog korisnika sa liste čekanja za određenu radionicu.
+
+**Autentifikacija:** Potrebna
+
+**Path parametri:** workshop_id
+
+
+
+| Status | Slučaj | Primjer body-ja |
+| --- | ---| ---|
+| `200 OK` | Uspješno uklanjanje sa liste čekanja | `{"message": "Uspješno ste napustili listu čekanja."}` |
+| `404 Not Found`    | Korisnik nije na listi čekanja za datu radionicu | `{"detail": "Niste na listi čekanja za ovu radionicu."}` |
+| `401 Unauthorized` | Korisnik nije autentifikovan | `{"detail": "Not authenticated"}` |
+
+---

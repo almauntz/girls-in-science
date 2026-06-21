@@ -56,13 +56,21 @@ def my_promotion(
         Workshop.ID_workshop == registration.workshop_id
     ).first()
 
+    is_promoted = registration.was_promoted
+
+    #odmah resetuj flag
+    if registration.was_promoted:
+        registration.was_promoted = False
+        db.commit()
+
     return {
         "promotion": {
+            "id": registration.id,
             "user_id": current_user.id,
             "workshop_id": registration.workshop_id,
             "workshop_title": workshop.title if workshop else "Radionica",
             "status": registration.status,
-            "is_promoted": registration.was_promoted
+            "is_promoted": is_promoted  
         }
     }
 
