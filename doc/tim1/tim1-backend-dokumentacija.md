@@ -1,15 +1,260 @@
 //amel
+# Modul: Admin upravljanje radionicama i prijedlozima radionica (Proposals)
 
+## Svrha modula
 
+Ovaj dio backend-a omogućava administratoru da kreira, ažurira i briše radionice, te da pregleda, odobrava i odbija prijedloge radionica koje šalju korisnice. Korisnicama omogućava slanje prijedloga i pregled statusa svojih poslanih prijedloga.
 
+## Pregled implementiranih funkcionalnosti
 
+- CRUD nad radionicama (kreiranje, izmjena, brisanje) — dostupno samo administratoru
+- Slanje notifikacije svim korisnicama prilikom kreiranja nove radionice
+- Slanje prijedloga radionice od strane korisnice
+- Pregled svih prijedloga (admin, sa filterom po statusu) i pregled vlastitih prijedloga (korisnica)
+- Detalji pojedinačnog prijedloga (admin)
+- Odobravanje prijedloga, sa opcijom da se odmah kreira radionica na osnovu prijedloga
+- Odbijanje prijedloga, sa opcionalnom napomenom administratora
+- Zajednička provjera admin role (`require_admin`) za sve admin-only endpointe
 
+---
 
+## Opis baze podataka — entitet `WorkshopProposal`
 
+| Kolona | Tip | Opis |
+|---|---|---|
+| `id` | Integer, PK | Jedinstveni identifikator prijedloga |
+| `title` | String | Naziv predložene radionice |
+| `description` | String | Opis predložene radionice |
+| `proposed_by_id` | Integer | ID korisnice koja je poslala prijedlog |
+| `proposed_by_email` | String | Email korisnice (snapshot u trenutku slanja) |
+| `status` | Enum (`pending`, `accepted`, `rejected`) | Status prijedloga, default `pending` |
+| `admin_note` | String, nullable | Napomena administratora pri odobravanju/odbijanju |
+| `created_at` | DateTime | Vrijeme slanja prijedloga |
 
+**Napomena:** `Workshop` i `WorkshopBase` entiteti su opisani u sekciji iznad (Maida) — `WorkshopBase` je zajednička SQLModel baza (title, description, location, date, end_time, capacity) iz koje `Workshop` nasljeđuje.
 
+### Pydantic šeme korištene u ovom modulu
 
+| Šema | Koristi se za |
+|---|---|
+| `WorkshopCreate` | Request body za kreiranje radionice (title, description, location, date, end_time, capacity, organizer_*) |
+| `WorkshopUpdate` | Request body za izmjenu radionice — sva polja opcionalna (partial update) |
+| `ProposalCreate` | Request body za slanje prijedloga (title, description) |
+| `ProposalRead` | Response za admin pregled prijedloga — uključuje `proposed_by_id`/`proposed_by_email` |
+| `ProposalUserRead` | Response za korisnicu — bez podataka o tome ko je predložio (samo vlastiti prijedlozi) |
+| `ProposalApprove` | Request body za odobravanje — `admin_note`, `create_workshop` (bool) + podaci radionice ako se kreira |
+| `ProposalReject` | Request body za odbijanje — samo `admin_note` |
 
+---
+
+## Endpoint 1 — Kreiranje radionice
+
+**`POST /workshops/`**
+
+**Namjena:** Kreira novu radionicu i šalje notifikaciju svim korisnicama o novoj radionici.
+
+**Autentifikacija:** Obavezna, samo administrator (`require_admin`)
+
+**Request body:** `WorkshopCreate`
+```json
+{
+  "title": "Uvod u Python",
+  "description": "Osnove programiranja u Pythonu",
+  "location": "Sarajevo",
+  "date": "2026-07-10T17:00:00",
+  "end_time": "2026-07-10T19:00:00",
+  "capacity": 20,
+  "organizer_name": "Amela Hodžić",
+  "organizer_email": "amela@example.com",
+  "organizer_phone": "061123456"
+}
+```
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `201 Created` | Uspješno kreirana radionica | vraća kompletan `WorkshopRead` objekat |
+| `403 Forbidden` | Korisnik nije administrator | `{"detail": "Samo administrator može izvršiti ovu akciju."}` |
+
+---
+
+## Endpoint 2 — Izmjena radionice
+
+**`PATCH /workshops/{workshop_id}`**
+
+**Namjena:** Djelimično ažurira postojeću radionicu (mijenjaju se samo proslijeđena polja).
+
+**Autentifikacija:** Obavezna, samo administrator
+
+**Path parametar:** `workshop_id` (int)
+
+**Request body:** `WorkshopUpdate` (sva polja opcionalna)
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Uspješno ažurirano | vraća ažurirani `WorkshopRead` objekat |
+| `404 Not Found` | Radionica ne postoji | `{"detail": "Radionica nije pronađena."}` |
+| `403 Forbidden` | Korisnik nije administrator | `{"detail": "Samo administrator može izvršiti ovu akciju."}` |
+
+---
+
+## Endpoint 3 — Brisanje radionice
+
+**`DELETE /workshops/{workshop_id}`**
+
+**Namjena:** Trajno briše radionicu.
+
+**Autentifikacija:** Obavezna, samo administrator
+
+**Path parametar:** `workshop_id` (int)
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `204 No Content` | Uspješno obrisano | — |
+| `404 Not Found` | Radionica ne postoji | `{"detail": "Radionica nije pronađena."}` |
+| `403 Forbidden` | Korisnik nije administrator | `{"detail": "Samo administrator može izvršiti ovu akciju."}` |
+
+---
+
+## Endpoint 4 — Slanje prijedloga radionice
+
+**`POST /workshops/proposals`**
+
+**Namjena:** Korisnica šalje prijedlog za novu radionicu.
+
+**Autentifikacija:** Obavezna
+
+**Request body:** `ProposalCreate`
+```json
+{ "title": "Radionica o Git-u", "description": "Osnove verzionisanja koda" }
+```
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `201 Created` | Uspješno poslan prijedlog | vraća `ProposalUserRead` objekat, status `pending` |
+
+---
+
+## Endpoint 5 — Moji prijedlozi
+
+**`GET /workshops/proposals/my`**
+
+**Namjena:** Korisnica dohvata listu svih svojih poslanih prijedloga.
+
+**Autentifikacija:** Obavezna
+
+**Mogući responses:**
+
+| Status | Primjer body-ja |
+|---|---|
+| `200 OK` | `[{"id": 3, "title": "...", "status": "pending", "admin_note": null}]` |
+
+---
+
+## Endpoint 6 — Admin pregled svih prijedloga
+
+**`GET /workshops/admin`**
+
+**Namjena:** Administrator dohvata sve prijedloge, opciono filtrirane po statusu.
+
+**Autentifikacija:** Obavezna, samo administrator
+
+**Query parametar:** `status_filter` (opciono, `pending` / `accepted` / `rejected`)
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Lista prijedloga | `[{"id": 3, "title": "...", "proposed_by_email": "...", "status": "pending"}]` |
+| `403 Forbidden` | Korisnik nije administrator | `{"detail": "Samo administrator može izvršiti ovu akciju."}` |
+
+---
+
+## Endpoint 7 — Detalji prijedloga
+
+**`GET /workshops/proposals/{proposal_id}`**
+
+**Namjena:** Administrator dohvata detalje jednog prijedloga prije odlučivanja.
+
+**Autentifikacija:** Obavezna, samo administrator
+
+**Path parametar:** `proposal_id` (int)
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Prijedlog pronađen | `ProposalRead` objekat |
+| `404 Not Found` | Prijedlog ne postoji | `{"detail": "Prijedlog nije pronađen."}` |
+
+---
+
+## Endpoint 8 — Odobravanje prijedloga
+
+**`PATCH /workshops/proposals/{proposal_id}/approve`**
+
+**Namjena:** Odobrava prijedlog; opciono (`create_workshop: true`) odmah kreira radionicu na osnovu prijedloga i dodatnih podataka (lokacija, datum, kapacitet, organizator).
+
+**Autentifikacija:** Obavezna, samo administrator
+
+**Path parametar:** `proposal_id` (int)
+
+**Request body:** `ProposalApprove`
+```json
+{
+  "admin_note": "Odlična ideja!",
+  "create_workshop": true,
+  "location": "Tuzla",
+  "date": "2026-08-01T10:00:00",
+  "end_time": "2026-08-01T12:00:00",
+  "capacity": 15,
+  "organizer_name": "Amela Hodžić",
+  "organizer_email": "amela@example.com"
+}
+```
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Uspješno odobreno | vraća ažurirani `ProposalRead`, status `accepted` |
+| `404 Not Found` | Prijedlog ne postoji | `{"detail": "Prijedlog nije pronađen."}` |
+| `400 Bad Request` | Prijedlog je već obrađen | `{"detail": "Prijedlog je već obrađen (status: accepted)."}` |
+| `422 Unprocessable Entity` | `create_workshop: true`, ali nedostaju obavezni podaci radionice | `{"detail": "Za kreiranje radionice nedostaju: location, date"}` |
+
+---
+
+## Endpoint 9 — Odbijanje prijedloga
+
+**`PATCH /workshops/proposals/{proposal_id}/reject`**
+
+**Namjena:** Odbija prijedlog, uz opcionalnu napomenu administratora.
+
+**Autentifikacija:** Obavezna, samo administrator
+
+**Path parametar:** `proposal_id` (int)
+
+**Request body:** `ProposalReject`
+```json
+{ "admin_note": "Slična radionica je već planirana." }
+```
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Uspješno odbijeno | vraća ažurirani `ProposalRead`, status `rejected` |
+| `404 Not Found` | Prijedlog ne postoji | `{"detail": "Prijedlog nije pronađen."}` |
+| `400 Bad Request` | Prijedlog je već obrađen | `{"detail": "Prijedlog je već obrađen (status: rejected)."}` |
+
+---
 
 
 //elma
