@@ -529,3 +529,193 @@ Formatira datum u oblik `DD.MM.YYYY.` — koristi se za header, "Datum početka"
 
 
 //mahir
+
+# Frontend dokumentacija - Prijava/odjava/waitinglist, Notifikacija za automatsku prijavu
+
+Dokumentacija obuhvata komponente: `WorkshopDetail.vue`  ,`WorkshopView.vue`.
+
+## 1. WorkshopView.vue
+
+### Svrha
+Ovaj dio UI-a unutar WorkshopsView.vue prikazuje akcione gumbe i informacije vezane za status korisnika na pojedinačnoj radionici (prijava, lista čekanja, slobodna mjesta i odustajanje).Ovisno o stanju korisnika i kapacitetu radionice, dinamički se prikazuju različite akcije.
+
+### Logika
+ UI se zasniva na sljedećim uslovima:
+-da li je korisnik već prijavljen na radionicu
+-da li je korisnik na listi čekanja
+-da li postoje slobodna mjesta
+
+
+| Stanje | Šta se desi | 
+|---|---|
+| Korisnik je prijavljen na radionicu (`registrations[workshop.ID_workshop] === true`)| Klik na **“Odustani”** poziva `handleCancel(workshop.ID_workshop, workshop.title)` i pokreće proces odjave |
+| Korisnik je na listi čekanja (`waitingList[workshop.ID_workshop] === true`) | Klik na **“Napusti listu čekanja”** poziva `handleLeaveWaitingList(workshop.ID_workshop)` i uklanja korisnika iz waiting liste |
+| Nema slobodnih mjesta (`getFreeSpots(workshop) === 0`) i korisnik nije ni prijavljen ni na waiting listi | 
+Klik na **“Lista čekanja”** poziva `handleJoinWaitingList(workshop ID_workshop)` i dodaje korisnika na waiting listu |
+| Ima slobodnih mjesta (`getFreeSpots(workshop) > 0`) i korisnik nije prijavljen | Ne prikazuje se dugme za akciju, samo informacija “X slobodnih” |
+
+---
+### Logika funkcije handleJoinWaitingList(workshopId)
+const handleJoinWaitingList = async (workshopId) => {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/workshops/waiting-list/join/${workshopId}`,
+      {
+        method: 'POST',
+        headers: { ...getAuthHeaders() }
+      }
+    )
+
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.detail || 'Neuspješno dodavanje na listu čekanja.')
+
+    waitingList[workshopId] = true
+
+    await Swal.fire('Uspjeh', 'Dodani ste na listu čekanja.', 'success')
+
+    await refreshWorkshops()
+  } catch (err) {
+    if (err.message === 'NO_TOKEN') return
+    Swal.fire('Greška', err.message || 'Server greška.', 'error')
+  }
+}
+---
+| Korak | Šta se dešava |
+|---|---|
+| 1 | Šalje se `POST` request na `/workshops/waiting-list/join/{workshopId}` |
+| 2 | U request se dodaju auth headers (`getAuthHeaders()`) |
+| 3 | Backend vraća JSON odgovor koji se parsira (`res.json()`) |
+| 4 | Ako `res.ok === false` baca se greška sa porukom iz `detail` ili default porukom |
+| 5 | Ako je uspješno, korisnik se označava kao da je na waiting listi (`waitingList[workshopId] = true`) |
+| 6 | Prikazuje se success poruka putem SweetAlert-a |
+| 7 | Refresha se lista radionica (`refreshWorkshops()`) da se UI uskladi sa backend podacima |
+
+| Slučaj | Šta se desi |
+|---|---|
+| Uspješna prijava na listu čekanja | Korisnik dobija SweetAlert success + UI se ažurira |
+| Backend vrati grešku (`400 / 401 / 404`) | Prikazuje se Swal error sa porukom iz backend-a |
+| Token ne postoji (`NO_TOKEN`) | Funkcija se prekida bez prikaza greške |
+| Network/server error | Prikazuje se generička poruka “Server greška” |
+
+---
+### Logika funkcije handleCancel(id, title)
+
+| Korak | Šta se dešava |
+|---|---|
+| 1 | Otvara se SweetAlert popup za potvrdu otkazivanja prijave |
+| 2 | Ako korisnik klikne “Ne” → funkcija se prekida |
+| 3 | Ako korisnik potvrdi → šalje se `DELETE` request na `/workshops/cancellation/{id}` |
+| 4 | Request koristi auth headers (`getAuthHeaders()`) |
+| 5 | Backend vraća JSON odgovor koji se parsira (`res.json()`) |
+| 6 | Ako `response.ok === false` baca se greška iz `detail` ili default poruka |
+| 7 | Dohvata se trenutno logovani korisnik iz `localStorage` |
+| 8 | Provjerava se da li je došlo do **automatske promocije sa waiting liste** |
+| 9 | Ako je korisnik promovisan → prikazuje se posebna success poruka |
+| 10 | Ako nije → prikazuje se standardna “Prijava je poništena” poruka |
+| 11 | Na kraju se osvježava lista radionica (`refreshWorkshops()`) |
+
+
+| Slučaj | Šta se desi |
+|---|---|
+| Korisnik potvrdi otkazivanje i nema promocije | Prikazuje se poruka “Prijava je poništena” |
+| Korisnik potvrdi otkazivanje i bude promovisan sa waiting liste | Prikazuje se “🎉 Automatska prijava!” poruka |
+| Korisnik klikne “Ne” u popup-u | Akcija se prekida, ništa se ne mijenja |
+| Backend vrati grešku (npr. 404/400) | Prikazuje se Swal error sa porukom iz backend-a |
+| Token ne postoji (`NO_TOKEN`) | Funkcija se prekida bez prikaza greške |
+
+---
+### Logika funkcije handleLeaveWaitingList(id)
+
+| Korak | Šta se dešava |
+|---|---|
+| 1 | Otvara se SweetAlert popup za potvrdu napuštanja liste čekanja |
+| 2 | Ako korisnik klikne “Ne” → funkcija se prekida  |
+| 3 | Ako korisnik potvrdi → šalje se `DELETE` request na `/workshops/waiting-list/{id}`  |
+| 4 | Request koristi auth headers (`getAuthHeaders()`) |
+| 5 | Backend vraća JSON odgovor koji se parsira (`res.json()`) |
+| 6 | Ako `response.ok === false` baca se greška iz `detail` ili default poruka |
+| 7 | Ako je uspješno, uklanja se workshop iz lokalnog state-a (`delete waitingList[id]`) |
+| 8 | Prikazuje se SweetAlert success poruka |
+| 9 | Poziva se `refreshWorkshops()` da se UI uskladi sa backend podacima |
+
+
+| Slučaj | Šta se desi |
+|---|---|
+| Korisnik potvrdi napuštanje liste čekanja | Korisnik se uklanja i dobija success poruku |
+| Korisnik klikne “Ne” | Akcija se prekida, ništa se ne mijenja |
+| Backend uspješno obradi zahtjev  UI se ažurira i workshop stanje se refresha |
+| Backend vrati grešku (npr. 404/400) | Prikazuje se Swal error sa porukom iz backend-a |
+| Token ne postoji (`NO_TOKEN`) | Funkcija se prekida bez prikaza greške |
+
+
+---
+
+### Logika funkcije fetchWaitingList()
+
+| Korak | Šta se dešava|
+|---|---|
+| 1 | Dohvata se token iz `localStorage`|
+| 2 | Ako token ne postoji → funkcija se prekida (korisnik nije logovan) |
+| 3 | Šalje se `GET` request na `/workshops/waiting-list/me`|
+| 4 | Request koristi auth headers (`getAuthHeaders()`) |
+| 5 | Backend vraća listu radionica na kojima je korisnik na waiting listi |
+| 6 | Podaci se parsiraju iz JSON odgovora |
+| 7 | Resetuje se lokalni state `waitingList` (brišu se svi prethodni zapisi) |
+| 8 | Iterira se kroz backend podatke |
+| 9 | Svaka radionica se označava kao “na waiting listi” (`waitingList[workshop_id] = true`) |
+
+### Logika funkcije checkMyPromotion()
+
+| Korak | Šta se dešava |
+|---|---|
+| 1 | Šalje se `GET` request na `/workshops/my-promotion`|
+| 2 | Request koristi auth headers (`getAuthHeaders()`|
+| 3 | Backend vraća podatke o eventualnoj promociji korisnika |
+| 4 | Iz odgovora se izvlači `promotion` objekt |
+| 5 | Ako `is_promoted !== true` → funkcija se prekida  |
+| 6 | Ako je korisnik promovisan → prikazuje se SweetAlert obavijest |
+| 7 | U poruci se prikazuje naziv radionice na koju je korisnik prebačen  |
+| 8 | Nakon toga se osvježava UI (`refreshWorkshops()`) |
+| 9 | Ponovo se učitava waiting list (`fetchWaitingList()`) kako bi se sinhronizovalo stanje |
+
+
+| Slučaj | Šta se desi |
+|---|---|
+| Korisnik je promovisan sa waiting liste | Prikazuje se “🎉 Automatska prijava!” i UI se ažurira |
+| Korisnik nije promovisan | Funkcija završava bez UI promjene |
+| Korisnik nije ulogovan (`NO_TOKEN`) | Funkcija se prekida bez prikaza greške  |
+| Backend vrati grešku | Prikazuje se Swal error poruka |
+
+---
+
+### Logika onMounted()
+
+| Korak | Šta se dešava |
+|---|---|
+| 1 | Komponenta se mounta (stranica se učitava) |
+| 2 | Poziva se `refreshWorkshops()` i učitavaju se sve radionice sa backend-a |
+| 3 | Nakon toga se poziva `checkMyPromotion()` radi provjere da li je korisnik automatski promovisan sa liste čekanja |
+| 4 | Zatim se poziva `fetchWaitingList()` kako bi se učitao status liste čekanja za trenutno logovanog korisnika |
+| 5 | UI se inicijalno sinhronizuje sa backend stanjem (radionice + waiting list + promocije) |
+
+---
+
+## 2. WorkshopsDetailView.vue
+
+### Logika dugmeta “ Prijavi se” (WorkshopDetailsView.vue)
+
+| Stanje | Šta se desi |
+|---|---|
+| Korisnik je već prijavljen (`wasRegistered === true`) | Dugme je **disabled**, prikazuje “✓ Prijavljeni” i klik ne radi ništa |
+| Nema slobodnih mjesta (`workshop.free_spots === 0`) | Dugme je **disabled**, prikazuje “⛔ Popunjeno” i klik ne radi ništa |
+| Korisnik nije prijavljen i ima slobodnih mjesta | Dugme je aktivno i klik poziva `handleRegistrationClick` |
+| Hover stanje (samo aktivno dugme) | Dugme mijenja opacity (`hover:opacity-90`) za bolji UX feedback |
+
+
+| Uslov | Prikaz na dugmetu |
+|---|---|
+| `wasRegistered === true`    | `✓ Prijavljeni`|
+| `workshop.free_spots === 0` | `⛔ Popunjeno` |
+| Inače | `🎟 Prijavi se` |
+
+---
