@@ -29,7 +29,7 @@
       <div
         v-for="model in bookmarks"
         :key="model.id"
-        @click="router.push(`/role-models/${model.id}`)"
+        @click="router.push({ path: `/role-models/${model.id}`, query: { from: 'bookmarks' } })"
         class="bg-white border border-gray-100 rounded-2xl p-6 cursor-pointer hover:shadow-lg transition"
       >
         <div class="flex items-center gap-4">
