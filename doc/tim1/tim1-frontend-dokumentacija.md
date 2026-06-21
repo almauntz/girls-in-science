@@ -145,6 +145,43 @@ Stranica gdje korisnica šalje novi prijedlog radionice i prati status svojih ra
 
 ---
 
+## 4. WorkshopsAdminView.vue — Pregled prijavljenih na radionicu
+
+### Svrha
+Dio admin panela gdje administratorica bira radionicu sa padajuće liste i vidi tabelu svih korisnica koje su se prijavile na nju.
+
+### State
+
+| Varijabla | Tip | Opis |
+|---|---|---|
+| `workshops` | Array | Lista aktivnih radionica (za padajuću listu) |
+| `selectedWorkshopId` | String/Number | Trenutno odabrana radionica |
+| `registrations` | Array | Lista prijava za odabranu radionicu |
+| `registrationsLoading` | Boolean | Indikator učitavanja |
+| `registrationsError` | String/null | Poruka greške |
+
+### API pozivi
+
+| Akcija | Poziv | Funkcija |
+|---|---|---|
+| Učitavanje liste radionica (za dropdown) | `GET /workshops/active` | poziva se pri `onMounted()` |
+| Učitavanje prijava za odabranu radionicu | `GET /workshops/{selectedWorkshopId}/registrations` | `loadRegistrations()`, okida se pri promjeni odabira (`@change`) |
+
+### Prikaz tabele
+Tabela prikazuje: ime, prezime, email, telefon, prethodno iskustvo (badge, ili "-" ako nema) i link na GitHub profil (ili "-" ako nema). Naslov tabele prikazuje broj prijavljenih (`registrations.length`).
+
+### Obrada odgovora backend-a
+
+| Slučaj | Ponašanje |
+|---|---|
+| Nije odabrana radionica | Tabela se ne prikazuje (`registrations = []`) |
+| Uspješno učitano, ima prijava | Prikazuje se tabela sa svim kandidatima |
+| Uspješno učitano, nema prijava | Prikazuje se poruka "Nema prijavljenih kandidata za odabranu radionicu." |
+| Greška (403 / 404) | `err.detail` iz backend-a prikazan kao alert iznad tabele |
+
+---
+
+
 
 //elma
 # Frontend dokumentacija — Prijava na radionice, Kalendar, Notifikacije
