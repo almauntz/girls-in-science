@@ -256,6 +256,28 @@ Ovaj dio backend-a omogućava administratoru da kreira, ažurira i briše radion
 
 ---
 
+## Endpoint 10 — Pregled prijavljenih na radionicu
+
+**`GET /workshops/{workshop_id}/registrations`**
+
+**Namjena:** Administrator dohvata listu svih korisnica prijavljenih na određenu radionicu (ime, prezime, kontakt podaci, prethodno iskustvo, GitHub profil).
+
+**Autentifikacija:** Obavezna, samo administrator
+
+**Path parametar:** `workshop_id` (int)
+
+**Napomena:** Koristi entitet `Registration` i šemu `RegistrationRead` — `Registration` entitet je već opisan u sekciji iznad (Elma).
+
+**Mogući responses:**
+
+| Status | Slučaj | Primjer body-ja |
+|---|---|---|
+| `200 OK` | Lista prijava | `[{"id": 4, "first_name": "Amina", "last_name": "Hodžić", "email": "amina@example.com", "phone": "061123456", "previous_experience": null, "github_profile": null, "status": "registered"}]` |
+| `404 Not Found` | Radionica ne postoji | `{"detail": "Radionica nije pronađena."}` |
+| `403 Forbidden` | Korisnik nije administrator | `{"detail": "Samo administrator može izvršiti ovu akciju."}` |
+
+---
+
 
 //elma
 # Modul: Prijava i odjava sa radionice (Registration)
