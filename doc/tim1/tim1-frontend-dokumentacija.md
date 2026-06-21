@@ -1,5 +1,150 @@
 //amel
 
+# Frontend dokumentacija — Admin CRUD radionica i Prijedlozi (Proposals)
+
+Dokumentacija obuhvata komponente: `WorkshopsAdminView.vue` (admin CRUD nad radionicama + pregled/odobravanje/odbijanje prijedloga) i `MyProposalsView.vue` (slanje prijedloga i pregled statusa od strane korisnice).
+
+---
+
+## 1. WorkshopsAdminView.vue — CRUD radionica
+
+### Svrha
+Administratorski panel za kreiranje, izmjenu i brisanje radionica, sa modalima i potvrdom prije svake akcije.
+
+### State (relevantan za ovaj dio)
+
+| Varijabla | Tip | Opis |
+|---|---|---|
+| `activeModal` | String/null | Koji modal je otvoren (`create` / `edit` / `delete`) |
+| `confirmConfig` | Object/null | Konfiguracija potvrdnog dijaloga (naslov, poruka, akcija) |
+| `busy` | Boolean | Sprečava dupli submit dok je zahtjev u toku |
+| `editStep` | Number | Korak u edit modalu (1 = unos ID-a, 2 = forma sa popunjenim podacima) |
+| `form` | Object | Polja radionice (title, description, location, date, end_time, capacity, organizer_*) |
+| `errors` | Object | Poruke validacijskih grešaka po polju |
+
+### Validacija prije kreiranja (`validateCreate()`)
+
+| Polje | Provjera |
+|---|---|
+| `title`, `description`, `location` | ne smiju biti prazni |
+| `date`, `end_time` | obavezni, `end_time` mora biti nakon `date` |
+| `capacity` | mora biti ≥ 1 |
+| `organizer_name`, `organizer_email` | obavezni |
+
+### Tok akcije (create / edit / delete)
+1. Klik na akciono dugme → `openModal(type)` otvara odgovarajući modal i resetuje formu
+2. Klik na "Sačuvaj"/"Obriši" → `askConfirm(action)` validira (za create) ili provjerava odabrani ID (za edit/delete), zatim popunjava `confirmConfig` sa porukom potvrde
+3. Korisnica potvrđuje u dijalogu → `runAction()` poziva pravu API funkciju (`doCreate` / `doEdit` / `doDelete`)
+4. Edit ide kroz dva koraka: prvo `loadWorkshop()` dohvata postojeće podatke po ID-u, pa tek onda forma za izmjenu
+
+### API pozivi
+
+| Akcija | Poziv | Funkcija |
+|---|---|---|
+| Kreiranje | `POST /workshops/` | `doCreate()` |
+| Učitavanje radionice za izmjenu | `GET /workshops/{editId}` | `loadWorkshop()` |
+| Izmjena | `PATCH /workshops/{editId}` | `doEdit()` — šalje samo popunjena polja |
+| Brisanje | `DELETE /workshops/{deleteId}` | `doDelete()` |
+
+### Obrada odgovora backend-a
+
+| Slučaj | Ponašanje |
+|---|---|
+| Uspjeh | Toast poruka ("Radionica uspješno kreirana/ažurirana/obrisana"), modal se zatvara (`closeModal()`) |
+| Greška (400 / 403 / 404) | `err.detail` iz backend-a se prikazuje direktno u toast-u, modal ostaje otvoren |
+| `loadWorkshop()` ne pronađe radionicu | Greška se prikazuje uz polje za ID (`errors.editId`), bez toast-a |
+
+---
+
+## 2. WorkshopsAdminView.vue — Pregled i obrada prijedloga
+
+### Svrha
+Dio iste komponente koji administratorici omogućava pregled svih poslanih prijedloga, filtriranje po statusu, te odobravanje (uz opcionalno kreiranje radionice) ili odbijanje.
+
+### State
+
+| Varijabla | Tip | Opis |
+|---|---|---|
+| `proposals` | Array | Lista prijedloga sa backend-a |
+| `activeFilter` | String | `'all'` / `'pending'` / `'accepted'` / `'rejected'` |
+| `detailProposal` | Object/null | Trenutno otvoren prijedlog (detalj modal) |
+| `actionNote` | String | Tekst napomene administratora |
+| `createWorkshop` | Boolean | Da li se uz odobravanje odmah kreira radionica |
+| `workshopForm` | Object | Podaci radionice (popunjava se ako se radionica kreira pri odobravanju) |
+
+### API pozivi
+
+| Akcija | Poziv | Funkcija |
+|---|---|---|
+| Dohvat svih prijedloga | `GET /workshops/admin` | `fetchProposals()` |
+| Odobravanje | `PATCH /workshops/proposals/{id}/approve` | `doApprove()` |
+| Odbijanje | `PATCH /workshops/proposals/{id}/reject` | `doReject()` |
+
+### Filtriranje (`filteredProposals`, `countFor()`)
+Računato lokalno (computed) iz već učitane liste — `activeFilter === 'all'` prikazuje sve, inače filtrira po `status` polju. `countFor()` vraća broj za svaki tab (koristi se za brojeve uz filtere).
+
+### Tok odobravanja prijedloga
+1. Klik na prijedlog → `detailProposal` se postavlja, otvara se detalj modal
+2. Ako admin čekira "Kreiraj radionicu odmah" (`createWorkshop`) — pojavljuju se dodatna polja (lokacija, datum, kapacitet, organizator)
+3. Klik "Odobri" → `doApprove()` šalje `admin_note`, `create_workshop`, i (ako je čekirano) podatke radionice
+4. Backend vraća ažurirani prijedlog — lista se ažurira lokalno (`findIndex` + zamjena), modal se zatvara
+
+### Obrada odgovora backend-a
+
+| Slučaj | Ponašanje |
+|---|---|
+| Uspješno odobreno (sa kreiranjem radionice) | Toast "Prijedlog odobren i radionica kreirana!" |
+| Uspješno odobreno (bez kreiranja) | Toast "Prijedlog uspješno odobren!" |
+| Uspješno odbijeno | Toast "Prijedlog odbijen." |
+| Greška (400 / 404 / 422) | `err.detail` iz backend-a prikazan u toast-u (npr. nedostaju polja za kreiranje radionice) |
+
+---
+
+## 3. MyProposalsView.vue
+
+### Svrha
+Stranica gdje korisnica šalje novi prijedlog radionice i prati status svojih ranije poslanih prijedloga.
+
+### State
+
+| Varijabla | Tip | Opis |
+|---|---|---|
+| `proposals` | Array | Lista prijedloga ulogovane korisnice |
+| `form` | Object `{ title, description }` | Forma za novi prijedlog |
+| `detailProposal` | Object/null | Otvoren detalj prijedloga (status, napomena admina) |
+
+### Validacija forme (`validateForm()`)
+
+| Polje | Provjera | Poruka |
+|---|---|---|
+| `title` | ne smije biti prazno | "Naziv je obavezan." |
+| `description` | ne smije biti prazno | "Opis je obavezan." |
+| `description` | max 500 znakova (brojač uživo) | "Opis ne smije biti duži od 500 znakova." |
+
+### API pozivi
+- `fetchMyProposals()` → `GET /workshops/proposals/my`, poziva se pri `onMounted`
+- `submitProposal()` → `POST /workshops/proposals`, šalje `{ title, description }`
+
+### Obrada odgovora backend-a
+
+| Slučaj | Ponašanje |
+|---|---|
+| Uspješno slanje (201) | Novi prijedlog se odmah dodaje na vrh liste (`proposals.unshift()`), forma se resetuje, toast "Prijedlog uspješno poslan!" |
+| Greška pri slanju | `err.detail` iz backend-a prikazan u toast-u |
+| Greška pri učitavanju liste | Toast "Greška pri učitavanju prijedloga." |
+
+### Prikaz statusa u detalj modalu (`statusInfoTitle()` / `statusInfoMsg()`)
+
+| Status | Naslov | Poruka |
+|---|---|---|
+| `pending` | "Prijedlog je primljen" | "Admin tima još uvijek pregledava tvoj prijedlog…" |
+| `accepted` | "Prijedlog je odobren!" | "Odlična vijest! Admin je odobrio tvoj prijedlog…" |
+| `rejected` | "Prijedlog nije prihvaćen" | "Nažalost, ovaj prijedlog nije prihvaćen. Pogledaj napomenu admina…" |
+
+`admin_note` (ako postoji) se prikazuje ispod poruke u detalj modalu.
+
+---
+
 
 //elma
 # Frontend dokumentacija — Prijava na radionice, Kalendar, Notifikacije
