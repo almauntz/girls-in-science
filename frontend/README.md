@@ -140,10 +140,8 @@ Koristite Tailwind klase `text-primary`, `bg-primary` za konzistentan dizajn.
 
 
 ---
-### Tim 2 — Mentoring
+### Mentoring
 --- 
- 
-### Tarik Jukan — Pregled liste mentorica i Prijava studentice
  
 #### Komponente i stranice
  

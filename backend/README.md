@@ -90,11 +90,8 @@ alembic upgrade head
 
 
 ---
-### Tim 2 — Mentoring
+### Mentoring
 ---
-
-
-### Tarik Jukan — Pregled liste mentorica (US1) i Prijava studentice (US5)
 
 #### Modeli
 
