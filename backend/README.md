@@ -199,6 +199,53 @@ Primjer odgovora:
   "status": "PENDING"
 }
 ```
+
+
+**`POST /mentoring/apply`**
+Prima javnu prijavu mentorica za program. Ne zahtijeva autentifikaciju. Vraća `400` ako email već postoji u bazi.
+Tijelo zahtjeva (multipart/form-data): 
+`first_name`, `last_name`, `email`, `field_of_expertise`, `years_of_experience`, `linkedin_url`, `bio`, `cv_file`
+
+Primjer odgovora (`201 Created`):
+```json
+{
+  "message": "Prijava uspješno primljena."
+}
+```
+**`GET /mentoring/my-applications`**
+Vraća listu pristiglih zahtjeva studentica za ulogovanu mentoricu (izvučenu iz JWT tokena) sortirano po datumu. Zahtijeva autentifikaciju (JWT).
+
+Primjer odgovora:
+```json
+[
+  {
+    "id": 5,
+    "student_user_id": 12,
+    "student_name": "Lejla Softić",
+    "student_email": "lejla@example.com",
+    "message": "Interesuje me ML mentorstvo",
+    "status": "PENDING",
+    "created_at": "2024-03-15T10:30:00",
+    "expectations": "Naučiti ML fundamentals",
+    "skills_to_improve": "Python, TensorFlow",
+    "cv_file_path": "uploads/cv/abc123.pdf",
+    "rejection_reason": null
+  }
+]
+```
+**`PUT /mentoring/applications/{application_id}/status`**
+Omogućava mentorici da prihvati ili odbije zahtjev studentice. Zahtijeva autentifikaciju (JWT). Vraća `403` ako zahtjev ne pripada toj mentorici.
+Tijelo zahtjeva (application/json): `status`, `rejection_reason` (opciono uz `REJECTED`)
+
+Primjer odgovora:
+```json
+{
+  "message": "Zahtjev je uspješno ažuriran na status: ACCEPTED",
+  "application_id": 5,
+  "status": "ACCEPTED"
+}
+```
+
 #### Integracija sa Tim 4 (Profili)
 
 Funkcija `get_avatar_url(mentor, db)` povezuje `Mentor.email` sa `User.email` (Tim 4), pronalazi pripadajući `Profile.avatar`, i vraća punu URL putanju do slike. Ako profil ili avatar ne postoji, koristi se `Mentor.profile_img_url` kao fallback.

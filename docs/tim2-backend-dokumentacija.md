@@ -359,9 +359,26 @@ Prima `multipart/form-data`.
 
 Mentoricin panel — lista zahtjeva studentica upućenih toj mentorici. **Zahtijeva JWT.**
 
-Mentorica se pronalazi po emailu iz tokena → traži se njen `Mentor` zapis → vraćaju se njeni `MentorshipRequest` zapisi.
+Mentorica se pronalazi po emailu iz tokena → traži se njen `Mentor` zapis → vraćaju se njeni `MentorshipRequest` zapisi sortirani po datumu (najnoviji prvi).
 
-*(Endpoint implementirala kolegica — Tim 2)*
+**Primjer odgovora (200 OK):**
+```json
+[
+  {
+    "id": 5,
+    "student_user_id": 12,
+    "student_name": "Lejla Softić",
+    "student_email": "lejla@example.com",
+    "message": "Interesuje me ML mentorstvo",
+    "status": "PENDING",
+    "created_at": "2024-03-15T10:30:00",
+    "expectations": "Naučiti ML fundamentals",
+    "skills_to_improve": "Python, TensorFlow",
+    "cv_file_path": "uploads/cv/abc123.pdf",
+    "rejection_reason": null
+  }
+]
+```
 
 ---
 
@@ -378,6 +395,19 @@ Mentorica prihvata ili odbija zahtjev studentice. **Zahtijeva JWT.**
 ```
 
 **Mogući statusi:** `PENDING`, `ACCEPTED`, `REJECTED`
+
+**Mogući odgovori:**
+- `200 OK`:
+```json
+{
+  "message": "Zahtjev je uspješno ažuriran na status: ACCEPTED",
+  "application_id": 5,
+  "status": "ACCEPTED"
+}
+```
+- `400 Bad Request` — nevaljani status ili mentor je popunjen
+- `403 Forbidden` — nemate dozvolu (niste mentorica sa ovim zahtjevom)
+- `404 Not Found` — zahtjev nije pronađen
 
 ---
 ### `POST /mentoring/requests/`
