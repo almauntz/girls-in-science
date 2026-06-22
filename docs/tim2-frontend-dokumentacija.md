@@ -178,6 +178,51 @@ Forma za slanje zahtjeva za mentorstvo. Dohvata podatke o mentorici sa `GET /men
 
 ---
 
+### `MentorRegistration.vue` — `/mentoring/apply`
+
+Javna forma za prijavu mentorica u program. Ne zahtijeva autentifikaciju, ima naprednu validaciju u realnom vremenu i podršku za upload fajlova.
+
+**Prikazuje:**
+- Unos osnovnih podataka (Ime, Prezime, Email)
+- Padajući meni za oblast stručnosti (`IT`, `Engineering`, `Science`...)
+- Numerički unos za godine iskustva (0–70) i opciono polje za LinkedIn URL
+- Tekstualno polje za biografiju sa brojačem karaktera (min. 20 karaktera)
+- Drag & Drop / Input zonu za upload CV-ja:
+  - Dozvoljeni formati: PDF, DOCX
+  - Maksimalna veličina: 5MB
+- Dugme "Pošalji prijavu":
+  - Onemogućeno (`disabled`) ako forma nije validna (`isFormValid`)
+  - Prikazuje loading spinner tokom slanja podataka
+
+**Ponašanje:**
+- Koristi `touched` stanja kako bi se crvene poruke grešaka prikazale tek nakon interakcije s poljem.
+- Pakuje podatke u `FormData` i šalje kao `multipart/form-data` na `POST /mentoring/apply`.
+- Nakon uspješnog slanja prikazuje zeleni banner sa potvrdom i resetuje formu nakon 3 sekunde.
+- U slučaju greške, dinamički ispisuje poruku sa backenda (`error.response.data.detail`).
+
+---
+
+### `MyApplicationsView.vue` — `/mentoring/my-applications`
+
+Panel namijenjen mentoricama za pregled, upravljanje i obradu pristiglih zahtjeva studentica za mentorstvo.
+
+**Prikazuje:**
+- **Tabovi za filtriranje:** Razvrstavanje zahtjeva u tri kategorije sa prikazom broja stavki:
+  - Pristigli zahtjevi (`PENDING`)
+  - Aktivni odnosi (`ACCEPTED`)
+  - Odbijeni zahtjevi (`REJECTED`)
+- **Kartice zahtjeva:** Sadrže inicijale studentice, ime, skraćeni prikaz motivacijske poruke i relativno vrijeme primitka (npr. *prije 2h*).
+- **Akcije (za PENDING status):** Dugmad "Prihvati", "Odbij" i "Detalji".
+- **Pregled detalja (Modal):** Prikazuje puni profil studentice sa njenim emailom, očekivanjima, vještinama za poboljšanje, motivacijom i linkom za preuzimanje CV-ja sa backenda.
+- **Modal za odbijanje:** Otvara se klikom na "Odbij" i nudi opciono polje za unos razloga odbijanja.
+
+**Ponašanje:**
+- Prilikom montiranja komponente dohvata sve zahtjeve preko `getMentorApplications()`.
+- Prikazuje loading spinner tokom učitavanja ili poruku greške ako API poziv ne uspije.
+- Klikom na "Prihvati" ili potvrdom odbijanja, poziva se `updateApplicationStatus(id, status, reason)` i reaktivno se ažurira stanje u UI-ju bez potrebe za ponovnim učitavanjem stranice.
+
+---
+
 ### `StudentRegistration.vue` — `/student/apply`
 
 Forma za prijavu studentice na mentorski program. **Zahtijeva login** (`meta: { requiresAuth: true }`).

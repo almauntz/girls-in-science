@@ -163,6 +163,12 @@ Detaljan profil mentorice na ruti `/mentoring/:id`. Prikazuje profilnu sliku, im
 **`views/mentoring/MentorshipRequestView.vue`**
 Forma za slanje zahtjeva za mentorstvo na ruti `/mentoring/:id/zahtjev`. Dohvata osnovne podatke o mentorici, omogućava unos očekivanja i vještina koje studentica želi unaprijediti, upload CV-a i potvrdu saglasnosti za sesije. Prilikom slanja koristi JWT autentifikaciju i `multipart/form-data`.
  
+**`views/mentoring/MentorRegistration.vue`**
+Javna forma za prijavu mentorica na ruti `/mentoring/apply`. Omogućava unos ličnih podataka, odabir STEM oblasti, unos godina iskustva, biografije i LinkedIn URL-a, uz Drag & Drop zonu za upload CV-ja (PDF/DOCX do 5MB). Koristi reaktivnu validaciju u realnom vremenu i šalje podatke kao `multipart/form-data` bez potrebe za autentifikacijom.
+
+**`views/mentoring/MyApplicationsView.vue`**
+Panel za mentorice na ruti `/mentoring/my-applications` koji omogućava upravljanje zahtjevima studentica kroz tri tabova (`PENDING`, `ACCEPTED`, `REJECTED`). Prikazuje kartice sa osnovnim podacima i relativnim vremenom, nudi detaljan modalni pregled profila studentice sa opcijom preuzimanja CV-ja, te modal za odbijanje zahtjeva uz unos obrazloženja.
+
 #### Servisi (`services/mentoring.js`)
  
 | Funkcija | Endpoint | Opis |
@@ -170,7 +176,10 @@ Forma za slanje zahtjeva za mentorstvo na ruti `/mentoring/:id/zahtjev`. Dohvata
 | `getMentors(skip, limit)` | `GET /mentoring/mentors` | Dohvata listu odobrenih mentorica |
 | `getMentorById(id)` | `GET /mentoring/mentors/{id}` | Dohvata detaljan profil jedne mentorice |
 | `registerStudent(formData)` | `POST /mentoring/students/register` | Šalje prijavu studentice (zahtijeva JWT token u headeru) |
- 
+| `applyAsMentor(formData)` | `POST /mentoring/apply` | Šalje prijavu mentorice sa priloženim CV-jem |
+| `getMentorApplications()` | `GET /mentoring/my-applications` | Dohvata sve pristigle zahtjeve studentica za prijavljenu mentoricu (zahtijeva JWT token) |
+| `updateApplicationStatus(applicationId, status, rejectionReason)` | `PUT /mentoring/applications/{id}/status` | Mijenja status zahtjeva u ACCEPTED ili REJECTED uz opcioni razlog (zahtijeva JWT token) |
+
 #### Rute (`router/index.js`)
  
 | Putanja | Komponenta | Pristup |
@@ -178,7 +187,9 @@ Forma za slanje zahtjeva za mentorstvo na ruti `/mentoring/:id/zahtjev`. Dohvata
 | `/mentoring` | MentoringView.vue | Javno (lista mentorica), automatski redirect za mentorice |
 | `/mentoring/:id` | MentorProfileView.vue | Javno (profil mentorice) |
 | `/mentoring/:id/zahtjev` | MentorshipRequestView.vue | Zahtijeva login |
- 
+| `/mentoring/my-applications` | MentorApplicationsView.vue | Zahtijeva login | 
+`/mentoring/apply` | MentorRegistration.vue | Javno | 
+
 #### Komunikacija sa backendom
  
 Autentifikacija preko JWT tokena spremljenog u `localStorage`. Token se dekodira na frontendu (`JSON.parse(atob(token.split('.')[1]))`) radi čitanja `role` polja za uslovni prikaz (npr. admin dugme, redirect mentorice).
