@@ -126,6 +126,24 @@ SQLAlchemy model koji čuva prijave studentica za mentorski program.
 | consent_data, consent_evaluation | Boolean | Saglasnosti |
 | status | Enum | PENDING / APPROVED / REJECTED / DELETED |
 
+**`MentorshipRequest`** (`app/models/mentorship_request.py`)
+SQLAlchemy model koji čuva zahtjeve studentica prema konkretnoj mentorici.
+
+| Polje | Tip | Opis |
+|---|---|---|
+| id | Integer | Primarni ključ |
+| mentor_id | Integer (FK → mentors.id) | Mentorica kojoj je zahtjev upućen |
+| student_id | Integer (FK → users.id) | Korisnica koja je poslala zahtjev |
+| expectations | String | Očekivanja studentice |
+| skills_to_improve | String | Vještine koje želi unaprijediti |
+| cv_file_path | String | Putanja do CV fajla |
+| message | Text | Dodatna poruka studentice |
+| agreed_to_sessions | Boolean | Saglasnost za sesije |
+| rejection_reason | Text | Razlog odbijanja |
+| status | Enum | PENDING / ACCEPTED / REJECTED |
+| created_at | DateTime | Datum kreiranja |
+| updated_at | DateTime | Datum posljednje izmjene |
+
 #### Endpointi (`app/routers/mentoring.py`)
 
 **`GET /mentoring/mentors`**
@@ -149,11 +167,38 @@ Primjer odgovora:
 **`GET /mentoring/mentors/{id}`**
 Vraća detaljan profil jedne mentorice (za `MentorProfileView.vue`).
 
+Primjer odgovora:
+```json
+{
+  "id": 1,
+  "full_name": "Amina Hodžić",
+  "field_of_expertise": "Softverski inženjering",
+  "bio": "...",
+  "avatar_url": "http://localhost:8000/uploads/avatars/...",
+  "is_available": true
+}
+```
+
 **`POST /mentoring/students/register`**
 Prima prijavu studentice za mentorski program. Zahtijeva autentifikaciju (JWT). Vraća `400` ako email već postoji u bazi.
 
 Telo zahtjeva (multipart/form-data): `full_name`, `email`, `university`, `faculty`, `year_of_study`, `city_country`, `areas_of_interest`, `has_business_idea`, `expectations`, `skills_to_improve`, `preferred_session_format`, `session_commitment`, `consent_data`, `consent_evaluation`
 
+
+**`POST /mentoring/requests/`**
+
+Prima zahtjev za mentorstvo od studentice. Zahtijeva autentifikaciju (JWT) i multipart/form-data.
+
+Polja zahtjeva: `mentor_id`, `expectations`, `skills_to_improve`, `cv`
+
+Primjer odgovora:
+```json
+{
+  "message": "Zahtjev je uspješno poslan.",
+  "request_id": 12,
+  "status": "PENDING"
+}
+```
 #### Integracija sa Tim 4 (Profili)
 
 Funkcija `get_avatar_url(mentor, db)` povezuje `Mentor.email` sa `User.email` (Tim 4), pronalazi pripadajući `Profile.avatar`, i vraća punu URL putanju do slike. Ako profil ili avatar ne postoji, koristi se `Mentor.profile_img_url` kao fallback.

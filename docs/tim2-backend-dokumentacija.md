@@ -29,7 +29,7 @@ Mentoring modul pokriva sljedeće funkcionalnosti:
 - **Profil mentorice** — detaljan prikaz biografije, iskustva i dostupnosti
 - **Prijava mentorice** — forma za prijavu u program (čeka odobrenje admina)
 - **Prijava studentice** — forma za učešće u mentorskom programu (čeka odobrenje admina)
-- **Zahtjev za mentorstvo** — studentica šalje zahtjev konkretnoj mentorici *(implementirala kolegica)*
+- **Zahtjev za mentorstvo** — studentica šalje zahtjev konkretnoj mentorici 
 - **Panel mentorice** — mentorica pregleda i obrađuje pristigle zahtjeve *(implementirala kolegica)*
 - **Admin panel** — odobravanje/odbijanje prijava mentorica i studentica
 
@@ -153,6 +153,7 @@ backend/
     routers/
       mentoring.py       — Javni i zaštićeni endpointi za mentoring
       admin.py           — Admin endpointi (odobravanje mentorica i studentica)
+      requests.py        — Endpoint za slanje zahtjeva za mentorstvo 
   seed_mentors.py        — Skripta za testne podatke
 ```
 
@@ -204,21 +205,24 @@ backend/
 | consent_data, consent_evaluation | Boolean | GDPR saglasnosti |
 | status | Enum | PENDING / APPROVED / REJECTED / DELETED |
 
-### `MentorshipRequest` tabela (`app/models/mentorship_request.py`)
+## `MentorshipRequest` tabela (`app/models/mentorship_request.py`)
 
-Čuva zahtjeve studentica prema konkretnoj mentorici. *(Implementirala kolegica — Tim 2)*
+Čuva zahtjeve studentica prema konkretnoj mentorici.
 
 | Polje | Tip | Opis |
 |---|---|---|
 | id | Integer | Primarni ključ |
 | mentor_id | Integer (FK → mentors.id) | Mentorica kojoj je zahtjev upućen |
-| student_user_id | Integer (FK → students.id) | Studentica koja je poslala zahtjev |
-| message | String | Poruka studentice |
-| expectations, skills_to_improve | String | Detalji zahtjeva |
+| student_id | Integer (FK → users.id) | Korisnica koja je poslala zahtjev |
+| expectations | String | Očekivanja studentice |
+| skills_to_improve | String | Vještine koje želi unaprijediti |
 | cv_file_path | String | Putanja do CV fajla |
+| message | Text | Dodatna poruka studentice |
+| agreed_to_sessions | Boolean | Saglasnost za sesije |
+| rejection_reason | Text | Razlog odbijanja |
 | status | Enum | PENDING / ACCEPTED / REJECTED |
 | created_at | DateTime | Datum kreiranja |
-| rejection_reason | String | Razlog odbijanja |
+| updated_at | DateTime | Datum posljednje izmjene |
 
 ### Relacije između tabela
 
@@ -279,9 +283,35 @@ GET http://127.0.0.1:8000/mentoring/mentors?skip=0&limit=10
 
 Javno dostupno. Vraća detaljan profil jedne mentorice.
 
+
+GET http://127.0.0.1:8000/mentoring/mentors/3
+
+**Primjer odgovora (200 OK):**
+```json
+{
+  "id": 3,
+  "full_name": "Amina Hodžić",
+  "bio": "Senior developer sa 8 godina iskustva.",
+  "field_of_expertise": "Softverski inženjering",
+  "linkedin_url": "https://linkedin.com/in/...",
+  "preferred_session_format": "Online",
+  "max_mentees": 3,
+  "current_applications_count": 1,
+  "is_available": true,
+  "email": "amina@example.com",
+  "years_of_experience": 8,
+  "cv_url": null,
+  "position": "Senior Developer",
+  "institution": "Univerzitet u Tuzli",
+  "avatar_url": "http://localhost:8000/uploads/avatars/abc.jpg"
+}
+```
+
 **Mogući odgovori:**
 - `200 OK` — profil mentorice
-- `404 Not Found` — mentorica sa tim ID-em ne postoji
+- `404 Not Found` — mentorica sa tim ID-em ne postoji: `{"detail": "Mentor not found."}`
+
+**Napomena:** `current_applications_count` i `is_available` se računaju dinamički — broji se koliko zahtjeva (`MentorshipRequest`) prema toj mentorici ima status `ACCEPTED`, i poredi se sa `max_mentees`. Slika (`avatar_url`) se dohvata preko `get_avatar_url()` funkcije koja povezuje `Mentor` i `Profile` (Tim 4) tabele po emailu.
 
 ---
 
@@ -350,6 +380,44 @@ Mentorica prihvata ili odbija zahtjev studentice. **Zahtijeva JWT.**
 **Mogući statusi:** `PENDING`, `ACCEPTED`, `REJECTED`
 
 ---
+### `POST /mentoring/requests/`
+
+Slanje zahtjeva za mentorstvo od strane studentice. **Zahtijeva JWT autentifikaciju.**
+Prima `multipart/form-data` (zbog CV upload-a). 
+
+**Polja forme:**
+| Polje | Tip | Obavezno |
+|---|---|---|
+| `mentor_id` | int | Da |
+| `expectations` | string | Da |
+| `skills_to_improve` | string | Da |
+| `cv` | file (PDF) | Da |
+
+**Primjer poziva:**
+```bash
+curl -X POST http://127.0.0.1:8000/mentoring/requests/ \
+  -H "Authorization: Bearer <TOKEN>" \
+  -F "mentor_id=1" \
+  -F "expectations=Želim naučiti praktične vještine." \
+  -F "skills_to_improve=Programiranje, timski rad." \
+  -F "cv=@moj_cv.pdf"
+```
+
+**Validacija:**
+- CV mora biti u PDF formatu, max 5MB
+- Korisnik mora biti registrovana studentica (provjera u tabeli `students`)
+- Ne dozvoljava se dupli aktivan (PENDING) zahtjev prema istoj mentorici
+
+**Mogući odgovori:**
+
+| Status | Razlog |
+|---|---|
+| `201 Created` | `{"message": "Zahtjev je uspješno poslan.", "request_id": 12, "status": "PENDING"}` |
+| `400 Bad Request` | Pogrešan format fajla / fajl preko 5MB / dupli zahtjev |
+| `401 Unauthorized` | Korisnik nije ulogovan |
+| `403 Forbidden` | Korisnik nije registrovana studentica |
+
+CV fajl se sprema u `backend/storage/cv/` sa jedinstvenim UUID nazivom.
 
 ## 8. Admin endpointi
 
