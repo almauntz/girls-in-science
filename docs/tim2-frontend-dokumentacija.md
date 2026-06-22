@@ -156,6 +156,28 @@ Detaljan profil jedne mentorice. Dohvata podatke sa `GET /mentoring/mentors/{id}
 
 ---
 
+### `MentorshipRequestView.vue` — `/mentoring/:id/zahtjev`
+
+Forma za slanje zahtjeva za mentorstvo. Dohvata podatke o mentorici sa `GET /mentoring/mentors/{id}` i šalje zahtjev na `POST /mentoring/requests/`.
+
+**Prikazuje:**
+- Kratke informacije o mentorici:
+  - profilna slika
+  - ime i prezime
+  - oblast ekspertize razdvojena u tagove
+- Tekstualno polje za očekivanja od mentorski programa
+- Tekstualno polje za vještine koje studentica želi unaprijediti
+- Upload CV-a
+  - dozvoljeni formati: PDF, DOC
+  - maksimalna veličina: 5MB
+- Checkbox saglasnosti za minimalno 2 sesije
+- Dugme "Pošalji zahtjev"
+  - dugme je onemogućeno ako forma nije validna
+  - dugme prelazi u status "Status: Na čekanju" nakon uspješnog slanja
+  - ako je mentorica trenutno popunjena, prikazuje se poruka da ne prihvata nove zahtjeve
+
+---
+
 ### `StudentRegistration.vue` — `/student/apply`
 
 Forma za prijavu studentice na mentorski program. **Zahtijeva login** (`meta: { requiresAuth: true }`).

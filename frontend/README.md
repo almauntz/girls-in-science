@@ -158,12 +158,19 @@ Kartica pojedinačne mentorice — slika (`avatar_url` sa fallback na `profile_i
  
 **`views/mentoring/StudentRegistration.vue`**
 Forma za prijavu studentice na mentorski program, podijeljena u 5 sekcija (lični podaci, akademski interesi, očekivanja, dostupnost, saglasnosti), usklađena sa wireframeom i originalnom Google formom profesorice. Klijentska validacija obaveznih polja, prikaz statusa slanja (uspjeh/greška), reset forme nakon uspješnog slanja.
+
+**`views/mentoring/MentorProfileView.vue`**
+Detaljan profil mentorice na ruti `/mentoring/:id`. Prikazuje profilnu sliku, ime, oblast ekspertize, LinkedIn link, indikator popunjenosti kapaciteta, preferirani format sesija, biografiju i timeline iskustva. Dugme "Zatraži mentorstvo" vodi na `/mentoring/{id}/zahtjev` i deaktivira se ako je kapacitet popunjen ili je zahtjev već poslan.
+
+**`views/mentoring/MentorshipRequestView.vue`**
+Forma za slanje zahtjeva za mentorstvo na ruti `/mentoring/:id/zahtjev`. Dohvata osnovne podatke o mentorici, omogućava unos očekivanja i vještina koje studentica želi unaprijediti, upload CV-a i potvrdu saglasnosti za sesije. Prilikom slanja koristi JWT autentifikaciju i `multipart/form-data`.
  
 #### Servisi (`services/mentoring.js`)
  
 | Funkcija | Endpoint | Opis |
 |---|---|---|
 | `getMentors(skip, limit)` | `GET /mentoring/mentors` | Dohvata listu odobrenih mentorica |
+| `getMentorById(id)` | `GET /mentoring/mentors/{id}` | Dohvata detaljan profil jedne mentorice |
 | `registerStudent(formData)` | `POST /mentoring/students/register` | Šalje prijavu studentice (zahtijeva JWT token u headeru) |
  
 #### Rute (`router/index.js`)
@@ -172,7 +179,7 @@ Forma za prijavu studentice na mentorski program, podijeljena u 5 sekcija (ličn
 |---|---|---|
 | `/mentoring` | MentoringView.vue | Javno (lista mentorica), automatski redirect za mentorice |
 | `/mentoring/:id` | MentorProfileView.vue | Javno (profil mentorice) |
-| `/student/apply` | StudentRegistration.vue | Zahtijeva login |
+| `/mentoring/:id/zahtjev` | MentorshipRequestView.vue | Zahtijeva login |
  
 #### Komunikacija sa backendom
  
