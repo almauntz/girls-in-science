@@ -1,4 +1,27 @@
-//amel
+## Postavljanje projekta
+
+1. Instaliraj zavisnosti:
+```bash
+cd frontend
+npm install
+```
+
+2. Pokreni dev server:
+```bash
+npm run dev
+```
+
+3. Otvori u browseru:
+```
+http://localhost:5173
+```
+
+> **Napomena:** Prije pokretanja, kreiraj `.env.local` fajl u `frontend/` folderu sa sljedećim sadržajem:
+> ```dotenv
+> VITE_API_URL=http://localhost:8000
+> ```
+> Bez ovog fajla aplikacija neće moći komunicirati sa backend serverom na lokalnom okruženju.
+
 
 # Frontend dokumentacija — Admin CRUD radionica i Prijedlozi (Proposals)
 
@@ -183,7 +206,6 @@ Tabela prikazuje: ime, prezime, email, telefon, prethodno iskustvo (ili "-" ako 
 
 
 
-//elma
 # Frontend dokumentacija — Prijava na radionice, Kalendar, Notifikacije
 
 Dokumentacija obuhvata komponente: `RegistrationForm.vue`, `Calendar.vue`, `Notifications.vue`, te dio `WorkshopDetail.vue` vezan za otvaranje forme za prijavu.
@@ -479,7 +501,6 @@ Backend endpoint (`GET /unread-notifications`) markira notifikacije kao pročita
 
 
 
-//maida
 
 # Frontend dokumentacija — WorkshopsView.vue (Pregled, pretraga, ocjenjivanje)
 
@@ -705,12 +726,6 @@ Formatira datum u oblik `DD.MM.YYYY.` — koristi se za header, "Datum početka"
 ---
 
 
-
-
-
-
-
-//mahir
 
 # Frontend dokumentacija - Prijava/odjava/waitinglist, Notifikacija za automatsku prijavu
 

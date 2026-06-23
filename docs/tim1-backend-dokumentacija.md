@@ -1,4 +1,28 @@
-//amel
+## Postavljanje projekta
+
+1. Kreiraj i aktiviraj virtualno okruženje:
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+2. Instaliraj zavisnosti:
+```bash
+pip install -r requirements.txt
+```
+
+3. Pokreni server:
+```bash
+cd backend
+uvicorn app.main:app --reload
+```
+
+4. Otvori API dokumentaciju:
+```
+http://127.0.0.1:8000/docs
+```
+
+
 # Modul: Admin upravljanje radionicama i prijedlozima radionica (Proposals)
 
 ## Svrha modula
@@ -277,7 +301,6 @@ Ovaj dio backend-a omogućava administratoru da kreira, ažurira i briše radion
 ---
 
 
-//elma
 # Modul: Prijava i odjava sa radionice (Registration)
 
 ## Svrha modula
@@ -397,10 +420,6 @@ Kompozitni indeks koji ubrzava upite po radionici i statusu, te omogućava obrad
 
 
 
-
-
-
-//maida
 
 # Modul: Pregled, pretraga i ocjenjivanje radionica
 
@@ -594,9 +613,6 @@ Ovaj dio backend-a omogućava javni pregled i pretragu radionica (filteri po naz
 
 
 
-
-
-//mahir
 
 # Modul: Upravljanje listom čekanja za radionice (waiting list)
 ## Svrha modula
