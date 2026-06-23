@@ -28,10 +28,6 @@
             {{ formatDate(workshop.date) }}
           </div>
           <div class="flex items-center gap-2 text-white/80 text-sm">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            {{ workshop.location || 'Online' }}
-          </div>
-          <div class="flex items-center gap-2 text-white/80 text-sm">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
             {{ workshop.capacity }} polaznika
           </div>
@@ -117,21 +113,23 @@
             </router-link>
            <button
               @click="handleRegistrationClick"
-              :disabled="wasRegistered || workshop.free_spots === 0"
+              :disabled="wasRegistered || workshop.free_spots === 0 || isCompleted(workshop)"
               class="flex-1 py-2.5 rounded-xl font-bold text-sm transition"
-              :class="(wasRegistered || workshop.free_spots === 0)
+              :class="(wasRegistered || workshop.free_spots === 0 || isCompleted(workshop))
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-70'
                 : 'text-white hover:opacity-90'"
-              :style="!(wasRegistered || workshop.free_spots === 0)
+              :style="!(wasRegistered || workshop.free_spots === 0 || isCompleted(workshop))
                 ? 'background: linear-gradient(135deg, #7c3aed, #a855f7);'
                 : ''"
               >
                {{
-                  wasRegistered
-                  ? '✓ Prijavljeni'
-                 : workshop.free_spots === 0
-                  ? '⛔ Popunjeno'
-                  : '🎟 Prijavi se'
+                  isCompleted(workshop)
+                    ? `📅 Završena ${formatDateM(workshop.end_time)}`
+                  : wasRegistered
+                    ? '✓ Prijavljeni'
+                   : workshop.free_spots === 0
+                    ? '⛔ Popunjeno'
+                   : '🎟 Prijavi se'
                }}
             </button>
           </div>
@@ -301,6 +299,23 @@ export default {
 
     const isLoggedIn = computed(() => !!localStorage.getItem('token'))
 
+
+
+
+const formatDateM = (date) => {
+  return new Date(date).toLocaleDateString('bs-BA', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  })
+}
+
+const isCompleted = (workshop) => {
+  if (!workshop?.end_time) return false
+  return new Date(workshop.end_time) < new Date()
+}
+
+
     const fetchWorkshop = async () => {
       try {
         loading.value = true
@@ -447,8 +462,8 @@ const submitRating = async () => {
     return {
       workshop, loading, error, showForm, showRatingModal,
       ratings, ratingsAverage, alreadyRated, wasRegistered,
-      ratingForm, ratingSubmitting, ratingError, isLoggedIn,
-      handleSuccess, formatDate, handleRegistrationClick, submitRating
+      ratingForm, ratingSubmitting, ratingError, isLoggedIn,isCompleted,
+      handleSuccess, formatDate, formatDateM, handleRegistrationClick, submitRating
     }
   }
 }
