@@ -30,7 +30,7 @@ Mentoring modul pokriva sljedeće funkcionalnosti:
 - **Prijava mentorice** — forma za prijavu u program (čeka odobrenje admina)
 - **Prijava studentice** — forma za učešće u mentorskom programu (čeka odobrenje admina)
 - **Zahtjev za mentorstvo** — studentica šalje zahtjev konkretnoj mentorici 
-- **Panel mentorice** — mentorica pregleda i obrađuje pristigle zahtjeve *(implementirala kolegica)*
+- **Panel mentorice** — mentorica pregleda i obrađuje pristigle zahtjeve 
 - **Admin panel** — odobravanje/odbijanje prijava mentorica i studentica
 
 ---
@@ -149,7 +149,7 @@ backend/
     models/
       mentor.py          — SQLAlchemy model za mentorice
       student.py         — SQLAlchemy model za prijave studentica
-      mentorship_request.py — Model za zahtjeve za mentorstvo (Tim 2 kolegica)
+      mentorship_request.py — Model za zahtjeve za mentorstvo
     routers/
       mentoring.py       — Javni i zaštićeni endpointi za mentoring
       admin.py           — Admin endpointi (odobravanje mentorica i studentica)
