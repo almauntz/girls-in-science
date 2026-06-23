@@ -277,6 +277,23 @@ export async function deleteNewsPost(id, token) {
   return response.json()
 }
 
+export async function getCategories() {
+  const response = await fetch(`${BASE_URL}/news/categories`)
+  return response.json()
+}
+
+export async function createCategory(data, token) {
+  const response = await fetch(`${BASE_URL}/news/categories`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
+
 /* =========================================================
    ADMIN — USER MANAGEMENT
 ========================================================= */
@@ -311,4 +328,60 @@ export async function updateUserRole(token, userId, newRole) {
   })
   if (!response.ok) throw new Error('Greška prilikom izmjene uloge na serveru')
   return response.json()
+}
+
+export async function uploadRoleModelImage(formData) {
+  const response = await fetch(
+    `${BASE_URL}/role-models/upload-image`,
+    {
+      method: "POST",
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      },
+      body: formData
+    }
+  )
+  return await response.json()
+}
+
+/* =========================================================
+   BOOKMARKS
+========================================================= */
+
+export async function getBookmarks() {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/bookmarks/`, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  return response.json()
+}
+
+export async function addBookmark(roleModelId) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/bookmarks/${roleModelId}`, {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  return response.json()
+}
+
+export async function removeBookmark(roleModelId) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/bookmarks/${roleModelId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  return response.json()
+}
+
+export async function uploadNewsImage(formData) {
+  const response = await fetch(
+    `${BASE_URL}/news/upload-image`,
+    {
+      method: "POST",
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+      body: formData
+    }
+  )
+  return await response.json()
 }
