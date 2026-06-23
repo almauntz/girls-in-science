@@ -56,13 +56,21 @@ def my_promotion(
         Workshop.ID_workshop == registration.workshop_id
     ).first()
 
+    is_promoted = registration.was_promoted
+
+    #odmah resetuj flag
+    if registration.was_promoted:
+        registration.was_promoted = False
+        db.commit()
+
     return {
         "promotion": {
+            "id": registration.id,
             "user_id": current_user.id,
             "workshop_id": registration.workshop_id,
             "workshop_title": workshop.title if workshop else "Radionica",
             "status": registration.status,
-            "is_promoted": registration.was_promoted
+            "is_promoted": is_promoted  
         }
     }
 
@@ -544,8 +552,7 @@ def cancel_registration(
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
-    # Tražimo prijavu na osnovu ID-a radionice i email-a ulogovanog korisnika
-    # Pošto tvoj Registration model ima 'email', ovo će raditi!
+    # 
     statement = select(Registration).where(
         Registration.workshop_id == workshop_id,
         Registration.email == current_user.email
