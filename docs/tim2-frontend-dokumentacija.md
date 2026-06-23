@@ -26,9 +26,9 @@ Frontend mentoring modula pokriva:
 - **Hero sekcija** na `/mentoring` — dva CTA dugmeta sa gradijentom i SVG grafikom
 - **Lista mentorica** — responzivni grid sa filterom po oblasti ekspertize
 - **Profil mentorice** — detaljan prikaz sa biografijom, iskustvom i dugmetom za zahtjev
-- **Forma za prijavu mentorice** — multi-step forma sa CV uploadom *(implementirala kolegica)*
+- **Forma za prijavu mentorice** — multi-step forma sa CV uploadom 
 - **Forma za prijavu studentice** — 5-sekcijska forma usklađena sa Google formom
-- **Panel mentorice** — pregled i obrada pristiglih zahtjeva *(implementirala kolegica)*
+- **Panel mentorice** — pregled i obrada pristiglih zahtjeva 
 - **Admin panel** — odobravanje/odbijanje prijava mentorica i studentica, sa tabovima
 
 ---
@@ -80,7 +80,7 @@ src/
       MentorRegistration.vue — Forma za prijavu mentorice (kolegica)
       StudentRegistration.vue — Forma za prijavu studentice
       MentorApplicationsView.vue — Admin panel za mentorice i studentice
-      MentoringRequestView.vue — Slanje zahtjeva za mentorstvo (kolegica)
+      MentorshipRequestView.vue — Slanje zahtjeva za mentorstvo 
       MyApplicationsView.vue — Panel mentorice (kolegica)
   router/
     index.js                 — Definicija svih ruta
@@ -306,7 +306,7 @@ Definirane u `src/router/index.js`:
 |---|---|---|---|
 | `/mentoring` | `MentoringView.vue` | Ne | Javna lista; redirect za mentoricu |
 | `/mentoring/:id` | `MentorProfileView.vue` | Ne | Profil mentorice |
-| `/mentoring/:id/zahtjev` | `MentoringRequestView.vue` | Da | Slanje zahtjeva za mentorstvo |
+| `/mentoring/:id/zahtjev` | `MentorshipRequestView.vue` | Da | Slanje zahtjeva za mentorstvo |
 | `/mentoring/my-applications` | `MyApplicationsView.vue` | Da | Panel mentorice |
 | `/mentoring/apply-mentor` | `MentorRegistration.vue` | Ne | Prijava mentorice |
 | `/student/apply` | `StudentRegistration.vue` | Da | Prijava studentice |
