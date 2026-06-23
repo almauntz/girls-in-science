@@ -293,7 +293,19 @@ export const registerStudent = (formData) => {
   })
 }
 ```
+**Admin pozivi (mentorice)** — koriste se direktno preko `fetch` unutar `MentorApplicationsView.vue` i `MentorApplicationDetailView.vue` (nisu izdvojeni u `mentoring.js`):
 
+| Poziv | HTTP metoda | Endpoint | Auth | Opis |
+|---|---|---|---|---|
+| Lista prijava | GET | `/api/v1/admin/mentor-applications` | Da (admin) | Sve prijave mentorica za admin panel |
+| Detalji prijave | GET | `/api/v1/admin/mentor-applications/{id}` | Da (admin) | Detalji jedne prijave |
+| Odobravanje | PATCH | `/api/v1/admin/mentor-applications/{id}/approve` | Da (admin) | Odobrava prijavu |
+| Odbijanje | PATCH | `/api/v1/admin/mentor-applications/{id}/reject` | Da (admin) | Odbija prijavu, šalje `rejection_reason` u JSON tijelu |
+| Ponovno slanje | PATCH | `/api/v1/admin/mentor-applications/{id}/resubmit` | Da (admin) | Vraća prijavu u `PENDING` |
+| Brisanje | DELETE | `/api/v1/admin/mentor-applications/{id}` | Da (admin) | Soft delete prijave |
+| Preuzimanje CV-a | GET | `/mentoring/cv/{filename}` | Ne | Direktan download link (koristi se kao `<a href>`, ne kao axios poziv) |
+
+---
 > **Napomena:** `Content-Type` header se ne postavlja ručno za `FormData` — `axios` ga automatski postavlja na `multipart/form-data` sa ispravnim `boundary`.
 
 ---

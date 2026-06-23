@@ -329,13 +329,16 @@ Prima `multipart/form-data` (zbog CV upload-a).
 
 **Napomena:** CV fajl se sprema u `backend/uploads/cv/` sa UUID nazivom.
 
----
 
 ### `GET /mentoring/cv/{filename}`
 
 Preuzimanje CV fajla mentorice. Vraća fajl za download.
 
----
+**Mogući odgovori:**
+- `200 OK` — fajl se preuzima
+- `404 Not Found` — fajl sa datim nazivom ne postoji na disku: `{"detail": "CV fajl nije pronađen."}`
+
+**Napomena:** Koristi se i na admin panelu (dugme "Preuzmi CV" na `MentorApplicationDetailView.vue`) i potencijalno na javnom profilu mentorice.
 
 ### `POST /mentoring/students/register`
 
