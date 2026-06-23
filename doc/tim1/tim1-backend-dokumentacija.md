@@ -8,7 +8,6 @@ Ovaj dio backend-a omogućava administratoru da kreira, ažurira i briše radion
 ## Pregled implementiranih funkcionalnosti
 
 - CRUD nad radionicama (kreiranje, izmjena, brisanje) — dostupno samo administratoru
-- Slanje notifikacije svim korisnicama prilikom kreiranja nove radionice
 - Slanje prijedloga radionice od strane korisnice
 - Pregled svih prijedloga (admin, sa filterom po statusu) i pregled vlastitih prijedloga (korisnica)
 - Detalji pojedinačnog prijedloga (admin)
@@ -31,7 +30,6 @@ Ovaj dio backend-a omogućava administratoru da kreira, ažurira i briše radion
 | `admin_note` | String, nullable | Napomena administratora pri odobravanju/odbijanju |
 | `created_at` | DateTime | Vrijeme slanja prijedloga |
 
-**Napomena:** `Workshop` i `WorkshopBase` entiteti su opisani u sekciji iznad (Maida) — `WorkshopBase` je zajednička SQLModel baza (title, description, location, date, end_time, capacity) iz koje `Workshop` nasljeđuje.
 
 ### Pydantic šeme korištene u ovom modulu
 
@@ -51,7 +49,7 @@ Ovaj dio backend-a omogućava administratoru da kreira, ažurira i briše radion
 
 **`POST /workshops/`**
 
-**Namjena:** Kreira novu radionicu i šalje notifikaciju svim korisnicama o novoj radionici.
+**Namjena:** Kreira novu radionicu.
 
 **Autentifikacija:** Obavezna, samo administrator (`require_admin`)
 
@@ -131,7 +129,7 @@ Ovaj dio backend-a omogućava administratoru da kreira, ažurira i briše radion
 
 **Request body:** `ProposalCreate`
 ```json
-{ "title": "Radionica o Git-u", "description": "Osnove verzionisanja koda" }
+{ "title": "Radionica o Git-u", "description": "Osnovne git komande" }
 ```
 
 **Mogući responses:**
@@ -266,7 +264,7 @@ Ovaj dio backend-a omogućava administratoru da kreira, ažurira i briše radion
 
 **Path parametar:** `workshop_id` (int)
 
-**Napomena:** Koristi entitet `Registration` i šemu `RegistrationRead` — `Registration` entitet je već opisan u sekciji iznad (Elma).
+**Napomena:** Koristi entitet `Registration` i šemu `RegistrationRead`
 
 **Mogući responses:**
 
