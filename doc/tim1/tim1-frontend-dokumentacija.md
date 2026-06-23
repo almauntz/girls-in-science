@@ -9,9 +9,9 @@ Dokumentacija obuhvata komponente: `WorkshopsAdminView.vue` (admin CRUD nad radi
 ## 1. WorkshopsAdminView.vue — CRUD radionica
 
 ### Svrha
-Administratorski panel za kreiranje, izmjenu i brisanje radionica, sa modalima i potvrdom prije svake akcije.
+Administratorski panel za kreiranje, izmjenu i brisanje radionica, sa modalima i potvrdama prije svake akcije, kao i kontrola unesenih obaveznih polja.
 
-### State (relevantan za ovaj dio)
+### State
 
 | Varijabla | Tip | Opis |
 |---|---|---|
@@ -22,7 +22,7 @@ Administratorski panel za kreiranje, izmjenu i brisanje radionica, sa modalima i
 | `form` | Object | Polja radionice (title, description, location, date, end_time, capacity, organizer_*) |
 | `errors` | Object | Poruke validacijskih grešaka po polju |
 
-### Validacija prije kreiranja (`validateCreate()`)
+### Validacija prije kreiranja radionice (`validateCreate()`)
 
 | Polje | Provjera |
 |---|---|
@@ -33,9 +33,9 @@ Administratorski panel za kreiranje, izmjenu i brisanje radionica, sa modalima i
 
 ### Tok akcije (create / edit / delete)
 1. Klik na akciono dugme → `openModal(type)` otvara odgovarajući modal i resetuje formu
-2. Klik na "Sačuvaj"/"Obriši" → `askConfirm(action)` validira (za create) ili provjerava odabrani ID (za edit/delete), zatim popunjava `confirmConfig` sa porukom potvrde
+2. Klik na "Sačuvaj"/"Obriši" → `askConfirm(action)` validira (za create), zatim popunjava `confirmConfig` sa porukom potvrde
 3. Korisnica potvrđuje u dijalogu → `runAction()` poziva pravu API funkciju (`doCreate` / `doEdit` / `doDelete`)
-4. Edit ide kroz dva koraka: prvo `loadWorkshop()` dohvata postojeće podatke po ID-u, pa tek onda forma za izmjenu
+4. Edit ide kroz dva koraka: prvo `loadWorkshop()` dohvata postojeće podatke, pa tek onda forma za izmjenu
 
 ### API pozivi
 
@@ -59,7 +59,7 @@ Administratorski panel za kreiranje, izmjenu i brisanje radionica, sa modalima i
 ## 2. WorkshopsAdminView.vue — Pregled i obrada prijedloga
 
 ### Svrha
-Dio iste komponente koji administratorici omogućava pregled svih poslanih prijedloga, filtriranje po statusu, te odobravanje (uz opcionalno kreiranje radionice) ili odbijanje.
+Dio iste komponente koji administratoru omogućava pregled svih poslanih prijedloga, filtriranje po statusu, te odobravanje (uz opcionalno kreiranje radionice) ili odbijanje.
 
 ### State
 
@@ -81,7 +81,7 @@ Dio iste komponente koji administratorici omogućava pregled svih poslanih prije
 | Odbijanje | `PATCH /workshops/proposals/{id}/reject` | `doReject()` |
 
 ### Filtriranje (`filteredProposals`, `countFor()`)
-Računato lokalno (computed) iz već učitane liste — `activeFilter === 'all'` prikazuje sve, inače filtrira po `status` polju. `countFor()` vraća broj za svaki tab (koristi se za brojeve uz filtere).
+Računato lokalno iz već učitane liste — `activeFilter === 'all'` prikazuje sve, inače filtrira po `status` polju. `countFor()` vraća broj za svaki tab (koristi se za brojeve uz filtere).
 
 ### Tok odobravanja prijedloga
 1. Klik na prijedlog → `detailProposal` se postavlja, otvara se detalj modal
@@ -168,7 +168,7 @@ Dio admin panela gdje administratorica bira radionicu sa padajuće liste i vidi 
 | Učitavanje prijava za odabranu radionicu | `GET /workshops/{selectedWorkshopId}/registrations` | `loadRegistrations()`, okida se pri promjeni odabira (`@change`) |
 
 ### Prikaz tabele
-Tabela prikazuje: ime, prezime, email, telefon, prethodno iskustvo (badge, ili "-" ako nema) i link na GitHub profil (ili "-" ako nema). Naslov tabele prikazuje broj prijavljenih (`registrations.length`).
+Tabela prikazuje: ime, prezime, email, telefon, prethodno iskustvo (ili "-" ako nema) i link na GitHub profil (ili "-" ako nema). Naslov tabele prikazuje broj prijavljenih (`registrations.length`).
 
 ### Obrada odgovora backend-a
 
