@@ -32,7 +32,8 @@ const routes = [
     path: '/workshops/admin',
     name: 'workshops-admin',
     component: () => import('../views/workshops/WorkshopsAdminView.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true,
+	    requiresAdmin: true	}
   },
   {
     path: '/workshops/my-proposals',

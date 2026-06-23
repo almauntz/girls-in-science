@@ -183,7 +183,7 @@
               </div>
               <div>
                 <h2>Uredi radionicu</h2>
-                <p>{{ editStep === 1 ? 'Korak 1 — unesi ID radionice' : `Korak 2 — izmijeni podatke (#${editId})` }}</p>
+                <p>{{ editStep === 1 ? 'Odaberi radionicu za uređivanje' : `Izmijeni podatke (#${editId})` }}</p>
               </div>
               <button class="close-btn" @click="closeModal">&#x2715;</button>
             </div>
@@ -208,7 +208,7 @@
 
             <!-- Korak 2: forma popunjena podacima s API-ja -->
             <div v-else class="modal-body">
-              <p class="loaded-label">Ostavi polje prazno ako ga ne želiš mijenjati</p>
+              <p class="loaded-label">Ostavi netaknuto polje ako ga ne želiš mijenjati</p>
  
               <div class="field-row">
                 <div class="field">
@@ -291,7 +291,7 @@
               </div>
               <div>
                 <h2>Obriši radionicu</h2>
-                <p>Upiši ID i potvrdi brisanje</p>
+                <p>Odaberi radionicu i potvrdi brisanje</p>
               </div>
               <button class="close-btn" @click="closeModal">&#x2715;</button>
             </div>
