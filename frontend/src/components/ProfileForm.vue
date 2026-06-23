@@ -63,32 +63,32 @@
 
             <!-- Osobne informacije -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <div class="flex items-center gap-2 mb-5">
-                  <span class="text-violet-500">👤</span>
-                  <h3 class="text-sm font-semibold text-gray-800">Osobne informacije</h3>
-                </div>
-                <div>
-                
-                  <div v-if="!isEditMode">
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Ime</p>
-                <p class="text-sm font-medium text-gray-800 mb-3">{{ form.first_name || 'Nije uneseno' }}</p>
-                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Prezime</p>
-                <p class="text-sm font-medium text-gray-800">{{ form.last_name || 'Nije uneseno' }}</p>
-              </div>
-                  <div v-else class="flex flex-col gap-2">
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Ime</label>
-                      <input v-model="form.first_name" type="text" placeholder="Ime"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"/>
-                    </div>
-                    <div>
-                      <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Prezime</label>
-                      <input v-model="form.last_name" type="text" placeholder="Prezime"
-                        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"/>
-                    </div>
-                  </div>
-                </div>
-              </div>
+  <div class="flex items-center gap-2 mb-5">
+    <span class="text-violet-500">👤</span>
+    <h3 class="text-sm font-semibold text-gray-800">Osobne informacije</h3>
+  </div>
+  <div>
+   
+    <div v-if="!isEditMode">
+  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Ime</p>
+  <p class="text-sm font-medium text-gray-800 mb-3">{{ form.first_name || 'Nije uneseno' }}</p>
+  <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Prezime</p>
+  <p class="text-sm font-medium text-gray-800">{{ form.last_name || 'Nije uneseno' }}</p>
+</div>
+    <div v-else class="flex flex-col gap-2">
+      <div>
+        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Ime</label>
+        <input v-model="form.first_name" type="text" placeholder="Ime"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"/>
+      </div>
+      <div>
+        <label class="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Prezime</label>
+        <input v-model="form.last_name" type="text" placeholder="Prezime"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"/>
+      </div>
+    </div>
+  </div>
+</div>
 
             <!-- Kontakt podaci -->
             <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -376,47 +376,46 @@
     </div>
 
     <!-- Sigurnost tab -->
-<div v-if="activeTab === 'security'" class="flex flex-col items-center gap-6">
-  <div class="bg-white rounded-xl shadow-sm p-6 w-full max-w-lg min-h-96">
-    <div v-if="passwordSuccess" class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 mb-4 text-sm">{{ passwordSuccess }}</div>
-    <div v-if="passwordError" class="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 mb-4 text-sm">{{ passwordError }}</div>
-    <form @submit.prevent="changePassword" class="space-y-5">
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Trenutna lozinka</label>
-        <input v-model="passwordForm.old_password" type="password" placeholder="••••••••"
-          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"/>
+    <div v-if="activeTab === 'security'" class="flex justify-center">
+      <div class="bg-white rounded-xl shadow-sm p-6 w-full max-w-lg min-h-96">
+        <div v-if="passwordSuccess" class="bg-green-50 text-green-700 border border-green-200 rounded-lg px-4 py-3 mb-4 text-sm">{{ passwordSuccess }}</div>
+        <div v-if="passwordError" class="bg-red-50 text-red-700 border border-red-200 rounded-lg px-4 py-3 mb-4 text-sm">{{ passwordError }}</div>
+        <form @submit.prevent="changePassword" class="space-y-5">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Trenutna lozinka</label>
+            <input v-model="passwordForm.old_password" type="password" placeholder="••••••••"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Nova lozinka</label>
+            <input v-model="passwordForm.new_password" type="password" placeholder="••••••••"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Potvrda nove lozinke</label>
+            <input v-model="passwordForm.confirm_new_password" type="password" placeholder="••••••••"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"/>
+          </div>
+          <div class="pt-2">
+            <button type="submit" :disabled="passwordLoading"
+              class="w-full bg-violet-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-violet-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+              {{ passwordLoading ? 'Spremanje...' : 'Promijeni lozinku' }}
+            </button>
+          </div>
+          <div class="bg-red-50 border border-red-100 rounded-xl shadow-sm p-6 max-w-full mt-6">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-red-500">⚠️</span>
+              <h3 class="text-sm font-semibold text-gray-800">Kontrola računa</h3>
+            </div>
+            <p class="text-sm text-red-400 mb-4">Deaktivacija će sakriti vaš profil iz javnog pretraživača.</p>
+            <button @click="deactivateAccount"
+              class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2 px-5 rounded-full text-sm font-medium transition-colors duration-200">
+              🗑️ Deaktiviraj nalog
+            </button>
+          </div>
+        </form>
       </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Nova lozinka</label>
-        <input v-model="passwordForm.new_password" type="password" placeholder="••••••••"
-          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"/>
-      </div>
-      <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">Potvrda nove lozinke</label>
-        <input v-model="passwordForm.confirm_new_password" type="password" placeholder="••••••••"
-          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"/>
-      </div>
-      <div class="pt-2">
-        <button type="submit" :disabled="passwordLoading"
-          class="w-full bg-violet-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-violet-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-          {{ passwordLoading ? 'Spremanje...' : 'Promijeni lozinku' }}
-        </button>
-      </div>
-    </form>
-  </div>
-
-  <div class="bg-red-50 border border-red-100 rounded-xl shadow-sm p-6 w-full max-w-lg">
-    <div class="flex items-center gap-2 mb-1">
-      <span class="text-red-500">⚠️</span>
-      <h3 class="text-sm font-semibold text-gray-800">Kontrola računa</h3>
     </div>
-    <p class="text-sm text-red-400 mb-4">Deaktivacija će sakriti vaš profil iz javnog pretraživača.</p>
-    <button @click="deactivateAccount"
-      class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2 px-5 rounded-full text-sm font-medium transition-colors duration-200">
-      🗑️ Deaktiviraj nalog
-    </button>
-  </div>
-</div>
 
     <!-- Modal deaktivacija -->
     <div v-if="showDeactivateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
