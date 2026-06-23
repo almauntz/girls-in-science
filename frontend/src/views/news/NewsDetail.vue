@@ -75,7 +75,7 @@
             <div
               v-for="model in newsPost.role_models"
               :key="model.id"
-              @click="$router.push(`/role-models/${model.id}`)"
+              @click="$router.push({ path: `/role-models/${model.id}`, query: { from: 'news', newsId: newsPost.id } })"
               class="flex items-center gap-4 bg-white border border-gray-100 rounded-2xl p-4 cursor-pointer hover:shadow-lg transition"
             >
               <div class="w-12 h-12 flex-shrink-0">
