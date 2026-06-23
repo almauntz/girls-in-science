@@ -169,6 +169,12 @@ Javna forma za prijavu mentorica na ruti `/mentoring/apply`. Omogućava unos li�
 **`views/mentoring/MyApplicationsView.vue`**
 Panel za mentorice na ruti `/mentoring/my-applications` koji omogućava upravljanje zahtjevima studentica kroz tri tabova (`PENDING`, `ACCEPTED`, `REJECTED`). Prikazuje kartice sa osnovnim podacima i relativnim vremenom, nudi detaljan modalni pregled profila studentice sa opcijom preuzimanja CV-ja, te modal za odbijanje zahtjeva uz unos obrazloženja.
 
+**`views/admin/MentorApplicationsView.vue`**
+Admin panel za upravljanje prijavama mentorica na ruti `/admin/mentor-applications`. Prikazuje prijave u tabovima po statusu (Na čekanju, Prihvaćene, Odbijene, Obrisane) sa brojem prijava u svakom tabu. Svaki red sadrži dugme "Pregledaj" za otvaranje detalja, te akcijska dugmad ✓ / ✗ za direktno odobravanje/odbijanje iz tabele. Pristup ograničen na ulogu `admin`.
+
+**`views/admin/MentorApplicationDetailView.vue`**
+Detaljan pregled jedne prijave mentorice na ruti `/admin/mentor-applications/:id`. Prikazuje sve podatke iz prijave, dugme "Preuzmi CV" sa direktnim linkom na backend, textarea za unos razloga odbijanja (vidljiva samo za prijave na čekanju), prikaz razloga odbijanja ako postoji, te dugme "Pošalji ponovo na pregled" za odbijene prijave. Pristup ograničen na ulogu `admin`.
+
 #### Servisi (`services/mentoring.js`)
  
 | Funkcija | Endpoint | Opis |
@@ -179,6 +185,12 @@ Panel za mentorice na ruti `/mentoring/my-applications` koji omogućava upravlja
 | `applyAsMentor(formData)` | `POST /mentoring/apply` | Šalje prijavu mentorice sa priloženim CV-jem |
 | `getMentorApplications()` | `GET /mentoring/my-applications` | Dohvata sve pristigle zahtjeve studentica za prijavljenu mentoricu (zahtijeva JWT token) |
 | `updateApplicationStatus(applicationId, status, rejectionReason)` | `PUT /mentoring/applications/{id}/status` | Mijenja status zahtjeva u ACCEPTED ili REJECTED uz opcioni razlog (zahtijeva JWT token) |
+| `getMentorApplications()` (admin verzija u `admin.js` ili direktno fetch) | `GET /api/v1/admin/mentor-applications` | Dohvata sve prijave mentorica za admin panel |
+| — | `PATCH /api/v1/admin/mentor-applications/{id}/approve` | Odobrava prijavu, mijenja role korisnika u `mentor` |
+| — | `PATCH /api/v1/admin/mentor-applications/{id}/reject` | Odbija prijavu uz razlog, mijenja role korisnika u `member` |
+| — | `PATCH /api/v1/admin/mentor-applications/{id}/resubmit` | Vraća odbijenu prijavu u status `PENDING` |
+| — | `DELETE /api/v1/admin/mentor-applications/{id}` | Soft delete prijave |
+| — | `GET /mentoring/cv/{filename}` | Preuzimanje CV fajla mentorice |
 
 #### Rute (`router/index.js`)
  
@@ -189,7 +201,8 @@ Panel za mentorice na ruti `/mentoring/my-applications` koji omogućava upravlja
 | `/mentoring/:id/zahtjev` | MentorshipRequestView.vue | Zahtijeva login |
 | `/mentoring/my-applications` | MentorApplicationsView.vue | Zahtijeva login | 
 `/mentoring/apply` | MentorRegistration.vue | Javno | 
-
+| `/admin/mentor-applications` | MentorApplicationsView.vue | Zahtijeva ulogu `admin` |
+| `/admin/mentor-applications/:id` | MentorApplicationDetailView.vue | Zahtijeva ulogu `admin` |
 #### Komunikacija sa backendom
  
 Autentifikacija preko JWT tokena spremljenog u `localStorage`. Token se dekodira na frontendu (`JSON.parse(atob(token.split('.')[1]))`) radi čitanja `role` polja za uslovni prikaz (npr. admin dugme, redirect mentorice).
