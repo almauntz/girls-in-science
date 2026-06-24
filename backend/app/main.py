@@ -76,7 +76,6 @@ def get_me(current_user: User = Depends(get_current_user)):
     }
 
 
-# Prilagođena klasa koja forsira browser da otvori PDF inline umjesto downloada
 class PDFStaticFiles(StaticFiles):
     def file_response(self, pool_line, stat_result, scope, status_code=200):
         response = super().file_response(pool_line, stat_result, scope, status_code)
@@ -92,15 +91,11 @@ os.makedirs("uploads/cv", exist_ok=True)
 os.makedirs("uploads/student_cvs", exist_ok=True)
 
 
-# =========================================================================
-# NOVA ZAMJENSKA RUTA: Preusmjerava studentske CV-jeve na folder od mentora
-# =========================================================================
+
 @app.get("/uploads/student_cvs/{filename}")
 async def get_student_cv_from_mentor_folder(filename: str):
-    # Tražimo fajl unutar 'uploads/cv' (gdje su mentori) umjesto 'student_cvs'
     target_path = os.path.join("uploads", "cv", filename)
     
-    # Ako taj konkretan fajl ne postoji, uzimamo PRVI slobodan PDF iz uploads/cv (npr. Belmin CV)
     if not os.path.exists(target_path):
         mentor_files = [f for f in os.listdir("uploads/cv") if f.endswith('.pdf')]
         if mentor_files:
@@ -108,13 +103,12 @@ async def get_student_cv_from_mentor_folder(filename: str):
         else:
             raise HTTPException(status_code=404, detail="Nijedan CV nije pronađen u uploads/cv")
 
-    # Vraćamo fajl tako da se otvori inline u browseru (isto kao kod mentorice)
     return FileResponse(
         target_path, 
         media_type="application/pdf", 
         headers={"Content-Disposition": "inline"}
     )
-# =========================================================================
+
 
 
 app.mount("/static", PDFStaticFiles(directory="static"), name="static")
