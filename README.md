@@ -54,6 +54,41 @@ Platforma koristi JWT tokene. Nakon prijave token se čuva u `localStorage` i š
 Authorization: Bearer YOUR_TOKEN_HERE
 ```
 
+## Testni podaci
+
+Za kreiranje admin korisnika pokrenite u `backend/` folderu sa aktiviranim virtualnim okruženjem:
+
+```bash
+python -c "
+from sqlmodel import Session, create_engine
+from app.models.user import User, UserRole
+from app.core.security import hash_password
+engine = create_engine('sqlite:///database.db')
+with Session(engine) as session:
+    user = User(email='admin@gis.ba', full_name='Admin User', password_hash=hash_password('admin123'), role=UserRole.admin)
+    session.add(user)
+    session.commit()
+    print('Admin kreiran!')
+"
+```
+Kredencijali: `admin@gis.ba` / `admin123`
+
+Za kreiranje obične korisnice:
+```bash
+python -c "
+from sqlmodel import Session, create_engine
+from app.models.user import User, UserRole
+from app.core.security import hash_password
+engine = create_engine('sqlite:///database.db')
+with Session(engine) as session:
+    user = User(email='student@gis.ba', full_name='Student User', password_hash=hash_password('student123'), role=UserRole.member)
+    session.add(user)
+    session.commit()
+    print('Korisnica kreirana!')
+"
+```
+Kredencijali: `student@gis.ba` / `student123`
+
 ## Git Workflow
 
 - Radite na grani `dev` — ne raditi commit direktno na `main`
@@ -68,6 +103,10 @@ Authorization: Bearer YOUR_TOKEN_HERE
 Detaljne upute za backend i frontend nalaze se u:
 - `backend/README.md`
 - `frontend/README.md`
+
+Detaljna dokumentacija (endpointi, struktura, baza podataka):
+* [Dokumentacija za Backend](backend/dokumentacija/backend-tim3-gis.md)
+* [Dokumentacija za Frontend](frontend/dokumentacija/frontend-tim3-gis.md)
 
 ## Git Workflow za projektne timove
 

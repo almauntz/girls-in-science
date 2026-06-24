@@ -6,10 +6,10 @@
       <div class="bg-white rounded-3xl shadow-lg p-8 mb-8">
         <div class="flex items-center justify-between mb-8">
           <router-link
-            to="/role-models"
+            :to="backTarget"
             class="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary rounded-xl shadow-sm hover:shadow-md border border-gray-100 transition"
           >
-            ← Nazad na direktorij
+            {{ backLabel }}
           </router-link>
 
           <div v-if="isAdmin" class="flex gap-3">
@@ -119,6 +119,22 @@ const achievements = computed(() => {
   if (!roleModel.value?.achievements) return [];
   return roleModel.value.achievements.split("\n").filter((a) => a.trim());
 });
+
+const backTarget = computed(() => {
+  if (route.query.from === 'bookmarks') {
+    return { path: '/bookmarks' }
+  }
+  if (route.query.from === 'news' && route.query.newsId) {
+    return { path: `/news/${route.query.newsId}` }
+  }
+  return { path: '/role-models' }
+})
+
+const backLabel = computed(() => {
+  if (route.query.from === 'bookmarks') return '← Nazad na favorite'
+  if (route.query.from === 'news') return '← Nazad na objavu'
+  return '← Nazad na direktorij'
+})
 
 function getInitials(first, last) {
   return `${first?.[0] || ""}${last?.[0] || ""}`.toUpperCase();
