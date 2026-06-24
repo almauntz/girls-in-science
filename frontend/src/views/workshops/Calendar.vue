@@ -465,4 +465,4 @@ const getFinalStyle = (workshop, n) => {
   0%, 100% { box-shadow: inset 0 0 0 0 rgba(124, 58, 237, 0.6); }
   50%       { box-shadow: inset 0 0 0 3px rgba(124, 58, 237, 0); }
 }
-</style>
+</style> 
