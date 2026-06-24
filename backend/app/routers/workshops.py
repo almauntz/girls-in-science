@@ -725,6 +725,29 @@ def get_workshop_registrations(
  
     return registrations
 
+# Endpoint za brisanj eregistracije 
+@router.delete("/{workshop_id}/registrations/{registration_id}", status_code=200)
+def admin_delete_registration(
+    workshop_id: int,
+    registration_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    registration = db.execute(
+        select(Registration).where(
+            Registration.id == registration_id,
+            Registration.workshop_id == workshop_id
+        )
+    ).scalars().first()
+
+    if not registration:
+        raise HTTPException(status_code=404, detail="Prijava nije pronađena.")
+
+    db.delete(registration)
+    db.commit()
+
+    return {"message": "Studentica uspješno uklonjena s radionice."}
+
 #Rating endpoints -------------------------------------------------------
 
 @router.post("/{workshop_id}/ratings", response_model=RatingRead, status_code=status.HTTP_201_CREATED)
