@@ -1,0 +1,156 @@
+# Girls in Science — Frontend Dokumentacija
+
+## 1. Pregled aplikacije
+
+Frontend pokriva sljedeće module:
+
+- Lični i javni profil korisnice (pregled, uređivanje, slika profila)
+- Dashboard sa pregledom i prijavom na radionice
+- Mentorski dashboard (pregled zahtjeva, prihvatanje/odbijanje polaznica)
+- Admin Panel (pregled statistike sistema, upravljanje ulogama i statusima računa korisnica)
+
+---
+
+## 2. Struktura projekta
+
+```
+frontend/
+└── src/
+    ├── views/
+    │   ├── LoginView.vue                (Autentifikacija i presretanje deaktiviranih naloga)
+    │   └── profiles/
+    │       ├── ProfilesView.vue         (wrapper komponenta — renderuje ProfileForm, DashboardTab, ActivityHistory ili AdminView ovisno o aktivnom tabu)
+    │       ├── PublicProfileView.vue    (javni profil druge korisnice)
+    │       └── AdminView.vue            (Admin panel za upravljanje ulogama i statusima računa)
+    ├── components/
+    │   ├── SideBar.vue          (ProfileSidebar — bočna navigacija prilagođena ulogama)
+    │   ├── NavBar.vue           (Navigacijska traka — sistem notifikacija, zvono i badge)
+    │   ├── ProfileForm.vue      (forma za uređivanje profila, lozinke, avatara)
+    │   ├── DashboardTab.vue     (Pametna komponenta koja dinamički renderuje dashboard shodno ulozi)
+    │   └── ActivityHistory.vue  (Prikaz historije pohađanih radionica)
+    │   └── StatusToggle.vue     (Reusable prekidač sa dvosmjernim v-model vezivanjem stanja)
+    ├── services/
+    │   └── api.js               (centralizovani API pozivi)
+    └── router/
+        └── index.js             (definicije ruta)
+```
+
+Pristup podacima i upravljanje stanjem organizovano je kroz **roditeljsko-dijete (parent-child)** komunikaciju, gdje centralna komponenta ProfilesView.vue učitava sve podatke sa backenda i koordinira radom svih tabova:
+- **Upravljanje profilom (ProfileForm.vue & ProfileSidebar.vue):** Roditelj prosljeđuje profilne podatke kao props, dok se izmjene vraćaju nazad putem emitovanih događaja (profile-updated, avatar-uploaded, avatar-deleted, tab-change).
+- **Dinamički Dashboard (DashboardTab.vue):** Prosljeđuje mu se trenutna uloga korisnice (userRole) i nizovi radionica/zahtjeva shodno ulozi. Komponenta ne vrši direktne API pozive, već akcije korisnica (prijava na radionicu, prihvatanje ili odbijanje studentica) delegira roditelju putem događaja @register, @accept-request i @reject-request. ProfilesView potom izvršava asinhroni zahtjev i reaktivno osvježava stanje.
+- **Admin Panel (AdminView.vue):** Renderuje se isključivo za korisnice sa ulogom admin. Kako bi se osigurala izolacija administratorskih prava i olakšao rad sa tabelom, ova komponenta samostalno komunicira sa specifičnim admin endpointima iz api.js, ali šalje signale roditelju ukoliko dođe do promjene prava ili presretanja deaktiviranog naloga.
+
+---
+
+## 3. Pregled implementiranih funkcionalnosti
+
+### 3.1 Upravljanje nalogom
+
+- Detekcija deaktiviranog naloga prilikom prijave (`isDeactivated` stanje na `LoginView`).
+- Reaktivacija naloga — korisnica unosi email i lozinku, backend ponovo aktivira nalog i odmah se izvrši prijava.
+- Deaktivacija naloga iz profila, uz modalnu potvrdu (`showDeactivateModal`), nakon čega se token briše i korisnica se preusmjerava na prijavu.
+- Promjena lozinke (`staraNovaPotvrda`) sa validacijom (minimalno 8 karaktera, poklapanje nove i potvrđene lozinke). Forma se nalazi u zasebnom tabu "Sigurnost i Lozinka" unutar `ProfileForm.vue` i šalje `PATCH` zahtjev sa JWT tokenom u zaglavlju; greške sa backenda (npr. netačna stara lozinka) ispisuju se direktno ispod forme.
+
+### 3.2 Lični profil (`ProfilesView` + `ProfileForm`)
+
+- Prikaz i uređivanje osnovnih podataka: ime i prezime, oblast (polje iz unaprijed definisane liste struka), biografija (do 500 karaktera), lokacija, email.
+- Validacija forme prije slanja: obavezno ime, dužina biografije, format email adrese.
+- Upravljanje vidljivošću podataka na javnom profilu (`show_biography`, `show_field`, `show_location`).
+- Strukturirani podaci profila u obliku nizova: jezici (`languages`), radno iskustvo (`experience`), obrazovanje (`education`) i vještine (`skills`).
+- Društvene mreže / linkovi: LinkedIn, GitHub, Twitter.
+- Upload profilne slike (JPG/PNG, maksimalno 2MB) sa validacijom na frontendu prije slanja na backend, te brisanje profilne slike uz potvrdu.
+
+### 3.3 Javni profil (`PublicProfileView`)
+
+- Prikaz javnog profila druge korisnice na osnovu `user_id` iz rute, uz poštovanje polja vidljivosti koje je postavila vlasnica profila.
+- Administratorski nalozi se ne prikazuju kroz javni profil (preusmjeravanje, odnosno poruka da profil nije dostupan).
+
+### 3.4 Admin Panel (`AdminView`)
+
+- Pregled i učitavanje podataka: Asinhroni dohvat svih registriranih korisnica sa servera uz slanje validnog Bearer tokena.
+- Vizuelna statistika sistema: Na vrhu panela renderuju se tri dinamičke kartice sa statistikom povučenom sa servera: Ukupan broj korisnica, Broj aktivnih računa i Broj neaktivnih računa, kao i tekstualni pregled raspodjele po ulogama (member, mentor, admin).
+- Dvosmjerna potvrda akcija (Modalni sistem): Implementiran isModalOpen i pendingAction sistem koji sprječava slučajne izmjene. Kada admin promijeni ulogu u dropdown-u ili klikne na status prekidač, otvara se modal sa detaljnim upitom.
+- Upravljanje ulogama i statusima: Pozivanje updateUserRole i updateUserStatus API metoda tek nakon eksplicitne potvrde. U slučaju otkazivanja (cancelAction), tabela se osvježava i vraća na izvorno stanje iz baze.
+- Sigurnosni presretač (Deaktivacija u hodu): Ako admin tokom rada dobije grešku DEAKTIVIRAN_NALOG sa API-ja, aplikacija automatski okida localStorage.removeItem('token'), briše sesiju i preusmjerava je na /login.
+- API metode: Za komunikaciju sa serverom unutar ove komponente koriste se tri namjenske funkcije uvezene iz api.js: getAllUsers(token), updateUserRole(token, userId, newRole) i updateUserStatus(token, userId, newStatus).
+
+### 3.5 Status Toggle Komponenta (`StatusToggle`)
+
+- Kreirana potpuno samostalna, višekratno iskoristiva (reusable) komponenta za vizuelni prikaz i promjenu statusa naloga (Aktivna / Deaktivirana).
+- Implementirano reaktivno praćenje stanja koristeći defineProps ({ modelValue }) i defineEmits (['update:modelValue', 'change']), što omogućava prirodno korištenje v-model sintakse u roditeljskim komponentama.
+
+### 3.6 Roditeljski omotač i Navigacija (ProfilesView & ProfileSidebar)
+- Dinamički prikaz na osnovu uloga: Podešena reaktivna activeTab logika. Za ulogu admin, Moj profil i Aktivnosti se sakrivaju, a otvara se pristup tabu Upravljanje korisnicama unutar bočne navigacije. Za uloge korisnice i mentorice, tabovi su isti: Moj profil, Dashboard i Aktivnosti.
+- Komunikacija i reaktivnost Dashboard-a: DashboardTab.vue prepoznaje ulogu korisnice i usmjerava prikaz. Kada studentica klikne "Prijavi se", ili mentorica klikne "Prihvati/Odbij", komponenta ne vrši direktne API pozive, već emituje događaje @register, @accept-request i @reject-request nazad u ProfilesView.vue. Roditeljska komponenta hvata ove događaje, izvršava axios zahtjeve prema backendu i automatski osvježava liste (fetchDashboardData, fetchMentorData), osiguravajući reaktivnost bez osvježavanja stranice.
+
+### 3.7 Sistem notifikacija (`NavBar.vue`)
+
+- Notifikacije se prikazuju u navigacijskoj traci putem ikonice zvona sa brojevnim badge-om; klik na zvono otvara dropdown sa detaljima nepročitanih notifikacija.
+- Stanje komponente: `notifCount` (broj za badge), `notifications` (lista za dropdown), `showDropdown` (vidljivost dropdowna), `pollInterval` (referenca na `setInterval`).
+- Automatsko osvježavanje: broj notifikacija se dohvata pri mountovanju komponente (`fetchCount`), a zatim se osvježava periodično svakih 60 sekundi putem `setInterval`.
+- Otvaranje dropdowna: klik na zvono poziva `toggleNotifications()`, koja dohvata listu notifikacija sa backenda i prikazuje dropdown. Za svaku notifikaciju prikazuje se naziv radionice (`workshop.title`), datum (formatiran u lokalnom formatu) i broj slobodnih mjesta.
+- Zatvaranje dropdowna klikom van komponente: implementirano preko `handleOutsideClick`, koji provjerava da li je klik izvan referenciranog elementa zvona (`$refs.bellRef`) i, ako jeste, zatvara dropdown. Listener se registruje na `document` prilikom mountovanja.
+- Brisanje notifikacija: dugme "Obriši sve" na dnu dropdowna šalje zahtjev backendu, nakon čega se lokalno čisti lista notifikacija i badge se resetuje na 0.
+- Cleanup: u `beforeUnmount()` hook-u se uklanja `setInterval` i `click` event listener kako bi se spriječilo curenje memorije (memory leak).
+
+### 3.8 Historija aktivnosti (`ActivityHistory.vue`)
+
+- Samostalna (standalone) Vue komponenta koja se prikazuje kada korisnica klikne na tab "Aktivnosti" unutar profila.
+- Loading stanje dok se podaci o pohađanim radionicama učitavaju sa backenda.
+- Poruka "Nemate evidentiranih radionica" prikazuje se ukoliko je lista praznih rezultata.
+- Lista kartica sa nazivom, datumom i opisom svake završene radionice, uz badge "Završena" na svakoj kartici.
+- Podaci se dohvataju asinhrono pri mountovanju komponente (`fetchHistory`), uz slanje JWT tokena iz `localStorage` u `Authorization` zaglavlju.
+
+---
+
+| Putanja              | Naziv rute       | Opis / komponenta                                                                                           |
+| -------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| `/profiles`          | `profiles`       | `ProfilesView.vue` — glavni ekran nakon prijave (profil, dashboard, mentorstvo). Zahtijeva autentifikaciju. |
+| `/profiles/:user_id` | `public-profile` | `PublicProfileView.vue` — javni profil korisnice po ID-u.                                                   |
+
+Navigacija unutar `ProfilesView.vue` ostvarena je putem internog stanja `activeTab` (npr. `'dashboard'`, `'info'`, itd.), a ne kroz odvojene rute — `ProfileSidebar` emituje događaj `tab-change` koji mijenja aktivni prikaz bez ponovnog učitavanja stranice.
+
+---
+
+## 5. Komunikacija sa backendom
+
+Backend je razvijen u FastAPI + SQLModel (SQLite baza). Komunikacija sa frontenda ide na osnovnu adresu `http://localhost:8000`, kombinovano kroz `axios` (servisni sloj i dio dashboard logike) i nativni `fetch` (profil, avatar, lozinka, deaktivacija).
+
+### 5.1 Autentifikacija
+
+- Token se dobija prilikom prijave (POST na login endpoint) i čuva se u `localStorage` pod ključem `token`.
+- Svi autentifikovani pozivi šalju zaglavlje `Authorization: Bearer <token>` — u `ProfilesView.vue` ovo je centralizovano kroz pomoćnu metodu `getAuthHeaders()`.
+- Uz token, u `localStorage` se čuvaju i `username` i `user_role` radi brže provjere uloge bez dodatnog poziva backendu (npr. `PublicProfileView` preusmjerava admina bez čekanja na odgovor servera).
+- Presretanje isteka sesije / deaktivacije: Unutar komponenti je implementiran mehanizam koji, u slučaju da backend vrati specifičnu grešku (poput DEAKTIVIRAN_NALOG), automatski briše token iz localStorage (localStorage.removeItem('token')) i preusmjerava korisnicu nazad na /login ekran radi zaštite rute.
+
+### 5.2 Pregled glavnih endpointa
+
+| Metoda      | Endpoint                             | Svrha                                                                  |
+| ----------- | ------------------------------------ | ---------------------------------------------------------------------- |
+| `POST`      | `/profiles/reactivate`               | Reaktivacija deaktiviranog naloga                                      |
+| `GET`       | `/profiles/me`                       | Dohvat podataka prijavljene korisnice (`getMyProfile`)                 |
+| `PUT/PATCH` | `/profiles/me`                       | Ažuriranje profila (`updateProfile`)                                   |
+| `GET`       | `/profiles/:user_id`                 | Dohvat javnog profila druge korisnice                                  |
+| `POST`      | `/profiles/me/avatar`                | Upload profilne slike (`multipart/form-data`)                          |
+| `DELETE`    | `/profiles/me/avatar`                | Brisanje profilne slike                                                |
+| `PATCH`     | `/profiles/me/change-password`       | Promjena lozinke                                                       |
+| `PATCH`     | `/profiles/me/deactivate`            | Deaktivacija naloga                                                    |
+| `GET`       | `/profiles/dashboard`                | Podaci za dashboard (moje, nove i dostupne radionice)                  |
+| `POST`      | `/profiles/dashboard/register`       | Prijava na radionicu (query parametar `workshop_id`)                   |
+| `GET`       | `/profiles/notifications/count`      | Dohvat broja nepročitanih notifikacija (`fetchCount`, za badge)        |
+| `GET`       | `/profiles/notifications`            | Dohvat liste nepročitanih notifikacija sa podacima o radionici         |
+| `DELETE`    | `/profiles/notifications`            | Markiranje svih notifikacija kao pročitane (dugme "Obriši sve")        |
+| `GET`       | `/profiles/me/history`               | Dohvat historije pohađanih (završenih) radionica (`fetchHistory`)      |
+| `GET`       | `/mentoring/my-applications`         | Dohvat svih mentorskih zahtjeva (filtrirano na `ACCEPTED` / `PENDING`) |
+| `PUT`       | `/mentoring/applications/:id/status` | Promjena statusa zahtjeva (`ACCEPTED` / `REJECTED`)                    |
+| `GET `      | `/admin/users`                       | Dohvat liste svih korisnica i statistike za Admin Panel                |
+| `PUT`       | `/admin/:user_id/role`               | Izmjena uloge korisnice (member, mentor, admin)                        |
+| `PUT`       | `/admin/:user_id/status`             | Ručna aktivacija ili deaktivacija korisničkog računa                   |
+
+### 5.3 Statički fajlovi
+
+Avatari i ostali otpremljeni fajlovi posluženi su preko FastAPI `StaticFiles` montiranog na rutu `/static`, a frontend ih prikazuje kroz puni URL oblika:
+
+```
+http://localhost:8000<putanja_iz_baze>
+```
