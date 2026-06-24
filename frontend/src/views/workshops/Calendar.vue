@@ -128,8 +128,8 @@
                 class="p-2 text-[10px] leading-tight rounded shadow-sm cursor-pointer border-l-[5px] border-solid transition-all relative"
                 @click="handleWorkshopClick(workshop)"
               >
-                <span v-if="isFree(workshop)" class="ping-green"></span>
-                <span v-else-if="checkIsRegistered(workshop.ID_workshop)" class="ping-purple"></span>
+                <span v-if="isFree(workshop) && isToday(n)" class="ping-green"></span>
+                <span v-else-if="checkIsRegistered(workshop.ID_workshop) && isToday(n)" class="ping-purple"></span>
 
                 <div class="flex justify-between items-start">
                   <div class="flex items-center gap-1 min-w-0">
