@@ -56,6 +56,9 @@ class Profile(SQLModel, table=True):
     github_url: Optional[str] = Field(default=None)
     twitter_url: Optional[str] = Field(default=None)
 
+    show_education: bool = Field(default=True)
+    show_experience: bool = Field(default=True)
+
 # Shema za ažuriranje profila
 class ProfileUpdate(SQLModel):
     full_name: Optional[str] = None
@@ -76,6 +79,9 @@ class ProfileUpdate(SQLModel):
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None
     twitter_url: Optional[str] = None
+
+    show_education: Optional[bool] = None
+    show_experience: Optional[bool] = None
 
     @field_validator('full_name')
     @classmethod
@@ -115,6 +121,9 @@ class ProfileResponse(SQLModel):
     linkedin_url: Optional[str] = None
     github_url: Optional[str] = None
     twitter_url: Optional[str] = None
+
+    show_education: bool = True
+    show_experience: bool = True
 
     class Config:
         from_attributes = True

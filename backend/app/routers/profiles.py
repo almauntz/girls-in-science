@@ -90,6 +90,8 @@ def get_my_profile(
         linkedin_url=profile.linkedin_url,
         github_url=profile.github_url,
         twitter_url=profile.twitter_url,
+        show_education=profile.show_education,
+        show_experience=profile.show_experience,
     )
 
 @router.put("/me", response_model=ProfileResponse)
@@ -137,6 +139,11 @@ def update_my_profile(
     if profile_data.twitter_url is not None:
         profile.twitter_url = profile_data.twitter_url
 
+    if profile_data.show_education is not None:
+        profile.show_education = profile_data.show_education
+    if profile_data.show_experience is not None:
+        profile.show_experience = profile_data.show_experience
+
     db.commit()
     db.refresh(current_user)
     db.refresh(profile)
@@ -162,6 +169,8 @@ def update_my_profile(
         linkedin_url=profile.linkedin_url,
         github_url=profile.github_url,
         twitter_url=profile.twitter_url,
+        show_education=profile.show_education,
+        show_experience=profile.show_experience
     )
 
 @router.get("/dashboard", response_model=Dict[str, Any])
@@ -572,10 +581,13 @@ def get_public_profile(
         email=email,
         location=profile.location if (profile and profile.show_location) else None,
         languages=parsed.get("languages", []),
-        experience=parsed.get("experience", []),
-        education=parsed.get("education", []),
+        #experience=parsed.get("experience", []),
+        #education=parsed.get("education", []),
         skills=parsed.get("skills", []),
         linkedin_url=profile.linkedin_url if profile else None,
         github_url=profile.github_url if profile else None,
-        twitter_url=profile.twitter_url if profile else None
+        twitter_url=profile.twitter_url if profile else None,
+        experience=parsed.get("experience", []) if (profile and profile.show_experience) else [],
+        education=parsed.get("education", []) if (profile and profile.show_education) else [],
+        
     )
