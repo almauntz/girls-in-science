@@ -53,6 +53,34 @@
         </button>
       </div>
 
+      <p class="text-center text-sm text-gray-500 mt-4">
+        <button @click="showReset = !showReset" class="text-primary font-medium hover:underline">
+          Zaboravili ste lozinku?
+        </button>
+      </p>
+
+      <div v-if="showReset" class="mt-4 border-t pt-4 flex flex-col gap-3">
+        <p class="text-sm text-gray-600 font-medium">Reset lozinke</p>
+        <p class="text-xs text-gray-500">Unesite vaš email i lozinka će biti resetovana na <strong>123456789</strong>.</p>
+
+        <div v-if="resetError" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm">{{ resetError }}</div>
+        <div v-if="resetSuccess" class="bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm">{{ resetSuccess }}</div>
+
+        <input
+          v-model="resetEmail"
+          type="email"
+          placeholder="tvoj@email.com"
+          class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-primary text-sm"
+        />
+        <button
+          @click="handleResetPassword"
+          :disabled="resetLoading"
+          class="bg-gray-700 text-white py-2 rounded-lg hover:bg-gray-800 transition font-medium text-sm disabled:opacity-50"
+        >
+          {{ resetLoading ? 'Resetovanje...' : 'Resetuj lozinku' }}
+        </button>
+      </div>
+
       <p class="text-center text-sm text-gray-500 mt-6">
         Nemaš račun?
         <router-link to="/register" class="text-primary font-medium hover:underline">Registruj se</router-link>
@@ -75,7 +103,12 @@ export default {
       error: null,
       isDeactivated: false,
       reactivateLoading: false,
-      canReactivate: false
+      canReactivate: false,
+      showReset: false,
+      resetEmail: '',
+      resetLoading: false,
+      resetSuccess: null,
+      resetError: null
     }
   },
     methods: {
@@ -113,6 +146,33 @@ export default {
         this.error = err.data?.detail || err.message || 'Pogrešan email ili lozinka.'
       } finally {
         this.loading = false
+      }
+    },
+
+    async handleResetPassword() {
+      this.resetLoading = true
+      this.resetError = null
+      this.resetSuccess = null
+
+      try {
+        const response = await fetch('http://localhost:8000/profiles/reset-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: this.resetEmail })
+        })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          this.resetSuccess = 'Lozinka je resetovana na 123456789. Možete se prijaviti.'
+          this.resetEmail = ''
+        } else {
+          this.resetError = data.detail || 'Greška pri resetovanju lozinke.'
+        }
+      } catch (e) {
+        this.resetError = 'Greška pri resetovanju lozinke.'
+      } finally {
+        this.resetLoading = false
       }
     },
 

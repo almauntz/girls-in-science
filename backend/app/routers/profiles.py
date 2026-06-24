@@ -444,6 +444,21 @@ def get_my_workshop_history(
     return history
 
 
+@router.post("/reset-password", status_code=200)
+def reset_password(
+    email: str = Body(..., embed=True),
+    db: Session = Depends(get_db)
+):
+    user = db.exec(select(User).where(User.email == email)).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Korisnik sa tim emailom nije pronađen.")
+
+    user.password_hash = hash_password("123456789")
+    db.add(user)
+    db.commit()
+
+    return {"message": "Lozinka je uspješno resetovana."}
+
 @router.post("/reactivate", status_code=200)
 def reactivate_account(
     email: str = Body(...),
