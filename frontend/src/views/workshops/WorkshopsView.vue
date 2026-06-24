@@ -179,10 +179,8 @@
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                     {{ formatDate(workshop.date) }}
                   </span>
-                  <span class="flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {{ workshop.location }}
-                  </span>
+                  <Location :location="workshop.location" size="sm" />
+
                 </div>
 
                 <div class="flex justify-between items-center pt-1 mt-1 border-t border-gray-50">
@@ -344,6 +342,8 @@ import { useRouter } from 'vue-router'
 import CalendarView from './Calendar.vue'
 import Notifications from './Notifications.vue'
 import confetti from 'canvas-confetti'
+import Location from './Location.vue'
+
 const BASE_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
 
