@@ -153,6 +153,29 @@
             <p class="text-gray-500 text-xs mt-1">{{ form.bio.length }} / 1500 karaktera</p>
             <p v-if="!form.bio && touched.bio" class="text-red-500 text-sm mt-1">Obavezno polje (min. 20 karaktera)</p>
           </div>
+          <div>
+
+
+
+<!--Dodat input za broj studentica koje mentorica zeli da primi - Lamija Altumbabic -->
+
+
+
+  <label class="block text-sm font-semibold text-gray-800 mb-2">
+    Koliko studentica možete primiti? <span class="text-red-500">*</span>
+  </label>
+  <input
+    v-model.number="form.max_mentees"
+    type="number"
+    min="1"
+    max="50"
+    placeholder="Npr. 3"
+    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-primary transition"
+    :class="{ 'border-red-500': (!form.max_mentees || form.max_mentees < 1) && touched.max_mentees }"
+  />
+  <p class="text-gray-500 text-xs mt-1">Unesite broj studentica koju ste spremni da mentorirate</p>
+  <p v-if="(!form.max_mentees || form.max_mentees < 1) && touched.max_mentees" class="text-red-500 text-sm mt-1">Obavezno polje (minimum 1)</p>
+</div>
 
           <!-- Upload CV-ja -->
           <div>
@@ -223,6 +246,7 @@
       </p>
     </div>
   </div>
+  
 </template>
 
 <script setup>
@@ -232,6 +256,10 @@ import { applyAsMentor } from '../../services/mentoring.js'
 
 const router = useRouter()
 
+// Dodato polje max_mentes u form i touched objekat - Lamija Altumbabic
+
+
+
 const form = ref({
   first_name: '',
   last_name: '',
@@ -240,7 +268,8 @@ const form = ref({
   years_of_experience: null,
   linkedin_url: '',
   bio: '',
-  cv_file: null
+  cv_file: null,
+  max_mentees: 1
 })
 
 const touched = ref({
@@ -251,7 +280,8 @@ const touched = ref({
   years_of_experience: false,
   linkedin_url: false,
   bio: false,
-  cv_file: false
+  cv_file: false,
+  max_mentees: false
 })
 
 const fileInput = ref(null)
@@ -272,7 +302,7 @@ const isValidLinkedIn = (url) => {
   const re = /^https?:\/\/(www\.)?linkedin\.com\/.*$/i
   return re.test(url)
 }
-
+// Dodata provjera da li je max mentees validan broj - Lamija Altumbabic
 // Provjera da li je forma validna
 const isFormValid = computed(() => {
   return (
@@ -281,6 +311,7 @@ const isFormValid = computed(() => {
     isValidEmail(form.value.email) &&
     form.value.field_of_expertise &&
     (form.value.years_of_experience !== null && form.value.years_of_experience >= 0) &&
+    form.value.max_mentees && form.value.max_mentees >= 1 &&
     (!form.value.linkedin_url || isValidLinkedIn(form.value.linkedin_url)) &&
     form.value.bio.trim().length >= 20 &&
     form.value.cv_file
@@ -344,15 +375,16 @@ const submitForm = async () => {
   loading.value = true
   errorMessage.value = ''
   successMessage.value = ''
-
-  try {
+try {
     // Kreiraj FormData objekat
+    // Kreiran FOrmData objekat za max_mentees polje - Lamija Altumbabic
     const formData = new FormData()
     formData.append('first_name', form.value.first_name)
     formData.append('last_name', form.value.last_name)
     formData.append('email', form.value.email)
     formData.append('field_of_expertise', form.value.field_of_expertise)
     formData.append('years_of_experience', form.value.years_of_experience)
+    formData.append('max_mentees', form.value.max_mentees)  
     formData.append('linkedin_url', form.value.linkedin_url || 'https://linkedin.com')
     formData.append('bio', form.value.bio)
     formData.append('cv_file', form.value.cv_file)
@@ -371,6 +403,7 @@ const submitForm = async () => {
         field_of_expertise: '',
         years_of_experience: null,
         linkedin_url: '',
+        max_mentees: 1,
         bio: '',
         cv_file: null
       }

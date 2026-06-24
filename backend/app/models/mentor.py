@@ -33,7 +33,7 @@ class Mentor(Base):
 
     # Motivacija i dostupnost
     motivation = Column(String, nullable=True)
-    max_mentees = Column(Integer, default=1)
+    max_mentees = Column(Integer, nullable=False)
     preferred_session_format = Column(String, nullable=True)
 
     # Ostalo

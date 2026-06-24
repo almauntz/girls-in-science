@@ -110,6 +110,7 @@ def get_mentors(
     return result
 
 
+# dodano max mentees polje u rutu tako da new mentor takoder sadrzi polje max mentees - Elma Đonlić
 @router.post("/apply", status_code=status.HTTP_201_CREATED)
 async def apply_as_mentor(
     first_name: str = Form(...),
@@ -117,6 +118,7 @@ async def apply_as_mentor(
     email: str = Form(...),
     field_of_expertise: str = Form(...),
     years_of_experience: int = Form(...),
+    max_mentees: int = Form(1),
     linkedin_url: str = Form(...),
     bio: str = Form(...),
     cv_file: UploadFile = File(...),
@@ -142,6 +144,7 @@ async def apply_as_mentor(
         email=email,
         field_of_expertise=field_of_expertise,
         years_of_experience=years_of_experience,
+        max_mentees=max_mentees,
         linkedin_url=linkedin_url,
         bio=bio,
         cv_url=unique_filename,
