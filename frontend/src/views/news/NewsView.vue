@@ -9,6 +9,14 @@
         Pratite aktivnosti centra, uspjehe žena u STEM-u i najnovije događaje.
       </p>
     </div>
+    <div class="max-w-2xl mx-auto mt-8 flex gap-3">
+      <input
+        v-model="search"
+        type="text"
+        placeholder="Pretraži po naslovu ili sadržaju"
+        class="flex-1 border border-gray-300 rounded-xl px-5 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
+      />
+    </div>
     <div class="flex justify-center mb-10" v-if="isAdmin">
       <router-link
         to="/news/create"
@@ -90,19 +98,30 @@ const loading = ref(true);
 const isAdmin = ref(false);
 const selectedCategory = ref(null);
 const newCategory = ref("");
+const search = ref("")
 
 const sortedCategories = computed(() => {
   return [...categories.value].sort((a, b) => a.name.localeCompare(b.name));
 });
 
 const filteredPosts = computed(() => {
-  if (!selectedCategory.value) return newsPosts.value;
-  return newsPosts.value.filter(
-    (post) =>
-      post.categories &&
-      post.categories.some((c) => c.name === selectedCategory.value),
-  );
-});
+  let posts = newsPosts.value
+
+  if (selectedCategory.value) {
+    posts = posts.filter(p => p.categories?.some(c => c.name === selectedCategory.value))
+  }
+
+  if (search.value.trim()) {
+    const q = search.value.toLowerCase()
+    posts = posts.filter(p =>
+      p.title?.toLowerCase().includes(q) ||
+      p.author?.toLowerCase().includes(q) ||
+      p.content?.toLowerCase().includes(q)
+    )
+  }
+
+  return posts
+})
 
 onMounted(async () => {
   const token = localStorage.getItem("token");
