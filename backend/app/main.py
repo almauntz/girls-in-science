@@ -16,6 +16,7 @@ from app.routers import (
 )
 from app.routers import admin_users
 from app.routers import bookmarks
+from app.routers import comments
 
 
 @asynccontextmanager
@@ -60,6 +61,7 @@ app.include_router(admin.router)
 app.include_router(admin_users.router)
 app.include_router(requests.router)
 app.include_router(bookmarks.router)
+app.include_router(comments.router)
 
 # Serve uploaded static files
 os.makedirs("static", exist_ok=True)

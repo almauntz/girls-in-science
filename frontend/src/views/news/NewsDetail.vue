@@ -102,15 +102,69 @@
             </div>
           </div>
         </div>
+
+        <!-- Komentari -->
+        <div class="mt-8">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">
+            Komentari ({{ comments.length }})
+          </h2>
+
+          <div v-if="comments.length === 0" class="text-gray-500 text-sm mb-6">
+            Još nema komentara. Budite prvi!
+          </div>
+
+          <div class="flex flex-col gap-4 mb-6">
+            <div
+              v-for="comment in comments"
+              :key="comment.id"
+              class="border border-gray-100 rounded-2xl p-4"
+            >
+              <div class="flex items-center justify-between mb-2">
+                <div>
+                  <p class="font-semibold text-gray-900 text-sm">{{ comment.user_full_name }}</p>
+                  <p class="text-xs text-gray-400">{{ formatDate(comment.created_at) }}</p>
+                </div>
+                <button
+                  v-if="isAdmin || comment.user_id === currentUserId"
+                  @click="handleDeleteComment(comment.id)"
+                  class="text-red-500 hover:text-red-700 text-xs transition"
+                >
+                  Obriši
+                </button>
+              </div>
+              <p class="text-gray-700 text-sm">{{ comment.content }}</p>
+            </div>
+          </div>
+
+          <div v-if="isLoggedIn" class="flex gap-3">
+            <input
+              v-model="newComment"
+              type="text"
+              placeholder="Napišite komentar..."
+              class="flex-1 border border-gray-300 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <button
+              @click="handleCreateComment"
+              class="bg-primary hover:bg-secondary text-white px-4 py-2 rounded-xl text-sm transition"
+            >
+              Pošalji
+            </button>
+          </div>
+          <p v-else class="text-sm text-gray-400">
+            <router-link to="/login" class="text-primary hover:underline">Prijavite se</router-link>
+            da biste ostavili komentar.
+          </p>
+        </div>
+
       </div>
     </div>
   </div>
 </template>
-
+   
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { getNewsPost, deleteNewsPost, getMe } from "../../services/api.js";
+import { getNewsPost, deleteNewsPost, getMe, getComments, createComment, deleteComment } from "../../services/api.js";
 import Swal from "sweetalert2";
 
 const route = useRoute();
@@ -119,6 +173,10 @@ const newsPost = ref(null);
 const loading = ref(true);
 const error = ref(null);
 const isAdmin = ref(false);
+const isLoggedIn = ref(false);
+const currentUserId = ref(null);
+const comments = ref([]);
+const newComment = ref('');
 
 function getInitials(first, last) {
   return `${first?.[0] || ""}${last?.[0] || ""}`.toUpperCase();
@@ -152,18 +210,38 @@ async function handleDelete() {
   }
 }
 
+async function handleCreateComment() {
+  if (!newComment.value.trim()) return;
+  const result = await createComment(route.params.id, { content: newComment.value.trim() });
+  if (result.id) {
+    comments.value.push(result);
+    newComment.value = '';
+  }
+}
+
+async function handleDeleteComment(commentId) {
+  const result = await deleteComment(route.params.id, commentId);
+  if (result.message) {
+    comments.value = comments.value.filter(c => c.id !== commentId);
+  }
+}
+
 onMounted(async () => {
   try {
     const token = localStorage.getItem("token");
     if (token) {
       const user = await getMe(token);
       isAdmin.value = user.role === "admin";
+      isLoggedIn.value = true;
+      currentUserId.value = user.id;
     }
     const data = await getNewsPost(route.params.id);
     if (data.detail) {
       error.value = "Objava nije pronađena.";
     } else {
       newsPost.value = data;
+      const commentsData = await getComments(route.params.id);
+      comments.value = Array.isArray(commentsData) ? commentsData : [];
     }
   } catch {
     error.value = "Došlo je do greške pri učitavanju objave.";

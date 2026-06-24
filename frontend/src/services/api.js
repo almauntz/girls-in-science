@@ -376,3 +376,34 @@ export async function uploadNewsImage(formData) {
   )
   return await response.json()
 }
+
+/* =========================================================
+   COMMENTS
+========================================================= */
+
+export async function getComments(newsPostId) {
+  const response = await fetch(`${BASE_URL}/news/${newsPostId}/comments`)
+  return response.json()
+}
+
+export async function createComment(newsPostId, data) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/news/${newsPostId}/comments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(data)
+  })
+  return response.json()
+}
+
+export async function deleteComment(newsPostId, commentId) {
+  const token = localStorage.getItem('token')
+  const response = await fetch(`${BASE_URL}/news/${newsPostId}/comments/${commentId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  })
+  return response.json()
+}
