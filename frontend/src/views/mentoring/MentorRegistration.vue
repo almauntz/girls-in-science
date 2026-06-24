@@ -226,9 +226,10 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { applyAsMentor } from '../../services/mentoring.js'
+import axios from 'axios'
 
 const router = useRouter()
 
@@ -382,4 +383,32 @@ const submitForm = async () => {
     loading.value = false
   }
 }
+
+onMounted(async () => {
+  const token =
+    localStorage.getItem('token') ||
+    localStorage.getItem('access_token')
+
+  if (!token) return
+
+  try {
+    const response = await axios.get('http://localhost:8000/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    const user = response.data
+
+    const fullName = user.full_name || ''
+    const nameParts = fullName.trim().split(' ')
+
+    form.value.first_name = nameParts[0] || ''
+    form.value.last_name = nameParts.slice(1).join(' ') || ''
+    form.value.email = user.email || ''
+
+  } catch (err) {
+    console.error('Greška pri dohvaćanju korisničkih podataka:', err.response?.data || err)
+  }
+})
 </script>

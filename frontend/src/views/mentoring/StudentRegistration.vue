@@ -183,7 +183,8 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 import { registerStudent } from '../../services/mentoring.js'
 
 const form = ref({
@@ -221,7 +222,6 @@ const submitForm = async () => {
     await registerStudent(formData)
     successMsg.value = 'Vaša prijava je uspješno poslana!'
 
-    // Reset forme
     form.value = {
       full_name: '', email: '', university: '', faculty: '',
       year_of_study: '', city_country: '', areas_of_interest: '',
@@ -236,4 +236,35 @@ const submitForm = async () => {
     loading.value = false
   }
 }
+
+
+onMounted(async () => {
+  const token =
+    localStorage.getItem('token') ||
+    localStorage.getItem('access_token')
+
+  if (!token) {
+    console.log('Nema tokena')
+    return
+  }
+
+  try {
+    const response = await axios.get('http://localhost:8000/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+
+    const user = response.data
+
+    form.value.full_name = user.full_name || ''
+    form.value.email = user.email || ''
+
+  } catch (err) {
+    console.error(
+      'Greška pri dohvaćanju korisničkih podataka:',
+      err.response?.data || err
+    )
+  }
+})
 </script>
