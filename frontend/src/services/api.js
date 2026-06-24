@@ -329,6 +329,14 @@ export async function updateUserRole(token, userId, newRole) {
   if (!response.ok) throw new Error('Greška prilikom izmjene uloge na serveru')
   return response.json()
 }
+//Edna - Sprint 3: dodajemo funkciju za reset lozinke korisnica
+export async function resetUserPassword(userId, newPassword) {
+  return apiRequest(`/admin/${userId}/reset-password`, {
+    method: 'POST',
+    headers: getAuthHeaders(), // Automatski vuče Bearer token iz localStorage
+    body: JSON.stringify({ new_password: newPassword })
+  })
+}
 
 export async function uploadRoleModelImage(formData) {
   const response = await fetch(

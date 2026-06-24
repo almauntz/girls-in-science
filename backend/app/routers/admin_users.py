@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
-from sqlmodel import Session, select
+from pydantic import BaseModel
+from sqlmodel import Session, select, update
 from app.database import get_db
-from app.core.security import get_current_user
+from app.core.security import get_current_user, hash_password
 from app.models.user import User
 from app.models.profile import Profile, UpdateRoleRequest
+from sqlalchemy.orm.attributes import flag_modified 
 
 router = APIRouter(prefix="/admin", tags=["admin-users"])
 
@@ -102,4 +104,46 @@ def update_user_role(
         "message": f"Uloga korisnice {user_to_update.full_name} je uspješno promijenjena.",
         "user_id": user_to_update.id,
         "new_role": user_to_update.role
+    }
+
+# Edna - Sprint 3: Šema za unos lozinke
+class AdminResetPasswordRequest(BaseModel):
+    new_password: str
+
+
+@router.post("/{user_id}/reset-password")
+def reset_user_password(
+    user_id: int,
+    request_data: AdminResetPasswordRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # 1. Provjera admin uloge
+    user_role_str = str(current_user.role).upper()
+    if "ADMIN" not in user_role_str:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Samo administratori mogu resetovati lozinku korisnika."
+        )
+        
+    # 2. Pronalazak korisnice
+    user_to_reset = db.exec(select(User).where(User.id == user_id)).first()
+    if not user_to_reset:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Korisnica nije pronađena."
+        )
+
+    # 3. Postavljanje nove lozinke (Sada znamo 100% da je polje hashed_password)
+    user_to_reset.hashed_password = hash_password(request_data.new_password)
+    
+    # 4. Spasavanje i osvježavanje sesije
+    db.add(user_to_reset)
+    db.commit()
+    db.refresh(user_to_reset)
+
+    return {
+        "status": "success",
+        "message": f"Lozinka korisnice {user_to_reset.full_name} je uspješno resetovana.",
+        "user_id": user_id
     }
