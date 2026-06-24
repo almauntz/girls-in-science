@@ -443,6 +443,7 @@
               <th class="px-6 py-3 text-left text-sm font-semibold text-white">Telefon</th>
               <th class="px-6 py-3 text-left text-sm font-semibold text-white">Iskustvo</th>
               <th class="px-6 py-3 text-left text-sm font-semibold text-white">GitHub</th>
+              <th class="px-6 py-3 text-center text-sm font-semibold text-white">Akcija</th>
             </tr>
           </thead>
           <tbody>
@@ -472,6 +473,20 @@
                 </a>
                 <span v-else class="text-gray-400">-</span>
               </td>
+              <td class="px-6 py-3 text-center">
+                <button
+                  @click="confirmDeleteRegistration(registration)"
+                  class="reg-delete-btn"
+                  title="Ukloni studenticu sa radionice"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="3 6 5 6 21 6"/>
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+                    <path d="M10 11v6"/><path d="M14 11v6"/>
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>
+                  </svg>
+                </button>
+              </td>
             </tr>
           </tbody>
         </table>
@@ -481,6 +496,35 @@
       <div v-if="!registrationsLoading && selectedWorkshopId && registrations.length === 0" class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
         Nema prijavljenih kandidata za odabranu radionicu.
       </div>
+    <!-- Potvrdni prozor za brisanje prijave -->
+      <Teleport to="body">
+        <div v-if="regDeleteTarget" class="overlay overlay-top" @click.self="regDeleteTarget = null">
+          <div class="modal modal-narrow confirm-modal">
+            <div class="confirm-icon icon-delete">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+              </svg>
+            </div>
+            <h3 class="confirm-title">Ukloni studenticu</h3>
+            <p class="confirm-msg">
+              Uklanjaš <strong>{{ regDeleteTarget?.first_name }} {{ regDeleteTarget?.last_name }}</strong>
+              sa odabrane radionice. Ova akcija se ne može poništiti.
+            </p>
+            <div class="confirm-actions">
+              <button class="btn-secondary" @click="regDeleteTarget = null" :disabled="regDeleteBusy">
+                Odustani
+              </button>
+              <button class="btn-delete" @click="doDeleteRegistration" :disabled="regDeleteBusy">
+                <span v-if="regDeleteBusy" class="spin"></span>
+                {{ regDeleteBusy ? 'Brisanje…' : 'Da, ukloni' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Teleport>
+
     </div> 
  
     <!-- ══════════════════════════════════════════════════════════════
@@ -1082,10 +1126,6 @@ function showToast(type, message) {
   }, 40)
 }
 
-onMounted(async () => {
-  const res = await fetch(`${BASE_URL}/workshops/active`)
-  workshops.value = await res.json()
-})
  
 // ================================================================
 // PREGLED PRIJAVLJENIH
@@ -1106,45 +1146,78 @@ function getAuthHeaders() {
 }
  
 async function loadWorkshops() {
-  try {
-    registrationsLoading.value = true
-    registrationsError.value = null
-    const response = await fetch(`${BASE_URL}/workshops/active`)
+ try {
+    const response = await fetch(`${BASE_URL}/workshops/active`, {
+      headers: getAuthHeaders() // Dodan auth header 
+    })
+    
+    if (!response.ok) {
+      throw new Error(`Greška pri učitavanju: ${response.status}`)
+    }
+    
     workshops.value = await response.json()
   } catch (err) {
-    registrationsError.value = 'Greška pri učitavanju radionica: ' + err.message
-    console.error(err)
-  } finally {
-    registrationsLoading.value = false
+    console.error('Greška pri učitavanju radionica:', err)
   }
 }
  
 async function loadRegistrations() {
   if (!selectedWorkshopId.value) {
-    registrations.value = []
-    return
-  }
- 
-  try {
+      registrations.value = []
+      return
+    }
+
     registrationsLoading.value = true
     registrationsError.value = null
-    const response = await fetch(
-      `${BASE_URL}/workshops/${selectedWorkshopId.value}/registrations`,
-      { headers: getAuthHeaders() }
-    )
-    if (!response.ok) {
-      const errorData = await response.json()
-      throw new Error(errorData.detail || 'Greška pri učitavanju prijava')
+
+    try {
+      const response = await fetch(`${BASE_URL}/workshops/${selectedWorkshopId.value}/registrations`, {
+        headers: getAuthHeaders()
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Greška ${response.status} - Nije moguće dohvatiti prijave.`)
+      }
+      
+      registrations.value = await response.json()
+    } catch (err) {
+      registrationsError.value = 'Greška pri učitavanju prijava: ' + err.message
+      console.error(err)
+    } finally {
+      registrationsLoading.value = false
     }
-    registrations.value = await response.json()
-  } catch (err) {
-    registrationsError.value = 'Greška pri učitavanju prijava: ' + err.message
-    console.error(err)
-    registrations.value = []
+}
+
+// Brisanje registracije
+const regDeleteTarget = ref(null)
+const regDeleteBusy   = ref(false)
+
+function confirmDeleteRegistration(registration) {
+  regDeleteTarget.value = registration
+}
+
+async function doDeleteRegistration() {
+  if (!regDeleteTarget.value) return
+  regDeleteBusy.value = true
+  try {
+    const res = await fetch(
+      `${BASE_URL}/workshops/${selectedWorkshopId.value}/registrations/${regDeleteTarget.value.id}`,
+      { method: 'DELETE', headers: getAuthHeaders() }
+    )
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}))
+      throw new Error(err.detail || `Greška ${res.status}`)
+    }
+    registrations.value = registrations.value.filter(r => r.id !== regDeleteTarget.value.id)
+    regDeleteTarget.value = null
+    showToast('success', 'Studentica uspješno uklonjena s radionice.')
+  } catch (e) {
+    showToast('error', e.message || 'Brisanje nije uspjelo.')
   } finally {
-    registrationsLoading.value = false
+    regDeleteBusy.value = false
   }
 }
+ 
  
 // ================================================================
 // PRIJEDLOZI
