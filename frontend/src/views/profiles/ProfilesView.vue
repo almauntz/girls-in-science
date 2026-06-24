@@ -136,6 +136,8 @@ async mounted() {
         linkedin_url: data.linkedin_url || '',
         github_url:   data.github_url   || '',
         twitter_url:  data.twitter_url  || '',
+        show_education: data.show_education ?? true,
+        show_experience: data.show_experience ?? true,
       }
 
       if (data.role) {
@@ -166,6 +168,8 @@ async mounted() {
       this.profileData.linkedin_url = data.linkedin_url || ''
       this.profileData.github_url   = data.github_url   || ''
       this.profileData.twitter_url  = data.twitter_url  || ''
+      this.profileData.show_education = data.show_education ?? true
+      this.profileData.show_experience = data.show_experience ?? true
     },
     getAuthHeaders() {
       const token = localStorage.getItem('token')

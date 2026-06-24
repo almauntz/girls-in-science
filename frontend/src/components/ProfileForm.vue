@@ -197,7 +197,15 @@
                     <span class="text-sm text-gray-600">Prikaži lokaciju</span>
                     <input type="checkbox" v-model="form.show_location" class="w-4 h-4 accent-violet-600"/>
                   </label>
-                  <p class="text-xs text-gray-400 mt-1">🔒 Ime je uvijek javno vidljivo.</p>
+                  <label class="flex items-center justify-between gap-3 cursor-pointer">
+                    <span class="text-sm text-gray-600">Prikaži obrazovanje</span>
+                    <input type="checkbox" v-model="form.show_education" class="w-4 h-4 accent-violet-600"/>
+                </label>
+                <label class="flex items-center justify-between gap-3 cursor-pointer">
+                    <span class="text-sm text-gray-600">Prikaži iskustvo</span>
+                    <input type="checkbox" v-model="form.show_experience" class="w-4 h-4 accent-violet-600"/>
+                </label>
+                     <p class="text-xs text-gray-400 mt-1">🔒 Ime je uvijek javno vidljivo.</p>
                 </div>
               </div>
             </div>
@@ -500,6 +508,8 @@ export default {
       linkedin_url: '',
       github_url: '',
       twitter_url: '',
+      show_education: true,
+      show_experience: true,
     },
     errors: {
       full_name: '',
@@ -570,6 +580,7 @@ fullName: {
   showBiography: { immediate: true, handler(val) { if (!this.isEditMode) this.form.show_biography = val ?? true } },
   showField:     { immediate: true, handler(val) { if (!this.isEditMode) this.form.show_field     = val ?? true } },
   showLocation:  { immediate: true, handler(val) { if (!this.isEditMode) this.form.show_location  = val ?? true } },
+  showBiography: { immediate: true, handler(val) { if (!this.isEditMode) this.form.show_biography = val ?? true } },
 },
 
   methods: {
@@ -617,6 +628,8 @@ fullName: {
       linkedin_url: this.form.linkedin_url,
       github_url:   this.form.github_url,
       twitter_url:  this.form.twitter_url,
+      show_education: this.form.show_education,
+      show_experience: this.form.show_experience,
     }
     console.log('Payload koji se šalje:', JSON.stringify(payload))
     await updateProfile(token, payload)
@@ -647,6 +660,8 @@ fullName: {
       this.form.linkedin_url = this.linkedinUrl || ''
       this.form.github_url   = this.githubUrl   || ''
       this.form.twitter_url  = this.twitterUrl  || ''
+      this.form.show_education = this.showEducation
+      this.form.show_experience = this.showExperience
     },
 
     async handleAvatarChange(event) {
