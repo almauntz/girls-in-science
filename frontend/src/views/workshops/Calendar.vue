@@ -128,8 +128,8 @@
                 class="p-2 text-[10px] leading-tight rounded shadow-sm cursor-pointer border-l-[5px] border-solid transition-all relative"
                 @click="handleWorkshopClick(workshop)"
               >
-                <span v-if="isFree(workshop)" class="ping-green"></span>
-                <span v-else-if="checkIsRegistered(workshop.ID_workshop)" class="ping-purple"></span>
+                <span v-if="isFree(workshop) && isToday(n)" class="ping-green"></span>
+                <span v-else-if="checkIsRegistered(workshop.ID_workshop) && isToday(n)" class="ping-purple"></span>
 
                 <div class="flex justify-between items-start">
                   <div class="flex items-center gap-1 min-w-0">
@@ -222,9 +222,37 @@ const firstDayOffset = computed(() => {
   return firstDay === 0 ? 6 : firstDay - 1
 })
 
+// ──────────────────────────────────────────────────────────────────
+// PRIVREMENA KOMPENZACIJA poznate greške na admin strani:
+// admin forma (dateToISO) konvertuje lokalni datum u UTC prije slanja
+// na backend, a backend čuva samo datumski dio (bez vremena/zone),
+// pa se datum trajno "pomjeri" 1 dan unazad za svaku radionicu koja
+// je kreirana ili editovana preko tog admin panela.
+//
+// Ako string koji stiže s API-ja NEMA informaciju o vremenskoj zoni
+// ('Z' ili '+HH:MM'/'-HH:MM' na kraju), tretiramo ga kao "sirovi"
+// datum pogođen tom greškom i dodajemo 1 dan da kompenzujemo.
+//
+// OGRANIČENJE: ako je radionica editovana više puta na admin strani,
+// greška se gomila (1 dan po svakom snimanju), pa ova kompenzacija
+// od +1 dan neće biti dovoljna za takve radionice — taj podatak je
+// već nepovratno izgubljen i može se ispravno riješiti samo na
+// admin/backend strani (u dateToISO funkciji).
+// ──────────────────────────────────────────────────────────────────
+const HAS_TIMEZONE_INFO = /Z$|[+-]\d{2}:\d{2}$/
+
+const parseWorkshopDate = (dateStr) => {
+  if (!dateStr) return new Date(NaN)
+  const d = new Date(dateStr)
+  if (!HAS_TIMEZONE_INFO.test(String(dateStr))) {
+    d.setDate(d.getDate() + 1)
+  }
+  return d
+}
+
 const stats = computed(() => {
   const inMonth = props.workshops.filter(w => {
-    const d = new Date(w.date)
+    const d = parseWorkshopDate(w.date)
     return d.getMonth() === currentMonth.value && d.getFullYear() === currentYear.value
   })
   const registered = Object.values(props.registrations).filter(r => r === true).length
@@ -239,7 +267,7 @@ const stats = computed(() => {
 const getDaysUntil = (date) => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
-  const workshopDate = new Date(date)
+  const workshopDate = parseWorkshopDate(date)
   workshopDate.setHours(0, 0, 0, 0)
   return Math.ceil((workshopDate - today) / (1000 * 60 * 60 * 24))
 }
@@ -255,7 +283,7 @@ const upcomingWarnings = computed(() => {
 const noWorkshopsInMonth = computed(() => {
   if (searchQuery.value) return false
   return props.workshops.filter(w => {
-    const d = new Date(w.date)
+    const d = parseWorkshopDate(w.date)
     return d.getMonth() === currentMonth.value && d.getFullYear() === currentYear.value
   }).length === 0
 })
@@ -263,7 +291,7 @@ const noWorkshopsInMonth = computed(() => {
 const noSearchResults = computed(() => {
   if (!searchQuery.value) return false
   return props.workshops.filter(w => {
-    const d = new Date(w.date)
+    const d = parseWorkshopDate(w.date)
     const matchesMonth = d.getMonth() === currentMonth.value && d.getFullYear() === currentYear.value
     const matchesSearch = w.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                           w.location.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -273,7 +301,7 @@ const noSearchResults = computed(() => {
 
 const filteredWorkshopsForDay = (n) => {
   return props.workshops.filter(w => {
-    const d = new Date(w.date)
+    const d = parseWorkshopDate(w.date)
     const matchesDay = d.getDate() === n && d.getMonth() === currentMonth.value && d.getFullYear() === currentYear.value
     const matchesSearch = w.title.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
                           w.location.toLowerCase().includes(searchQuery.value.toLowerCase())
@@ -287,7 +315,7 @@ const isFree = (workshop) => {
 }
 
 const handleWorkshopClick = (workshop) => {
-  const isExpired = new Date(workshop.date) < new Date(new Date().setHours(0, 0, 0, 0))
+  const isExpired = parseWorkshopDate(workshop.date) < new Date(new Date().setHours(0, 0, 0, 0))
   if (isExpired) {
     showExpiredModal.value = true
   } else {
@@ -333,7 +361,7 @@ const checkIsRegistered = (id) => {
 const getFinalStyle = (workshop, n) => {
   const isPrijavljena = checkIsRegistered(workshop.ID_workshop)
   const free = workshop.free_spots ?? (workshop.capacity - (workshop.registered_count || 0))
-  const isExpired = new Date(workshop.date) < new Date(new Date().setHours(0, 0, 0, 0))
+  const isExpired = parseWorkshopDate(workshop.date) < new Date(new Date().setHours(0, 0, 0, 0))
   let style = { borderLeftWidth: '5px' }
 
   if (isExpired) {
