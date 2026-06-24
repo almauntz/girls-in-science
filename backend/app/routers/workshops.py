@@ -146,10 +146,10 @@ def search_workshops(
     statement = select(Workshop)
 
     if filters.title:
-        statement = statement.where(Workshop.title.ilike(f"%{filters.title}%"))
-
-    if filters.location:
-        statement = statement.where(Workshop.location.ilike(f"%{filters.location}%"))
+       statement = statement.where(
+        Workshop.title.ilike(f"%{filters.title}%") |
+        Workshop.location.ilike(f"%{filters.title}%")
+       )
 
     if filters.date_from and filters.date_to:
         date_to_end = filters.date_to.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)

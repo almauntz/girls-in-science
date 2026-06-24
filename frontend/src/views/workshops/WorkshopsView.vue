@@ -23,7 +23,7 @@
       @input="handleSearch"
       @blur="hideDropdown"
       type="text"
-      placeholder="Pretraži radionice po nazivu..."
+      placeholder="Pretraži radionice po nazivu ili lokaciji..."
       class="flex-1 bg-transparent text-sm focus:outline-none text-gray-800 placeholder-gray-400"
     />
     <div class="w-px h-5 bg-gray-200 flex-shrink-0"></div>
@@ -73,26 +73,7 @@
           </button>
         </div>
 
-        <!-- Location  -->
-        <div class="flex gap-2 flex-wrap">
-          <button
-            v-for="loc in locationChips"
-            :key="loc"
-            @click="selectLocation(loc)"
-            :style="filterLocation === loc
-              ? 'background:#fff; color:#7c3aed; border-color:#fff;'
-              : 'background:rgba(255,255,255,0.15); color:#ede9fe; border-color:rgba(255,255,255,0.25);'"
-            class="px-4 py-1.5 rounded-full text-sm font-semibold border transition-all"
-          >
-            {{ loc }}
-          </button>
-        </div>
-
         <div v-if="filtersActive" class="flex gap-2 flex-wrap mt-3">
-          <span v-if="filterLocation && filterLocation !== 'Sve'" class="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-white/20 text-white border border-white/30">
-            {{ filterLocation }}
-            <button @click="selectLocation('Sve')" class="hover:text-red-300 font-bold">×</button>
-          </span>
           <span v-if="filterDateFrom || filterDateTo" class="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-white/20 text-white border border-white/30">
             {{ filterDateFrom || '...' }} → {{ filterDateTo || '...' }}
             <button @click="clearDates" class="hover:text-red-300 font-bold">×</button>
@@ -134,149 +115,170 @@
           <CalendarView :workshops="workshops" :registrations="registrations" />
         </div>
 
-        <!-- LIST VIEW -->
-        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<!-- LIST VIEW -->
+<div v-else class="flex flex-col gap-10">
 
-          <!-- Aktivne radionice -->
-          <div>
-            <div class="flex items-center gap-2 mb-4">
-              <h2 class="text-lg font-extrabold text-gray-800">Aktivne radionice</h2>
-              <span class="text-xs font-semibold px-2.5 py-1 rounded-full text-purple-700" style="background:#ede9fe;">
-                {{ activeWorkshops.length }} dostupnih
+  <!-- Aktivne radionice -->
+  <div>
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-1 h-7 rounded-full" style="background:#7c3aed;"></div>
+      <h2 class="text-xl font-extrabold text-gray-800">Aktivne radionice</h2>
+      <span class="text-xs font-bold px-3 py-1 rounded-full text-purple-700" style="background:#ede9fe;">
+        {{ activeWorkshops.length }} dostupnih
+      </span>
+    </div>
+
+    <div v-if="activeWorkshops.length === 0" class="text-gray-400 text-sm text-center py-10 bg-white rounded-2xl">
+      Nema aktivnih radionica.
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div
+        v-for="workshop in activeWorkshops"
+        :key="workshop.ID_workshop"
+        class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-200 overflow-hidden flex flex-col"
+      >
+        <!-- Colored top accent -->
+        <div class="h-1.5 w-full" :style="getFreeSpots(workshop) > 0 ? 'background: linear-gradient(90deg,#7c3aed,#a855f7)' : 'background: linear-gradient(90deg,#f59e0b,#fbbf24)'"></div>
+
+        <div class="p-5 flex flex-col gap-3 flex-1">
+          <!-- Status + prijava tag -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <span
+              class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
+              :style="getFreeSpots(workshop) > 0 ? 'background:#dcfce7; color:#16a34a;' : 'background:#fef3c7; color:#b45309;'"
+            >
+              <span class="w-1.5 h-1.5 rounded-full inline-block" :style="getFreeSpots(workshop) > 0 ? 'background:#16a34a;' : 'background:#b45309;'"></span>
+              {{ getFreeSpots(workshop) > 0 ? 'Slobodna mjesta' : 'Popunjeno' }}
+            </span>
+            <span v-if="registrations[workshop.ID_workshop] === true" class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#ede9fe; color:#7c3aed;">
+              ✓ Prijavljen
+            </span>
+            <span v-if="waitingList[workshop.ID_workshop]" class="text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#fef3c7; color:#b45309;">
+              ⏳ Lista čekanja
+            </span>
+          </div>
+
+          <!-- Naziv -->
+          <h3 class="font-extrabold text-base text-gray-800 leading-snug">{{ workshop.title }}</h3>
+
+          <!-- Info -->
+          <div class="flex flex-col gap-1.5 text-xs text-gray-400">
+            <span class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              {{ formatDate(workshop.date) }}
+            </span>
+            <span class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ workshop.location }}
+            </span>
+          </div>
+
+          <!-- Progress bar -->
+          <div v-if="workshop.capacity" class="mt-1">
+            <div class="flex justify-between text-xs text-gray-400 mb-1">
+              <span>Popunjenost</span>
+              <span class="font-semibold" :style="getFreeSpots(workshop) > 0 ? 'color:#7c3aed' : 'color:#b45309'">
+                {{ workshop.capacity - getFreeSpots(workshop) }}/{{ workshop.capacity }}
               </span>
             </div>
-
-            <div v-if="activeWorkshops.length === 0" class="text-gray-400 text-sm text-center py-10 bg-white rounded-xl">
-              Nema aktivnih radionica.
-            </div>
-
-            <div class="flex flex-col gap-3">
+            <div class="w-full h-1.5 rounded-full bg-gray-100 overflow-hidden">
               <div
-                v-for="workshop in activeWorkshops"
-                :key="workshop.ID_workshop"
-                class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col gap-2 hover:shadow-md transition-shadow"
-              >
-                <!-- Status tag -->
-                <div class="flex items-center gap-2">
-                  <span
-                    class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full"
-                    :style="getFreeSpots(workshop) > 0
-                      ? 'background:#dcfce7; color:#16a34a;'
-                      : 'background:#fef3c7; color:#b45309;'"
-                  >
-                    <span class="w-1.5 h-1.5 rounded-full inline-block" :style="getFreeSpots(workshop) > 0 ? 'background:#16a34a;' : 'background:#b45309;'"></span>
-                    {{ getFreeSpots(workshop) > 0 ? 'Slobodna mjesta' : 'Popunjeno' }}
-                  </span>
-                  <span v-if="registrations[workshop.ID_workshop] === true" class="text-xs font-semibold px-2 py-0.5 rounded-full" style="background:#ede9fe; color:#7c3aed;">
-                    Prijavljen ✓
-                  </span>
-                </div>
-
-                <h3 class="font-bold text-base text-gray-800 leading-snug">{{ workshop.title }}</h3>
-
-                <div class="flex items-center gap-4 text-xs text-gray-400">
-                  <span class="flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                    {{ formatDate(workshop.date) }}
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {{ workshop.location }}
-                  </span>
-                </div>
-
-                <div class="flex justify-between items-center pt-1 mt-1 border-t border-gray-50">
-                  <router-link :to="`/workshops/${workshop.ID_workshop}`" class="text-sm font-semibold transition-colors" style="color:#7c3aed;">
-                    Saznaj više →
-                  </router-link>
-                  <span v-if="getFreeSpots(workshop) > 0 && !registrations[workshop.ID_workshop]" class="text-xs font-bold text-green-600">
-                    {{ getFreeSpots(workshop) }} slobodnih
-                  </span>
-                  <button
-                    v-if="registrations[workshop.ID_workshop]"
-                    @click="handleCancel(workshop.ID_workshop, workshop.title)"
-                    class="text-xs font-semibold text-gray-400 hover:text-red-500 uppercase tracking-wide transition-colors"
-                  >
-                    Odustani
-                  </button>
-                  <button
-                    v-else-if="waitingList[workshop.ID_workshop]"
-                    @click="handleLeaveWaitingList(workshop.ID_workshop)"
-                    class="text-xs font-semibold text-red-500 uppercase tracking-wide transition-colors"
-                  >
-                    Napusti listu čekanja
-                  </button>
-                  <button
-                    v-else-if="getFreeSpots(workshop) === 0"
-                    @click="handleJoinWaitingList(workshop.ID_workshop)"
-                    class="text-xs font-semibold uppercase tracking-wide transition-colors"
-                    style="color:#d97706;"
-                  >
-                    Lista čekanja
-                  </button>
-                </div>
-              </div>
+                class="h-full rounded-full transition-all duration-500"
+                :style="`width: ${Math.round(((workshop.capacity - getFreeSpots(workshop)) / workshop.capacity) * 100)}%; background: ${getFreeSpots(workshop) > 0 ? '#7c3aed' : '#f59e0b'}`"
+              ></div>
             </div>
           </div>
 
-          <!-- Završene radionice -->
-          <div>
-            <div class="flex items-center gap-2 mb-4">
-              <h2 class="text-lg font-extrabold text-gray-800">Završene radionice</h2>
-              <span class="text-xs font-semibold px-2.5 py-1 rounded-full text-gray-500" style="background:#f3f4f6;">
-                {{ completedWorkshops.length }} završenih
-              </span>
-            </div>
-
-            <div v-if="completedWorkshops.length === 0" class="text-gray-400 text-sm text-center py-10 bg-white rounded-xl">
-              Nema završenih radionica.
-            </div>
-
-            <div class="flex flex-col gap-3">
-              <div
-                v-for="workshop in completedWorkshops"
-                :key="workshop.ID_workshop"
-                class="bg-white rounded-xl p-4 border border-gray-100 shadow-sm flex flex-col gap-2 hover:shadow-md transition-shadow"
-              >
-                <div class="flex items-center justify-between">
-                  <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full" style="background:#f3f4f6; color:#6b7280;">
-                    <span class="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span>
-                    Završena
-                  </span>
-                </div>
-
-                <h3 class="font-bold text-base text-gray-700 leading-snug">{{ workshop.title }}</h3>
-
-                <div class="flex items-center gap-4 text-xs text-gray-400">
-                  <span class="flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                    {{ formatDate(workshop.date) }}
-                  </span>
-                  <span class="flex items-center gap-1">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                    {{ workshop.location }}
-                  </span>
-                </div>
-
-                <div class="flex justify-between items-center pt-1 mt-1 border-t border-gray-50">
-                  <router-link :to="`/workshops/${workshop.ID_workshop}`" class="text-sm font-semibold transition-colors" style="color:#9333ea;">
-                    Pogledaj ocjene →
-                  </router-link>
-                  <button
-                    @click="openRatingModal(workshop.ID_workshop, workshop.title)"
-                    class="text-xs font-semibold uppercase tracking-wide transition-colors" style="color:#7c3aed;"
-                  >
-                    Ocijeni ★
-                  </button>
-                </div>
-              </div>
-            </div>
+          <!-- Actions -->
+          <div class="flex justify-between items-center pt-3 mt-auto border-t border-gray-50">
+            <router-link :to="`/workshops/${workshop.ID_workshop}`" class="text-sm font-bold transition-colors" style="color:#7c3aed;">
+              Saznaj više →
+            </router-link>
+            <button
+              v-if="registrations[workshop.ID_workshop]"
+              @click="handleCancel(workshop.ID_workshop, workshop.title)"
+              class="text-xs font-semibold text-gray-400 hover:text-red-500 uppercase tracking-wide transition-colors"
+            >Odustani</button>
+            <button
+              v-else-if="waitingList[workshop.ID_workshop]"
+              @click="handleLeaveWaitingList(workshop.ID_workshop)"
+              class="text-xs font-semibold text-red-400 hover:text-red-600 uppercase tracking-wide transition-colors"
+            >Napusti listu</button>
+            <button
+              v-else-if="getFreeSpots(workshop) === 0"
+              @click="handleJoinWaitingList(workshop.ID_workshop)"
+              class="text-xs font-semibold uppercase tracking-wide transition-colors"
+              style="color:#d97706;"
+            >Lista čekanja</button>
           </div>
-
         </div>
-
       </div>
     </div>
+  </div>
+
+  <!-- Završene radionice -->
+  <div>
+    <div class="flex items-center gap-3 mb-5">
+      <div class="w-1 h-7 rounded-full bg-gray-300"></div>
+      <h2 class="text-xl font-extrabold text-gray-800">Završene radionice</h2>
+      <span class="text-xs font-bold px-3 py-1 rounded-full text-gray-500" style="background:#f3f4f6;">
+        {{ completedWorkshops.length }} završenih
+      </span>
+    </div>
+
+    <div v-if="completedWorkshops.length === 0" class="text-gray-400 text-sm text-center py-10 bg-white rounded-2xl">
+      Nema završenih radionica.
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <div
+        v-for="workshop in completedWorkshops"
+        :key="workshop.ID_workshop"
+        class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col opacity-80"
+      >
+        <div class="h-1.5 w-full bg-gray-200"></div>
+
+        <div class="p-5 flex flex-col gap-3 flex-1">
+          <span class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-full w-fit" style="background:#f3f4f6; color:#6b7280;">
+            <span class="w-1.5 h-1.5 rounded-full bg-gray-400 inline-block"></span>
+            Završena
+          </span>
+
+          <h3 class="font-extrabold text-base text-gray-600 leading-snug">{{ workshop.title }}</h3>
+
+          <div class="flex flex-col gap-1.5 text-xs text-gray-400">
+            <span class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+              {{ formatDate(workshop.date) }}
+            </span>
+            <span class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ workshop.location }}
+            </span>
+          </div>
+
+          <div class="flex justify-between items-center pt-3 mt-auto border-t border-gray-50">
+            <router-link :to="`/workshops/${workshop.ID_workshop}`" class="text-sm font-bold transition-colors" style="color:#9333ea;">
+              Pogledaj ocjene →
+            </router-link>
+            <button
+              @click="openRatingModal(workshop.ID_workshop, workshop.title)"
+              class="text-xs font-bold uppercase tracking-wide px-3 py-1.5 rounded-lg transition-colors"
+              style="background:#ede9fe; color:#7c3aed;"
+            >
+              ★ Ocijeni
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+    </div>
+
+  </div>
       <!-- Prijedlog dugme -->
      <router-link
   to="/workshops/my-proposals"
@@ -394,6 +396,8 @@ const fetchSearchResults = async (title) => {
 const hideDropdown = () => {
   setTimeout(() => {
     searchResults.value = []
+    searchQuery.value = ''   // ← dodaj ovo
+
   }, 200)
 }
 
@@ -404,21 +408,18 @@ const goToWorkshop = (workshop) => {
 }
 
 /* ---------------- FILTERI ---------------- */
-const filterLocation = ref('Sve')
+
 const filterDateFrom = ref('')
 const filterDateTo = ref('')
 const dateOpen = ref(false)
-const locationChips = ref(['Sve'])
 
-const selectLocation = async (loc) => { filterLocation.value = loc; await applyFilters() }
 const clearDates = async () => { filterDateFrom.value = ''; filterDateTo.value = ''; dateOpen.value = false; await applyFilters() }
-const filtersActive = computed(() => (filterLocation.value && filterLocation.value !== 'Sve') || filterDateFrom.value !== '' || filterDateTo.value !== '')
+const filtersActive = computed(() => filterDateFrom.value !== '' || filterDateTo.value !== '')
 
 const applyFilters = async () => {
   try {
     error.value = null
     const params = new URLSearchParams()
-    if (filterLocation.value && filterLocation.value !== 'Sve') params.append('location', filterLocation.value)
     if (filterDateFrom.value) params.append('date_from', filterDateFrom.value)
     if (filterDateTo.value) params.append('date_to', filterDateTo.value)
     const url = params.toString() ? `${BASE_URL}/workshops/search?${params.toString()}` : `${BASE_URL}/workshops/active`
@@ -431,7 +432,7 @@ const applyFilters = async () => {
 }
 
 const resetFilters = async () => {
-  filterLocation.value = 'Sve'; filterDateFrom.value = ''; filterDateTo.value = ''; dateOpen.value = false
+  filterDateFrom.value = ''; filterDateTo.value = ''; dateOpen.value = false
   await refreshWorkshops()
 }
 
@@ -511,8 +512,6 @@ const fetchWorkshops = async () => {
     const res = await fetch(`${BASE_URL}/workshops/active`)
     const data = await res.json()
     workshops.value = Array.isArray(data) ? data : []
-    const locations = [...new Set(workshops.value.map(w => w.location).filter(Boolean))]
-    locationChips.value = ['Sve', ...locations]
     if (!Array.isArray(data)) error.value = 'Trenutno nema aktivnih radionica.'
   } catch { error.value = 'Nije moguće kontaktirati server.' }
 }
