@@ -16,6 +16,12 @@
         placeholder="Pretraži po naslovu ili sadržaju"
         class="flex-1 border border-gray-300 rounded-xl px-5 py-3 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white"
       />
+      <button
+        @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+        class="px-4 py-2 rounded-xl border border-gray-300 text-sm font-medium"
+      >
+        {{ sortOrder === 'asc' ? 'A→Z' : 'Z→A' }}
+      </button>
     </div>
     <div class="flex justify-center mb-10" v-if="isAdmin">
       <router-link
@@ -99,6 +105,7 @@ const isAdmin = ref(false);
 const selectedCategory = ref(null);
 const newCategory = ref("");
 const search = ref("")
+const sortOrder = ref("asc")
 
 const sortedCategories = computed(() => {
   return [...categories.value].sort((a, b) => a.name.localeCompare(b.name));
@@ -119,7 +126,11 @@ const filteredPosts = computed(() => {
       p.content?.toLowerCase().includes(q)
     )
   }
-
+  posts = [...posts].sort((a, b) => {
+  return sortOrder.value === "asc"
+    ? a.title.localeCompare(b.title)
+    : b.title.localeCompare(a.title)
+})
   return posts
 })
 
