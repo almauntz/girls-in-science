@@ -51,6 +51,8 @@ class NewsPostUpdate(SQLModel):
     author: Optional[str] = None
     image_url: Optional[str] = None
     role_model_ids: Optional[List[int]] = None
+    category_ids: Optional[List[int]] = None
+
 
 
 class RoleModelSimple(SQLModel):
@@ -58,6 +60,7 @@ class RoleModelSimple(SQLModel):
     first_name: str
     last_name: str
     stem_field: str
+    image_url: Optional[str] = None
 class CategoryRead(SQLModel):
     id: int
     name: str

@@ -15,6 +15,7 @@ class RoleModel(SQLModel, table=True):
     position: str = Field(nullable=False)
     biography: str = Field(sa_column=Column(Text, nullable=False))
     achievements: str = Field(sa_column=Column(Text, nullable=False))
+    image_url: Optional[str]=Field(default=None)
     created_at: Optional[datetime] = Field(
         default=None,
         sa_column=Column(DateTime(timezone=True), server_default=func.now())
@@ -31,6 +32,7 @@ class RoleModelCreate(SQLModel):
     position: str
     biography: str
     achievements: str
+    image_url: Optional[str]=None
 
 class RoleModelUpdate(SQLModel):
     first_name: Optional[str] = None
@@ -40,3 +42,4 @@ class RoleModelUpdate(SQLModel):
     position: Optional[str] = None
     biography: Optional[str] = None
     achievements: Optional[str] = None
+    image_url: Optional[str]=None

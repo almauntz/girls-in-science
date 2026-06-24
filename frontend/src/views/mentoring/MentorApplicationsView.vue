@@ -1,7 +1,43 @@
 <template>
   <div class="py-8 px-4">
     <h1 class="text-4xl font-semibold text-gray-800 mb-2">Moji zahtjevi</h1>
-    <p class="text-gray-500 mb-8">Upravljajte zahtjevima studentica za mentorstvo</p>
+    <p class="text-gray-500 mb-6">Upravljajte zahtjevima studentica za mentorstvo</p>
+
+    <div class="flex border-b border-gray-200 mb-8">
+      <button
+        @click="activeTab = 'pending'"
+        :class="[
+          'py-3 px-6 font-semibold text-sm border-b-2 transition',
+          activeTab === 'pending'
+            ? 'border-purple-600 text-purple-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+        ]"
+      >
+        Pristigli zahtjevi ({{ pendingApplications.length }})
+      </button>
+      <button
+        @click="activeTab = 'active'"
+        :class="[
+          'py-3 px-6 font-semibold text-sm border-b-2 transition',
+          activeTab === 'active'
+            ? 'border-purple-600 text-purple-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+        ]"
+      >
+        Aktivni odnosi ({{ activeApplications.length }})
+      </button>
+      <button
+        @click="activeTab = 'rejected'"
+        :class="[
+          'py-3 px-6 font-semibold text-sm border-b-2 transition',
+          activeTab === 'rejected'
+            ? 'border-purple-600 text-purple-600'
+            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+        ]"
+      >
+        Odbijeni zahtjevi ({{ rejectedApplications.length }})
+      </button>
+    </div>
 
     <div v-if="loading" class="flex justify-center items-center py-20">
       <div class="animate-spin rounded-full h-12 w-12 border-4 border-purple-600 border-t-transparent"></div>
@@ -12,137 +48,130 @@
       <p class="text-red-700">{{ error }}</p>
     </div>
 
-    <div v-else class="space-y-8">
-      <div class="border border-gray-300 rounded-lg p-6 bg-white">
-        <!-- PRISTIGLI ZAHTJEVI Section -->
-        <div>
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4">PRISTIGLI ZAHTJEVI</h2>
-          <div v-if="pendingApplications.length === 0" class="bg-gray-50 rounded-lg p-8 text-center">
-            <p class="text-gray-500">Nema novih zahtjeva za sada</p>
-          </div>
-          <div v-else class="space-y-3">
-            <div
-              v-for="app in pendingApplications"
-              :key="app.id"
-              class="bg-white border border-gray-200 rounded-lg p-4 flex items-start gap-4 hover:shadow-md transition"
-            >
-              <div class="flex-shrink-0">
-                <div class="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
-                  <span class="text-purple-600 font-semibold">{{ getInitials(app.student_name) }}</span>
-                </div>
-              </div>
-
-              <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-gray-800">{{ app.student_name }}</h3>
-                <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ app.message }}</p>
-                <p class="text-gray-400 text-xs mt-2">{{ formatDate(app.created_at) }}</p>
-              </div>
-
-              <div class="flex-shrink-0 flex flex-col gap-2">
-                <div class="flex gap-2">
-                  <button
-                    @click="approveApplication(app.id, app)"
-                    class="px-4 py-2 bg-white border border-gray-800 text-gray-800 font-semibold rounded hover:bg-gray-800 hover:text-white transition"
-                  >
-                    Prihvati
-                  </button>
-                  <button
-                    @click="openRejectModal(app)"
-                    class="px-4 py-2 bg-gray-400 text-white font-semibold rounded hover:bg-gray-500 transition"
-                  >
-                    Odbij
-                  </button>
-                </div>
-                <button
-                  @click="openDetails(app)"
-                  class="px-4 py-2 bg-purple-100 border border-purple-300 text-purple-600 font-semibold rounded hover:bg-purple-200 transition whitespace-nowrap"
-                >
-                  Detalji
-                </button>
+    <div v-else class="border border-gray-300 rounded-lg p-6 bg-white">
+      
+      <div v-if="activeTab === 'pending'">
+        <div v-if="pendingApplications.length === 0" class="bg-gray-50 rounded-lg p-8 text-center">
+          <p class="text-gray-500">Nema novih zahtjeva za sada</p>
+        </div>
+        <div v-else class="space-y-3">
+          <div
+            v-for="app in pendingApplications"
+            :key="app.id"
+            class="bg-white border border-gray-200 rounded-lg p-4 flex items-start gap-4 hover:shadow-md transition"
+          >
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
+                <span class="text-purple-600 font-semibold">{{ getInitials(app.student_name) }}</span>
               </div>
             </div>
-          </div>
-        </div>
 
-        <!-- AKTIVNI ODNOSI Section -->
-        <div class="mt-8 pt-8 border-t border-gray-200">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4">AKTIVNI ODNOSI</h2>
-          <div v-if="activeApplications.length === 0" class="bg-gray-50 rounded-lg p-8 text-center">
-            <p class="text-gray-500">Nema aktivnih odnosa za sada</p>
-          </div>
-          <div v-else class="space-y-3">
-            <div
-              v-for="app in activeApplications"
-              :key="app.id"
-              class="bg-white border border-gray-200 rounded-lg p-4 flex items-start gap-4"
-            >
-              <div class="flex-shrink-0">
-                <div class="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
-                  <span class="text-purple-600 font-semibold">{{ getInitials(app.student_name) }}</span>
-                </div>
-              </div>
-
-              <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-gray-800">{{ app.student_name }}</h3>
-                <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ app.message }}</p>
-                <p class="text-gray-400 text-xs mt-2">{{ formatDate(app.created_at) }}</p>
-              </div>
-
-              <div class="flex-shrink-0">
-                <button
-                  disabled
-                  class="px-4 py-2 bg-green-100 text-green-700 font-semibold rounded cursor-default"
-                >
-                  Aktivan
-                </button>
-              </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-gray-800">{{ app.student_name }}</h3>
+              <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ app.message }}</p>
+              <p class="text-gray-400 text-xs mt-2">{{ formatDate(app.created_at) }}</p>
             </div>
-          </div>
-        </div>
 
-        <!-- ODBIJENI ZAHTJEVI Section -->
-        <div class="mt-8 pt-8 border-t border-gray-200">
-          <h2 class="text-2xl font-semibold text-gray-800 mb-4">ODBIJENI ZAHTJEVI</h2>
-          <div v-if="rejectedApplications.length === 0" class="bg-gray-50 rounded-lg p-8 text-center">
-            <p class="text-gray-500">Nema odbijenih zahtjeva</p>
-          </div>
-          <div v-else class="space-y-3">
-            <div
-              v-for="app in rejectedApplications"
-              :key="app.id"
-              class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-4"
-            >
-              <div class="flex-shrink-0">
-                <div class="w-12 h-12 bg-red-200 rounded-full flex items-center justify-center">
-                  <span class="text-red-600 font-semibold">{{ getInitials(app.student_name) }}</span>
-                </div>
-              </div>
-
-              <div class="flex-1 min-w-0">
-                <h3 class="font-semibold text-gray-800">{{ app.student_name }}</h3>
-                <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ app.message }}</p>
-                <p class="text-gray-400 text-xs mt-2">{{ formatDate(app.created_at) }}</p>
-                <div v-if="app.rejection_reason" class="mt-2 p-2 bg-red-100 border-l-4 border-red-500 text-red-700 text-sm rounded">
-                  <strong>Razlog:</strong> {{ app.rejection_reason }}
-                </div>
-              </div>
-
-              <div class="flex-shrink-0">
+            <div class="flex-shrink-0 flex flex-col gap-2">
+              <div class="flex gap-2">
                 <button
-                  disabled
-                  class="px-4 py-2 bg-red-100 text-red-700 font-semibold rounded cursor-default"
+                  @click="approveApplication(app.id, app)"
+                  class="px-4 py-2 bg-white border border-gray-800 text-gray-800 font-semibold rounded hover:bg-gray-800 hover:text-white transition"
                 >
-                  Odbijen
+                  Prihvati
+                </button>
+                <button
+                  @click="openRejectModal(app)"
+                  class="px-4 py-2 bg-gray-400 text-white font-semibold rounded hover:bg-gray-500 transition"
+                >
+                  Odbij
                 </button>
               </div>
+              <button
+                @click="openDetails(app)"
+                class="px-4 py-2 bg-purple-100 border border-purple-300 text-purple-600 font-semibold rounded hover:bg-purple-200 transition whitespace-nowrap"
+              >
+                Detalji
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      <div v-if="activeTab === 'active'">
+        <div v-if="activeApplications.length === 0" class="bg-gray-50 rounded-lg p-8 text-center">
+          <p class="text-gray-500">Nema aktivnih odnosa za sada</p>
+        </div>
+        <div v-else class="space-y-3">
+          <div
+            v-for="app in activeApplications"
+            :key="app.id"
+            class="bg-white border border-gray-200 rounded-lg p-4 flex items-start gap-4"
+          >
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 bg-purple-200 rounded-full flex items-center justify-center">
+                <span class="text-purple-600 font-semibold">{{ getInitials(app.student_name) }}</span>
+              </div>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-gray-800">{{ app.student_name }}</h3>
+              <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ app.message }}</p>
+              <p class="text-gray-400 text-xs mt-2">{{ formatDate(app.created_at) }}</p>
+            </div>
+
+            <div class="flex-shrink-0">
+              <button
+                disabled
+                class="px-4 py-2 bg-green-100 text-green-700 font-semibold rounded cursor-default"
+              >
+                Aktivan
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="activeTab === 'rejected'">
+        <div v-if="rejectedApplications.length === 0" class="bg-gray-50 rounded-lg p-8 text-center">
+          <p class="text-gray-500">Nema odbijenih zahtjeva</p>
+        </div>
+        <div v-else class="space-y-3">
+          <div
+            v-for="app in rejectedApplications"
+            :key="app.id"
+            class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-4"
+          >
+            <div class="flex-shrink-0">
+              <div class="w-12 h-12 bg-red-200 rounded-full flex items-center justify-center">
+                <span class="text-red-600 font-semibold">{{ getInitials(app.student_name) }}</span>
+              </div>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <h3 class="font-semibold text-gray-800">{{ app.student_name }}</h3>
+              <p class="text-gray-600 text-sm mt-1 line-clamp-2">{{ app.message }}</p>
+              <p class="text-gray-400 text-xs mt-2">{{ formatDate(app.created_at) }}</p>
+              <div v-if="app.rejection_reason" class="mt-2 p-2 bg-red-100 border-l-4 border-red-500 text-red-700 text-sm rounded">
+                <strong>Razlog:</strong> {{ app.rejection_reason }}
+              </div>
+            </div>
+
+            <div class="flex-shrink-0">
+              <button
+                disabled
+                class="px-4 py-2 bg-red-100 text-red-700 font-semibold rounded cursor-default"
+              >
+                Odbijen
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-    <!-- Details Modal -->
-    <div v-if="showDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="showDetailsModal && selectedApplication" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg max-w-2xl w-full p-8 shadow-xl max-h-[90vh] overflow-y-auto">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-semibold text-gray-800">Profil studentice</h2>
@@ -150,20 +179,17 @@
         </div>
 
         <div class="space-y-5">
-          <!-- Avatar -->
           <div class="flex justify-center">
             <div class="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center">
               <span class="text-purple-600 font-semibold text-xl">{{ getInitials(selectedApplication.student_name) }}</span>
             </div>
           </div>
 
-          <!-- Ime i email -->
           <div class="text-center border-b pb-4">
             <h3 class="text-xl font-semibold text-gray-800">{{ selectedApplication.student_name }}</h3>
             <p class="text-gray-600 text-sm">{{ selectedApplication.student_email }}</p>
           </div>
 
-          <!-- Očekivanja -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Očekivanja:</label>
             <div class="bg-gray-50 border border-gray-200 rounded p-3 text-gray-600 text-sm">
@@ -171,7 +197,6 @@
             </div>
           </div>
 
-          <!-- Vještine za poboljšanje -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Vještine za poboljšanje:</label>
             <div class="bg-gray-50 border border-gray-200 rounded p-3 text-gray-600 text-sm">
@@ -179,7 +204,6 @@
             </div>
           </div>
 
-          <!-- Motivacija/Poruka -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Motivacija/Poruka:</label>
             <div class="bg-gray-50 border border-gray-200 rounded p-3 text-gray-600 text-sm">
@@ -187,7 +211,6 @@
             </div>
           </div>
 
-          <!-- CV -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">CV:</label>
             <div v-if="selectedApplication.cv_file_path" class="flex items-center gap-2">
@@ -196,17 +219,12 @@
                 target="_blank"
                 class="text-purple-600 hover:underline flex items-center gap-2"
               >
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path>
-                  <path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H10a1 1 0 001-1V5a1 1 0 00-1-1H3zM14 7a1 1 0 00-1 1v6.05A2.5 2.5 0 0115.95 10H17a1 1 0 001-1v-3a1 1 0 00-1-1h-3z"></path>
-                </svg>
                 Preuzmi CV
               </a>
             </div>
             <div v-else class="text-gray-400 text-sm">Nema priloženog CV-a</div>
           </div>
 
-          <!-- Primljena -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">Primljena:</label>
             <p class="text-gray-600">{{ formatDateFull(selectedApplication.created_at) }}</p>
@@ -224,8 +242,7 @@
       </div>
     </div>
 
-    <!-- Reject Modal -->
-    <div v-if="showRejectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div v-if="showRejectModal && appToReject" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-lg max-w-md w-full p-8 shadow-xl">
         <div class="flex justify-between items-center mb-6">
           <h2 class="text-2xl font-semibold text-gray-800">Odbij zahtjev</h2>
@@ -263,12 +280,15 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { getMentorApplications, updateApplicationStatus } from '../../services/mentoring.js'
+
+const activeTab = ref('pending')
 
 const applications = ref([])
 const loading = ref(true)
@@ -283,23 +303,17 @@ const pendingApplications = computed(() => {
   return applications.value.filter(app => app.status === 'PENDING')
 })
 
-// POPRAVLJENO: APPROVED -> ACCEPTED
 const activeApplications = computed(() => {
   return applications.value.filter(app => app.status === 'ACCEPTED')
 })
 
-// Novi computed za odbijene zahtjeve
 const rejectedApplications = computed(() => {
   return applications.value.filter(app => app.status === 'REJECTED')
 })
 
 const getInitials = (name) => {
-  return name
-    .split(' ')
-    .map(word => word[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
+  if (!name) return ''
+  return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
 }
 
 const formatDate = (dateString) => {
@@ -352,7 +366,7 @@ const closeRejectModal = () => {
 
 const approveApplication = async (applicationId, app) => {
   try {
-    // POPRAVLJENO: APPROVED -> ACCEPTED
+    // Popravljeno slanje: servisu proslijediti samo string statusa
     await updateApplicationStatus(applicationId, 'ACCEPTED')
     app.status = 'ACCEPTED'
     closeDetails()
@@ -365,14 +379,11 @@ const approveApplication = async (applicationId, app) => {
 const confirmReject = async (applicationId) => {
   try {
     await updateApplicationStatus(applicationId, 'REJECTED', rejectionReason.value)
-    
-    // Nađi zahtjev i ažuriraj ga
     const app = applications.value.find(a => a.id === applicationId)
     if (app) {
       app.status = 'REJECTED'
       app.rejection_reason = rejectionReason.value
     }
-    
     closeRejectModal()
   } catch (err) {
     console.error('Greška pri odbijanju zahtjeva:', err)

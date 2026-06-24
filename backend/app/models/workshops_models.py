@@ -30,7 +30,6 @@ class Workshop(WorkshopBase, table=True):
 
     ID_workshop: Optional[int] = Field(default=None, primary_key=True)
     status: WorkshopStatus = Field(default=WorkshopStatus.upcoming)
-    #created_by_id: Optional[int] = Field(default=None, foreign_key="users.id")
     created_by_id: Optional[int] = Field(default=None)
     created_at: Optional[datetime] = Field(
         default_factory=lambda: datetime.now(timezone.utc)
@@ -145,7 +144,9 @@ class ProposalApprove(BaseModel):
     date: Optional[datetime] = None
     end_time: Optional[datetime] = None
     capacity: Optional[int] = None 
-
+    organizer_name: Optional[str] = None
+    organizer_email: Optional[str] = None
+    organizer_phone: Optional[str] = None
 ### ---------------------------------------------------------------------------
 
 class WorkshopList(BaseModel):
@@ -190,11 +191,10 @@ class Registration(Base):
     previous_experience = Column(String, nullable=True)
     github_profile = Column(String, nullable=True)
 
-    #  NOVO - Mahir
+    #Mahir
     status = Column(String, nullable=False, default="registered")
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     was_promoted = Column(Boolean, nullable=False, default=False)
-# indeks za FIFO + brze upite
 Index(
     "idx_workshop_status_created",
     Registration.workshop_id,
@@ -281,7 +281,12 @@ class RatingRead(BaseModel):
     score: int
     comment: Optional[str]
     created_at: Optional[datetime]
-
+    user_name: Optional[str] = None 
     class Config:
         from_attributes = True
   
+class WorkshopFilter(BaseModel):
+    title: Optional[str] = None
+    location: Optional[str] = None
+    date_from: Optional[datetime] = None
+    date_to: Optional[datetime] = None

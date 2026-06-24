@@ -4,8 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.core.security import get_current_user
+from app.models.mentor import Mentor, ApplicationStatus
 from app.models.user import User
 from app.models.mentor import Mentor
+from app.models.profile import Profile
 from app.models.mentorship_request import MentorshipRequest, RequestStatus
 from pydantic import BaseModel
 from datetime import datetime
@@ -34,6 +36,7 @@ class MentorOut(BaseModel):
     cv_url: Optional[str] = None
     position: Optional[str] = None
     institution: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -60,6 +63,14 @@ class MentorshipRequestOut(BaseModel):
 def mentoring_placeholder():
     return {"message": "Mentoring router is working — Team 2 builds here"}
 
+def get_avatar_url(mentor: Mentor, db: Session) -> str | None:
+    user = db.query(User).filter(User.email == mentor.email).first()
+    if not user:
+        return mentor.profile_img_url  # fallback na vlastitu sliku
+    profile = db.query(Profile).filter(Profile.user_id == user.id).first()
+    if not profile or not profile.avatar:
+        return mentor.profile_img_url  # fallback
+    return f"http://localhost:8000{profile.avatar}"
 
 @router.get("/mentors", response_model=list[MentorOut])
 def get_mentors(
@@ -74,6 +85,11 @@ def get_mentors(
         l_name = mentor.last_name or ""
         full_name = f"{f_name} {l_name}".strip() or "Unknown Mentor"
         max_m = mentor.max_mentees or 1
+        # compute accepted requests count dynamically
+        accepted_count = db.query(MentorshipRequest).filter(
+            MentorshipRequest.mentor_id == mentor.id,
+            MentorshipRequest.status == RequestStatus.ACCEPTED
+        ).count()
         result.append(MentorOut(
             id=mentor.id,
             full_name=full_name,
@@ -82,13 +98,14 @@ def get_mentors(
             linkedin_url=mentor.linkedin_url,
             preferred_session_format=mentor.preferred_session_format or "Online",
             max_mentees=max_m,
-            current_applications_count=0,
-            is_available=0 < max_m,
+            current_applications_count=accepted_count,
+            is_available=accepted_count < max_m,
             email=mentor.email,
             years_of_experience=mentor.years_of_experience,
             cv_url=mentor.cv_url,
             position=mentor.position,
-            institution=mentor.institution
+            institution=mentor.institution,
+            avatar_url=get_avatar_url(mentor, db)
         ))
     return result
 
@@ -165,6 +182,10 @@ def get_mentor_profile(id: int, db: Session = Depends(get_db)):
     l_name = mentor.last_name or ""
     full_name = f"{f_name} {l_name}".strip() or "Unknown Mentor"
     max_m = mentor.max_mentees or 1
+    accepted_count = db.query(MentorshipRequest).filter(
+        MentorshipRequest.mentor_id == mentor.id,
+        MentorshipRequest.status == RequestStatus.ACCEPTED
+    ).count()
     return MentorOut(
         id=mentor.id,
         full_name=full_name,
@@ -173,16 +194,79 @@ def get_mentor_profile(id: int, db: Session = Depends(get_db)):
         linkedin_url=mentor.linkedin_url,
         preferred_session_format=mentor.preferred_session_format or "Online",
         max_mentees=max_m,
-        current_applications_count=0,
-        is_available=0 < max_m,
+        current_applications_count=accepted_count,
+        is_available=accepted_count < max_m,
         email=mentor.email,
         years_of_experience=mentor.years_of_experience,
         cv_url=mentor.cv_url,
         position=mentor.position,
-        institution=mentor.institution
+        institution=mentor.institution,
+        avatar_url=get_avatar_url(mentor, db)
     )
 
 
+class MentorApplicationStatusOut(BaseModel):
+    id: int
+    first_name: str
+    last_name: str
+    status: str
+    rejection_reason: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+@router.get("/my-application", response_model=MentorApplicationStatusOut)
+def get_my_mentor_application(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    mentor = db.query(Mentor).filter(Mentor.email == current_user.email).first()
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nemate prijavu za mentoricu."
+        )
+    status_value = mentor.status.value if hasattr(mentor.status, "value") else str(mentor.status)
+    return MentorApplicationStatusOut(
+        id=mentor.id,
+        first_name=mentor.first_name,
+        last_name=mentor.last_name,
+        status=status_value,
+        rejection_reason=mentor.rejection_reason
+    )
+
+
+@router.patch("/my-application/resubmit", response_model=MentorApplicationStatusOut)
+def resubmit_my_mentor_application(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    mentor = db.query(Mentor).filter(Mentor.email == current_user.email).first()
+    if not mentor:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nemate prijavu za mentoricu."
+        )
+    if mentor.status != ApplicationStatus.REJECTED:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Samo odbijena prijava može biti ponovo poslana."
+        )
+    mentor.status = ApplicationStatus.PENDING
+    mentor.is_approved = False
+    mentor.rejection_reason = None
+    db.commit()
+    db.refresh(mentor)
+
+    status_value = mentor.status.value if hasattr(mentor.status, "value") else str(mentor.status)
+    return MentorApplicationStatusOut(
+        id=mentor.id,
+        first_name=mentor.first_name,
+        last_name=mentor.last_name,
+        status=status_value,
+        rejection_reason=mentor.rejection_reason
+    )
 
 @router.get("/my-applications", response_model=list[MentorshipRequestOut])
 def get_mentor_applications(
@@ -254,8 +338,23 @@ def update_application_status(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Status mora biti jedan od: {', '.join(valid_statuses)}"
         )
+    # Ako prihvaćamo zahtjev, provjeri kapacitet mentora
+    if request.status == "ACCEPTED":
+        accepted_count = db.query(MentorshipRequest).filter(
+            MentorshipRequest.mentor_id == application.mentor_id,
+            MentorshipRequest.status == RequestStatus.ACCEPTED
+        ).count()
+        mentor_obj = db.query(Mentor).filter(Mentor.id == application.mentor_id).first()
+        max_m = mentor_obj.max_mentees or 1
+        if accepted_count >= max_m:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Mentor je već popunjen. Ne možete prihvatiti ovaj zahtjev."
+            )
+
+    # Postavi novi status
     application.status = RequestStatus[request.status]
-    
+
     # Ako se zahtjev odbija, spremi razlog odbijanja
     if request.status == "REJECTED" and request.rejection_reason:
         application.rejection_reason = request.rejection_reason
