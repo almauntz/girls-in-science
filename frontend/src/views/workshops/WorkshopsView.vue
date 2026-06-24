@@ -346,6 +346,8 @@ import { useRouter } from 'vue-router'
 import CalendarView from './Calendar.vue'
 import Notifications from './Notifications.vue'
 import confetti from 'canvas-confetti'
+import Location from './Location.vue'
+
 const BASE_URL = import.meta.env.VITE_API_URL
 const router = useRouter()
 
