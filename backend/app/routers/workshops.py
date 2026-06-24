@@ -13,6 +13,36 @@ from sqlalchemy.orm import Session
 
 router = APIRouter(prefix="/workshops", tags=["workshops"])
 
+
+
+
+@router.get("/waiting-list/{workshop_id}/position")
+def get_waiting_list_position(
+    workshop_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    entry = db.execute(
+        select(WaitingList).where(
+            WaitingList.workshop_id == workshop_id,
+            WaitingList.user_id == current_user.id
+        )
+    ).scalars().first()
+
+    if not entry:
+        raise HTTPException(status_code=404, detail="Niste na listi čekanja.")
+
+    position = db.execute(
+        select(func.count()).where(
+            WaitingList.workshop_id == workshop_id,
+            WaitingList.created_at <= entry.created_at
+        ).select_from(WaitingList)
+    ).scalar()
+
+    return {"position": position}
+
+
+
 @router.get("/waiting-list/me")
 def get_my_waiting_list(
     db: Session = Depends(get_db),
@@ -31,7 +61,18 @@ def get_my_waiting_list(
         for e in entries
     ]
 
+@router.get("/waiting-list/{workshop_id}/count")
+def get_waiting_list_count(
+    workshop_id: int,
+    db: Session = Depends(get_db)
+):
+    count = db.execute(
+        select(func.count()).where(
+            WaitingList.workshop_id == workshop_id
+        ).select_from(WaitingList)
+    ).scalar()
 
+    return {"workshop_id": workshop_id, "count": count}
 
 
 @router.get("/my-promotion")

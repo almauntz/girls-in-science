@@ -201,13 +201,21 @@
               v-else-if="waitingList[workshop.ID_workshop]"
               @click="handleLeaveWaitingList(workshop.ID_workshop)"
               class="text-xs font-semibold text-red-400 hover:text-red-600 uppercase tracking-wide transition-colors"
-            >Napusti listu</button>
+            >Napusti listu:
+              <span v-if="waitingListPosition[workshop.ID_workshop]" class="normal-case font-normal text-gray-400">
+                 #{{ waitingListPosition[workshop.ID_workshop] }} na redu
+              </span>
+            </button>
             <button
               v-else-if="getFreeSpots(workshop) === 0"
               @click="handleJoinWaitingList(workshop.ID_workshop)"
               class="text-xs font-semibold uppercase tracking-wide transition-colors"
               style="color:#d97706;"
-            >Lista čekanja</button>
+            >Lista čekanja
+              <span v-if="waitingListCount[workshop.ID_workshop] !== undefined">
+                ({{ waitingListCount[workshop.ID_workshop] }})
+              </span>
+            </button>
           </div>
         </div>
       </div>
@@ -354,6 +362,8 @@ const waitingList = reactive({})
 const activeWorkshops = computed(() => workshops.value.filter(w => w.status === 'upcoming'))
 const completedWorkshops = computed(() => workshops.value.filter(w => w.status === 'completed'))
 
+const waitingListCount = ref({})
+const waitingListPosition = ref({})
 
 const searchQuery = ref('')
 const searchResults = ref([])
@@ -362,6 +372,44 @@ const dropdownLeft = ref(0)
 const dropdownWidth = ref(0)
 const searchBarRef = ref(null)
 let searchTimeout = null
+
+
+const fetchWaitingListPositions = async () => {
+  const token = localStorage.getItem('token')
+  if (!token) return
+  for (const workshop of workshops.value) {
+    if (waitingList[workshop.ID_workshop]) {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/workshops/waiting-list/${workshop.ID_workshop}/position`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        )
+        const data = await res.json()
+        waitingListPosition.value[workshop.ID_workshop] = data.position
+      } catch { }
+    }
+  }
+}
+
+const fetchWaitingListCounts = async () => {
+  const token = localStorage.getItem('token')
+  for (const workshop of workshops.value) {
+    if (getFreeSpots(workshop) === 0) {
+      try {
+        const res = await fetch(
+          `${BASE_URL}/workshops/waiting-list/${workshop.ID_workshop}/count`,
+          { headers: token ? { Authorization: `Bearer ${token}` } : {} }
+        )
+        const data = await res.json()
+        waitingListCount.value[workshop.ID_workshop] = data.count
+      } catch {
+        // ignoriši grešku za pojedinu radionicu
+      }
+    }
+  }
+}
+
+
 
 const updateDropdownPosition = () => {
   if (searchBarRef.value) {
@@ -667,11 +715,16 @@ const checkMyPromotion = async () => {
   }
 }
 
-const refreshWorkshops = async () => { await fetchWorkshops(); await checkAllRegistrations() }
+const refreshWorkshops = async () => {
+  await fetchWorkshops()
+  await checkAllRegistrations()
+  await fetchWaitingList()
+  await fetchWaitingListPositions()
+  await fetchWaitingListCounts()
+}
 
 onMounted(async () => {
   await refreshWorkshops()
   await checkMyPromotion()
-  await fetchWaitingList()
 })
 </script>
